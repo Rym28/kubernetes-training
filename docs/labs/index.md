@@ -22,7 +22,7 @@ Dans chaque atelier, vous trouverez des blocs d'indices progressifs pliables :
 
 | Atelier | Titre du Lab | Concepts Clés Traités |
 | :---: | :--- | :--- |
-| **[Lab 00](00-provisioning-cluster.md)** | **Provisionnement du Cluster** | Kubeadm multi-nœuds, scripts cloud-init, Terraform AWS, et déploiement Minikube / KillerCoda avec NodePort 30080. |
+| **[Lab 00](00-provisioning-cluster.md)** | **Provisionnement du Cluster** | Installation de Minikube en local, provisionnement des 3 instances EC2 par Terraform, puis installation du cluster multi-nœuds avec Kubeadm et Calico. |
 | **[Lab 01](01-control-plane-anatomy.md)** | **Anatomie du Plan de Contrôle** | Static Pods (`/etc/kubernetes/manifests`), santé et instantané `etcd` avec `etcdctl` (mTLS), requêtes brutes API Server (`/readyz`), panne du Scheduler. |
 | **[Lab 02](02-premiers-pods-labels.md)** | **Premiers Pods, Labels & InitContainers** | Pod `campus-backend`, flux déclaratif `--dry-run=client`, variables d'environnement, requests/limits CPU/RAM, InitContainers. |
 | **[Lab 03](03-deployments-resilience.md)** | **Déploiements, Résilience & Rollback** | Base PostgreSQL de développement, contrôleur `Deployment`, ReplicaSets, Self-healing, RollingUpdate (`maxSurge`/`maxUnavailable`), Rollback ciblé, placement des pods (`nodeSelector`, taints, `podAntiAffinity`). |

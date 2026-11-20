@@ -77,7 +77,7 @@ Requis pour automatiser le déploiement multi-nœuds AWS dans le Lab 00 :
 
 ### 2. MobaXterm & FreeLens
 * **MobaXterm** (Windows) : Client SSH avec mode Multi-Exec et SFTP intégré ([mobaxterm.mobatek.net](https://mobaxterm.mobatek.net/)).
-* **FreeLens** : IDE open-source pour visualiser l'état du cluster Kubernetes ([freelensapp.github.io](https://freelensapp.github.io/)).
+* **FreeLens** *(optionnel, utilisé au Lab 06)* : IDE open-source pour visualiser l'état du cluster Kubernetes ([freelensapp.github.io](https://freelensapp.github.io/)).
 
 ---
 
@@ -98,10 +98,10 @@ kubectl get pods -n kube-system
 
 ### Créer votre namespace de travail
 
-Quel que soit l'environnement choisi (Minikube, KillerCoda ou AWS), tous les ateliers se déroulent dans le namespace `campus-dev`. Créez-le et définissez-le comme namespace courant (détails dans le [Lab 00, §6.5](labs/00-provisioning-cluster.md#65-creer-votre-espace-de-travail-le-namespace-campus-dev)) :
+Quel que soit l'environnement choisi (Minikube, KillerCoda ou AWS), tous les ateliers se déroulent dans le namespace `campus-dev`. Créez-le et définissez-le comme namespace courant (détails dans l'Exercice 0 du [Lab 02](labs/02-premiers-pods-labels.md#exercice-0-le-namespace-votre-perimetre-de-travail)). Chaque lab rappelle ces commandes, sans effet si le namespace existe déjà :
 
 ```bash
-kubectl create namespace campus-dev
+kubectl create namespace campus-dev --dry-run=client -o yaml | kubectl apply -f -
 kubectl config set-context --current --namespace=campus-dev
 kubectl config view --minify -o jsonpath='{..namespace}'   # doit afficher campus-dev
 ```

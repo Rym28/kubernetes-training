@@ -28,14 +28,20 @@ Dans cet atelier, vous allez explorer le Control Plane sur le nœud maître, int
 
 * Un cluster Kubernetes opérationnel (issu du **Lab 00**).
 * Accès SSH avec privilèges `sudo` sur le nœud de contrôle (`k8s-control`).
-* Le namespace de travail `campus-dev` créé et défini comme namespace courant sur `k8s-control` (**Lab 00, §6.5**) : le Pod de test `scheduler-probe` de l'exercice 4 y sera créé, tandis que les composants du plan de contrôle restent dans `kube-system`.
+* Le namespace de travail `campus-dev`, créé et défini comme namespace courant sur `k8s-control` (commandes ci-dessous) : le Pod de test `scheduler-probe` de l'exercice 4 y sera créé, tandis que les composants du plan de contrôle restent dans `kube-system`. Le namespace est présenté en détail à l'Exercice 0 du [Lab 02](../02-premiers-pods-labels/README.md#exercice-0--le-namespace-votre-périmètre-de-travail).
 
 > ⚠️ **Environnement d'exécution pour ce lab :**  
 > Contrairement aux ateliers suivants qui pourront être exécutés confortablement depuis votre poste local avec votre `kubectl` et votre IDE, **ce Lab 01 nécessite obligatoirement d'être connecté en SSH sur `k8s-control`**. Nous allons en effet auditer des répertoires système hôtes (`/etc/kubernetes/manifests`), manipuler le service `kubelet` et interroger la base `etcd` en local, ce qui est impossible à distance.
 
-### Vérification
+### Préparation et vérification
+
+**k8s-control — SSH**
 ```bash
 kubectl get nodes
+# Créer le namespace de travail s'il n'existe pas encore (sans effet s'il existe déjà)
+kubectl create namespace campus-dev --dry-run=client -o yaml | kubectl apply -f -
+# En faire le namespace courant, puis vérifier
+kubectl config set-context --current --namespace=campus-dev
 kubectl config view --minify -o jsonpath='{..namespace}'
 ```
 *Le nœud de contrôle et les deux workers doivent être à l'état `Ready`, et le namespace courant doit être `campus-dev`.*

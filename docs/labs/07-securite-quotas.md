@@ -14,7 +14,15 @@
 > * **Option A (Recommandée - Confort DevOps Local) :** Exécutez les commandes directement depuis votre machine locale avec votre `kubectl` et votre `kubeconfig`.  
 > * **Option B (Secours - PC d'entreprise verrouillé) :** Connectez-vous en SSH sur `k8s-control` : l'outillage et les manifests sont pré-installés dans `~/labs/`.
 >
-> 🗂️ **Namespace de travail : `campus-dev`** (créé au Lab 00, §6.5). Vérifiez-le avant de commencer avec `kubectl config view --minify -o jsonpath='{..namespace}'`, qui doit afficher `campus-dev`. Sinon : `kubectl config set-context --current --namespace=campus-dev`.
+> 🗂️ **Namespace de travail : `campus-dev`.** Avant de commencer, créez-le s'il n'existe pas encore et définissez-le comme namespace courant (les commandes sont sans effet s'il existe déjà) :
+>
+> ```bash
+> kubectl create namespace campus-dev --dry-run=client -o yaml | kubectl apply -f -
+> kubectl config set-context --current --namespace=campus-dev
+> kubectl config view --minify -o jsonpath='{..namespace}'   # doit afficher campus-dev
+> ```
+>
+> *Le namespace est présenté en détail à l'Exercice 0 du [Lab 02](02-premiers-pods-labels.md#exercice-0-le-namespace-votre-perimetre-de-travail).*
 
 ---
 

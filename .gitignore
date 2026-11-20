@@ -42,4 +42,5 @@ terraform.rc
 *.key
 kubeconfig
 *.kubeconfig
+kubeconfig.yaml
 .env

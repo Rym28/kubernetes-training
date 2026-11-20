@@ -17,7 +17,7 @@
 > * **Option A (Recommandée - Confort DevOps Local) :** Exécutez les commandes directement depuis votre terminal local avec votre `kubectl` et le `kubeconfig` configuré au Lab 00. Vous modifiez vos YAML directement dans votre IDE sans transfert !  
 > * **Option B (Secours - PC d'entreprise verrouillé) :** Connectez-vous en SSH sur `k8s-control` (via MobaXterm ou terminal) : `kubectl` et tous les dossiers de TP sont déjà pré-déployés dans `~/labs/`.
 >
-> 🗂️ **Namespace de travail : `campus-dev`** (créé au Lab 00, §6.5). Vérifiez-le avant de commencer avec `kubectl config view --minify -o jsonpath='{..namespace}'`, qui doit afficher `campus-dev`. Sinon : `kubectl config set-context --current --namespace=campus-dev`.
+> 🗂️ **Namespace de travail : `campus-dev`.** Vous le créez et le définissez comme namespace courant à l'**Exercice 0** ci-dessous.
 
 ---
 
@@ -31,33 +31,66 @@ Le portail Horizon Stages doit démarrer par la mise en ligne d'une première ve
 
 ## Exercice 0 : Le Namespace, Votre Périmètre de Travail
 
-Au Lab 00, vous avez créé le namespace `campus-dev` et l'avez défini comme namespace courant. Avant de déployer votre premier Pod, vérifions ce que cela implique.
+Un **namespace** est une cloison logique qui regroupe les objets d'un projet : il délimite les noms, les quotas, les règles réseau et les droits (Lab 07). **Bonne pratique : on ne déploie jamais une application dans `default`.**
 
-1. Confirmez votre namespace courant :
+| Namespace | Contenu | Labs |
+| :--- | :--- | :---: |
+| `campus-dev` | L'application fil rouge en construction | 01 à 07 |
+| `campus-prod` | La plateforme finale durcie | 08 |
+| `monitoring` | La pile d'observabilité (Prometheus, Loki, Grafana) | 06 |
+| `kube-system` | Les composants du cluster : **on n'y déploie rien** | 01, 06 |
+
+1. **Créez votre namespace de travail `campus-dev`.** Créez le fichier `namespace-campus-dev.yaml` :
+   ```yaml
+   apiVersion: v1
+   kind: Namespace
+   metadata:
+     name: campus-dev
+     labels:
+       app.kubernetes.io/part-of: campus-summer-portal
+       environment: dev
+   ```
+
+   Appliquez-le (sans effet s'il existe déjà, par exemple créé au Lab 01) :
    ```bash
+   kubectl apply -f namespace-campus-dev.yaml
+   kubectl get namespaces --show-labels
+   ```
+
+2. **Faites-en le namespace courant**, pour ne plus avoir à taper `-n campus-dev`. Un kubeconfig contient des **contextes** : chacun associe un cluster, un utilisateur et un namespace par défaut. Enregistrez `campus-dev` dans le contexte courant, puis vérifiez :
+   ```bash
+   kubectl config set-context --current --namespace=campus-dev
    kubectl config view --minify -o jsonpath='{..namespace}'
    ```
-   *Il doit afficher `campus-dev`. Sinon : `kubectl config set-context --current --namespace=campus-dev`.*
+   *Sortie attendue : `campus-dev`.*
 
-2. Listez les namespaces du cluster et repérez les namespaces système créés par Kubeadm (`default`, `kube-system`, `kube-public`, `kube-node-lease`) :
+   > ⚠️ Le namespace courant est enregistré **dans chaque fichier kubeconfig**. Si vous travaillez à la fois depuis votre poste (Option A) et en SSH sur `k8s-control` (Option B), lancez la commande `set-context` dans les deux.
+
+   <details>
+   <summary>💡 <b>Indice : j'ai oublié de changer de namespace, où sont mes objets ?</b></summary>
+
+   Ils sont dans `default` : `kubectl get all -n default`. Supprimez-les (`kubectl delete -f <fichier>.yaml -n default`), refaites le point 2, puis réappliquez vos manifests.
+   </details>
+
+3. Listez les namespaces du cluster et repérez les namespaces système créés par Kubeadm (`default`, `kube-system`, `kube-public`, `kube-node-lease`) :
    ```bash
    kubectl get namespaces
    ```
 
-3. Observez la portée des commandes :
+4. Observez la portée des commandes :
    ```bash
    kubectl get pods                 # namespace courant : campus-dev (vide pour l'instant)
    kubectl get pods -n kube-system  # un namespace précis
    kubectl get pods -A              # tous les namespaces
    ```
 
-4. Tous les objets n'appartiennent pas à un namespace. Listez ceux qui sont globaux au cluster :
+5. Tous les objets n'appartiennent pas à un namespace. Listez ceux qui sont globaux au cluster :
    ```bash
    kubectl api-resources --namespaced=false
    ```
    *Vous y trouvez notamment `nodes`, `namespaces`, `persistentvolumes`, `storageclasses` et `clusterroles` : un nœud ou un disque n'appartient à aucun projet en particulier.*
 
-5. **Préparer le nom réseau attendu par le frontend.** Le serveur Nginx du frontend relaie les appels `/api/` et `/actuator/` vers l'hôte `campus-backend:8080`. Or Nginx vérifie ce nom DNS **dès son démarrage** : s'il est introuvable, il s'arrête aussitôt (`host not found in upstream "campus-backend"`) et le Pod part en `CrashLoopBackOff`.
+6. **Préparer le nom réseau attendu par le frontend.** Le serveur Nginx du frontend relaie les appels `/api/` et `/actuator/` vers l'hôte `campus-backend:8080`. Or Nginx vérifie ce nom DNS **dès son démarrage** : s'il est introuvable, il s'arrête aussitôt (`host not found in upstream "campus-backend"`) et le Pod part en `CrashLoopBackOff`.
 
    Créez donc dès maintenant le **Service** `campus-backend`, qui portera ce nom dans le namespace. Créez le fichier `service-backend.yaml` :
    ```yaml
@@ -128,7 +161,7 @@ En revanche, ne laissez jamais le hasard décider : vérifiez toujours votre nam
 <details>
 <summary>💡 <b>Indice : le pod passe en <code>CrashLoopBackOff</code></b></summary>
 
-Lisez la raison : `kubectl logs frontend-test`. Si vous voyez `host not found in upstream "campus-backend"`, le Service `campus-backend` de l'exercice 0 (étape 5) n'existe pas dans votre namespace courant. Vérifiez avec `kubectl get svc campus-backend`, créez-le, puis supprimez et recréez le pod.
+Lisez la raison : `kubectl logs frontend-test`. Si vous voyez `host not found in upstream "campus-backend"`, le Service `campus-backend` de l'exercice 0 (étape 6) n'existe pas dans votre namespace courant. Vérifiez avec `kubectl get svc campus-backend`, créez-le, puis supprimez et recréez le pod.
 </details>
 
 3. Supprimez ce pod de test :

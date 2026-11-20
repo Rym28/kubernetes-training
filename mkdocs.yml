@@ -2,9 +2,9 @@ site_name: "Kubernetes & Orchestration — Ateliers Pratiques"
 site_description: "Ateliers pratiques d'orchestration et déploiement de conteneurs avec Kubernetes."
 site_author: "Rym Regaieg"
 copyright: "Copyright &copy; 2026 Rym Regaieg"
-site_url: "https://h4mdi.github.io/training/"
-repo_url: "https://github.com/h4mdi/training"
-repo_name: "h4mdi/training"
+site_url: "https://rym28.github.io/kubernetes-training/"
+repo_url: "https://github.com/Rym28/kubernetes-training"
+repo_name: "Rym28/kubernetes-training"
 
 theme:
   name: material
