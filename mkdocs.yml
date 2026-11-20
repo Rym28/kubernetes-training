@@ -1,0 +1,89 @@
+site_name: "Kubernetes & Orchestration — Ateliers Pratiques"
+site_description: "Ateliers pratiques d'orchestration et déploiement de conteneurs avec Kubernetes."
+site_author: "Rym Regaieg"
+copyright: "Copyright &copy; 2026 Rym Regaieg"
+site_url: "https://h4mdi.github.io/training/"
+repo_url: "https://github.com/h4mdi/training"
+repo_name: "h4mdi/training"
+
+theme:
+  name: material
+  language: fr
+  palette:
+    # Mode Clair
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: deep purple
+      toggle:
+        icon: material/weather-night
+        name: "Passer au mode sombre"
+    # Mode Sombre
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: cyan
+      toggle:
+        icon: material/weather-sunny
+        name: "Passer au mode clair"
+  font:
+    text: Inter
+    code: JetBrains Mono
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - md_in_html
+  - attr_list
+  - def_list
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Accueil: index.md
+  - Architecture & Environnement:
+      - Application Fil Rouge: application.md
+      - Prérequis & Environnement: setup-environnement.md
+  - Ateliers Pratiques (Labs):
+      - Vue d'Ensemble: labs/index.md
+      - "Partie 1 — Déploiement & Fondations":
+          - "Lab 00 : Déploiement Infrastructure (IaC)": labs/00-provisioning-cluster.md
+          - "Lab 01 : Anatomie du Plan de Contrôle": labs/01-control-plane-anatomy.md
+          - "Lab 02 : Premiers Pods, Labels & Sélecteurs": labs/02-premiers-pods-labels.md
+          - "Lab 03 : Déploiements, Résilience & Rollback": labs/03-deployments-resilience.md
+          - "Lab 04 : Réseau, Services & Découverte DNS": labs/04-services-reseau.md
+      - "Partie 2 — Production & Sécurité":
+          - "Lab 05 : Stockage & Données Persistantes": labs/05-configuration-persistance.md
+          - "Lab 06 : Exploitation & Diagnostic de Pannes": labs/06-exploitation-debugging.md
+          - "Lab 07 : Sécurité, Quotas & Isolement Réseau": labs/07-securite-quotas.md
+          - "Lab 08 : Challenge Final de Production": labs/08-challenge-integration.md
+  - Évaluation des Acquis: evaluation.md

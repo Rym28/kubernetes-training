@@ -1,0 +1,3 @@
+# Les scripts shell s'exécutent sous Linux (user_data cloud-init, k8s-control) :
+# ils doivent garder des fins de ligne LF, même clonés sous Windows (core.autocrlf=true).
+*.sh text eol=lf

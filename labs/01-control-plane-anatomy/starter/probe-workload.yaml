@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: scheduler-probe
+  labels:
+    app.kubernetes.io/name: scheduler-probe
+    app.kubernetes.io/part-of: campus-summer-portal
+spec:
+  containers:
+    - name: probe
+      image: busybox:1.36
+      command: ["sh", "-c", "echo 'Scheduler probe running' && sleep 3600"]
+      resources:
+        requests:
+          cpu: 50m
+          memory: 32Mi

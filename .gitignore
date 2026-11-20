@@ -1,0 +1,45 @@
+# Fichiers système et IDE
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+site/
+
+# Fichiers de build Java / Node
+**/target/
+**/node_modules/
+**/*.class
+**/*.jar
+
+# ==============================================================
+# DOSSIER DES CORRECTIONS (Masqué aux apprenants par défaut)
+# Pour diffuser les énoncés seuls aux stagiaires sans les solutions :
+# Laisser la ligne ci-dessous active.
+# Pour versionner les corrections sur votre dépôt privé formateur :
+# Commentez la ligne avec un '#' ou utilisez une branche dédiée.
+# ==============================================================
+corrections/
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Clés et identifiants (ne jamais versionner)
+*.pem
+*.key
+kubeconfig
+*.kubeconfig
+.env
