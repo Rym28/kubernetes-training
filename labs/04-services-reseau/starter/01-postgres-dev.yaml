@@ -1,0 +1,61 @@
+# ==============================================================================
+# Starter du Lab 04 - Base PostgreSQL de DÉVELOPPEMENT (éphémère)
+# ------------------------------------------------------------------------------
+# Même base que celle du Lab 03 (labs/03-deployments-resilience/starter/).
+# L'API campus-backend se connecte à PostgreSQL dès son démarrage : sans base
+# joignable, elle s'arrête en erreur.
+# Les données sont dans un volume emptyDir : elles DISPARAISSENT à chaque
+# recréation du pod (le Lab 05 rend la base persistante et sécurisée).
+# ==============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: campus-postgres
+  labels:
+    app: campus-postgres
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: campus-postgres
+  template:
+    metadata:
+      labels:
+        app: campus-postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: "campus"
+        - name: POSTGRES_USER
+          value: "campus"
+        - name: POSTGRES_PASSWORD
+          value: "campus"          # Mot de passe en clair : acceptable en dev, corrigé au Lab 05
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        volumeMounts:
+        - name: postgres-dev-data
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: postgres-dev-data
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  labels:
+    app: campus-postgres
+spec:
+  type: ClusterIP
+  selector:
+    app: campus-postgres
+  ports:
+  - port: 5432
+    targetPort: 5432

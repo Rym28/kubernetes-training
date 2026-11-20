@@ -1,0 +1,79 @@
+# ==============================================================================
+# Starter du Lab 07 - Base PostgreSQL persistante (état de fin du Lab 05)
+# ------------------------------------------------------------------------------
+# PVC pvc-postgres (1Gi, RWO) + Deployment lisant ses identifiants dans le
+# Secret campus-db-credentials + Service postgres.
+# ==============================================================================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-postgres
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: campus-postgres
+  labels:
+    app: campus-postgres
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: campus-postgres
+  template:
+    metadata:
+      labels:
+        app: campus-postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: campus-db-credentials
+              key: POSTGRES_DB
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: campus-db-credentials
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: campus-db-credentials
+              key: POSTGRES_PASSWORD
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        volumeMounts:
+        - name: donnees
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: donnees
+        persistentVolumeClaim:
+          claimName: pvc-postgres
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  labels:
+    app: campus-postgres
+spec:
+  type: ClusterIP
+  selector:
+    app: campus-postgres
+  ports:
+  - port: 5432
+    targetPort: 5432

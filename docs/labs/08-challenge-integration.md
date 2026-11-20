@@ -269,7 +269,7 @@ kubectl wait --for=condition=ready pod -l app=campus-postgres -n campus-prod --t
 2. Injectez la variable `SPRING_DATASOURCE_URL` avec la chaîne JDBC : `jdbc:postgresql://postgres:5432/campus`.
 3. Injectez `SPRING_DATASOURCE_USERNAME` et `SPRING_DATASOURCE_PASSWORD` depuis le secret `prod-db-credentials`.
 4. Chargez les variables non sensibles via `envFrom: configMapRef: prod-backend-config`.
-5. Configurez les trois sondes vues au Lab 06 (port `8080`) : **Startup Probe** et **Liveness Probe** sur `/actuator/health/liveness`, **Readiness Probe** sur `/actuator/health`. Avec seulement 400m de CPU, Spring Boot peut mettre plus d'une minute à démarrer : la startup probe doit lui en laisser le temps.
+5. Configurez les trois sondes de santé (port `8080`) : **Startup Probe** et **Liveness Probe** sur `/actuator/health/liveness`, **Readiness Probe** sur `/actuator/health`. Avec seulement 400m de CPU, Spring Boot peut mettre plus d'une minute à démarrer : la startup probe doit lui en laisser le temps.
 6. Ajoutez le durcissement de sécurité NSA : `runAsNonRoot: true`, `runAsUser: 10001`.
 7. Allouez les ressources : `requests: cpu 150m, memory 256Mi` / `limits: cpu 400m, memory 512Mi`.
 8. Exposez ce backend via un Service `ClusterIP` nommé **`campus-backend`** sur le port `8080`. Ce nom n'est pas négociable : c'est l'hôte amont `http://campus-backend:8080` attendu par le reverse proxy Nginx du frontend (Lab 02).

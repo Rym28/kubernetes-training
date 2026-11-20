@@ -1,119 +1,44 @@
-# Lab 02 : Premiers Pods, Labels & Sélecteurs
+# Atelier 02 : Les Pods : les Trois Briques du Campus Summer Portal
 
 ### Objectifs Pédagogiques :
-* Situer son travail dans un **namespace** dédié (`campus-dev`) et distinguer les objets propres à un namespace des objets globaux au cluster.
-* Comprendre la structure atomique d'un **Pod** Kubernetes et son cycle de vie.
-* Maîtriser la génération de manifests déclaratifs YAML grâce à `--dry-run=client -o yaml`.
-* Injecter des variables d'environnement (`env`) et inspecter l'intérieur du conteneur (`kubectl exec`, `logs`).
-* Dimensionner les ressources système avec les **Requests** et **Limits** (CPU et mémoire vive).
-* Mettre en œuvre le pattern d'initialisation avec les **InitContainers**.
-* Exploiter les **Labels** et **Selectors** pour organiser et filtrer les composants applicatifs.
+* Écrire le manifest YAML d'un **Pod** (`apiVersion`, `kind`, `metadata`, `spec`) et le créer avec `kubectl apply`.
+* Suivre le cycle de vie d'un Pod avec `kubectl get`, `describe` et `logs`.
+* Accéder à l'application d'un Pod avec `kubectl port-forward`.
+* Diagnostiquer un statut anormal (`ImagePullBackOff`, `CrashLoopBackOff`) et choisir entre `describe` et `logs`.
+* Générer un manifest déclaratif avec `--dry-run=client -o yaml`.
+* Inspecter l'intérieur du conteneur avec `kubectl exec`.
 * Constater les limites de résilience d'un Pod isolé (*bare pod*).
 
 > 📌 **Note Compatibilité OS :**  
-> Les commandes `kubectl` (`kubectl apply`, `kubectl get`, `kubectl describe`, `kubectl exec`, `kubectl label`) sont **rigoureusement identiques** sous **Windows (PowerShell)**, **Linux (Ubuntu)** et **macOS (Terminal)**.
+> Les commandes `kubectl` (`kubectl apply`, `kubectl get`, `kubectl describe`, `kubectl exec`, `kubectl port-forward`) sont **rigoureusement identiques** sous **Windows (PowerShell)**, **Linux (Ubuntu)** et **macOS (Terminal)**.
 >
-> 💡 **Modalités d'exécution (Au choix) :**  
-> * **Option A (Recommandée - Confort DevOps Local) :** Exécutez les commandes directement depuis votre terminal local avec votre `kubectl` et le `kubeconfig` configuré au Lab 00. Vous modifiez vos YAML directement dans votre IDE sans transfert !  
-> * **Option B (Secours - PC d'entreprise verrouillé) :** Connectez-vous en SSH sur `k8s-control` (via MobaXterm ou terminal) : `kubectl` et tous les dossiers de TP sont déjà pré-déployés dans `~/labs/`.
+> 💻 **Environnement : Minikube sur votre poste.** Cet atelier se déroule entièrement sur votre cluster **Minikube** local. Vous éditez vos YAML dans votre IDE et lancez les commandes depuis votre terminal. Vérifiez que Minikube tourne et que `kubectl` pointe dessus :
 >
-> 🗂️ **Namespace de travail : `campus-dev`.** Vous le créez et le définissez comme namespace courant à l'**Exercice 0** ci-dessous.
+> ```bash
+> minikube status                     # host, kubelet et apiserver : Running
+> kubectl config use-context minikube
+> kubectl get nodes                   # un nœud « minikube » à l'état Ready
+> ```
+>
+> *Si Minikube est arrêté, démarrez-le avec `minikube start`.*
+>
+> 🗂️ **Namespace de travail : `campus-dev`.** Avant de commencer, créez-le et définissez-le comme namespace courant (les commandes sont sans effet s'il existe déjà) :
+>
+> ```bash
+> kubectl create namespace campus-dev --dry-run=client -o yaml | kubectl apply -f -
+> kubectl config set-context --current --namespace=campus-dev
+> kubectl config view --minify -o jsonpath='{..namespace}'   # doit afficher campus-dev
+> ```
 
 ---
 
 ## Contexte Métier
-Le portail Horizon Stages doit démarrer par la mise en ligne d'une première version de son interface web statique. En tant qu'administrateur, vous devez déployer ce premier conteneur dans un Pod, encadrer ses besoins en ressources CPU/RAM, lui injecter ses paramètres d'exécution et l'étiqueter correctement pour que les équipes d'exploitation puissent l'identifier sans ambiguïté.
+Le portail Horizon Stages doit démarrer par la mise en ligne d'une première version de son interface web statique. En tant qu'administrateur, vous devez déployer ce premier conteneur dans un Pod, y accéder, inspecter son fonctionnement interne et constater les limites d'un Pod isolé.
 
 * Image Docker du frontend : `regaieg/campus:frontend-1.0.0`
 * Port exposé par le conteneur : `8080` (Nginx unprivileged)
 
 ---
-
-## Exercice 0 : Le Namespace, Votre Périmètre de Travail
-
-Un **namespace** est une cloison logique qui regroupe les objets d'un projet : il délimite les noms, les quotas, les règles réseau et les droits (Lab 07). **Bonne pratique : on ne déploie jamais une application dans `default`.**
-
-| Namespace | Contenu | Labs |
-| :--- | :--- | :---: |
-| `campus-dev` | L'application fil rouge en construction | 01 à 07 |
-| `campus-prod` | La plateforme finale durcie | 08 |
-| `monitoring` | La pile d'observabilité (Prometheus, Loki, Grafana) | 06 |
-| `kube-system` | Les composants du cluster : **on n'y déploie rien** | 01, 06 |
-
-1. **Créez votre namespace de travail `campus-dev`.** Créez le fichier `namespace-campus-dev.yaml` :
-   ```yaml
-   apiVersion: v1
-   kind: Namespace
-   metadata:
-     name: campus-dev
-     labels:
-       app.kubernetes.io/part-of: campus-summer-portal
-       environment: dev
-   ```
-
-   Appliquez-le (sans effet s'il existe déjà, par exemple créé au Lab 01) :
-   ```bash
-   kubectl apply -f namespace-campus-dev.yaml
-   kubectl get namespaces --show-labels
-   ```
-
-2. **Faites-en le namespace courant**, pour ne plus avoir à taper `-n campus-dev`. Un kubeconfig contient des **contextes** : chacun associe un cluster, un utilisateur et un namespace par défaut. Enregistrez `campus-dev` dans le contexte courant, puis vérifiez :
-   ```bash
-   kubectl config set-context --current --namespace=campus-dev
-   kubectl config view --minify -o jsonpath='{..namespace}'
-   ```
-   *Sortie attendue : `campus-dev`.*
-
-   > ⚠️ Le namespace courant est enregistré **dans chaque fichier kubeconfig**. Si vous travaillez à la fois depuis votre poste (Option A) et en SSH sur `k8s-control` (Option B), lancez la commande `set-context` dans les deux.
-
-   <details>
-   <summary>💡 <b>Indice : j'ai oublié de changer de namespace, où sont mes objets ?</b></summary>
-
-   Ils sont dans `default` : `kubectl get all -n default`. Supprimez-les (`kubectl delete -f <fichier>.yaml -n default`), refaites le point 2, puis réappliquez vos manifests.
-   </details>
-
-3. Listez les namespaces du cluster et repérez les namespaces système créés par Kubeadm (`default`, `kube-system`, `kube-public`, `kube-node-lease`) :
-   ```bash
-   kubectl get namespaces
-   ```
-
-4. Observez la portée des commandes :
-   ```bash
-   kubectl get pods                 # namespace courant : campus-dev (vide pour l'instant)
-   kubectl get pods -n kube-system  # un namespace précis
-   kubectl get pods -A              # tous les namespaces
-   ```
-
-5. Tous les objets n'appartiennent pas à un namespace. Listez ceux qui sont globaux au cluster :
-   ```bash
-   kubectl api-resources --namespaced=false
-   ```
-   *Vous y trouvez notamment `nodes`, `namespaces`, `persistentvolumes`, `storageclasses` et `clusterroles` : un nœud ou un disque n'appartient à aucun projet en particulier.*
-
-6. **Préparer le nom réseau attendu par le frontend.** Le serveur Nginx du frontend relaie les appels `/api/` et `/actuator/` vers l'hôte `campus-backend:8080`. Or Nginx vérifie ce nom DNS **dès son démarrage** : s'il est introuvable, il s'arrête aussitôt (`host not found in upstream "campus-backend"`) et le Pod part en `CrashLoopBackOff`.
-
-   Créez donc dès maintenant le **Service** `campus-backend`, qui portera ce nom dans le namespace. Créez le fichier `service-backend.yaml` :
-   ```yaml
-   apiVersion: v1
-   kind: Service
-   metadata:
-     name: campus-backend
-   spec:
-     type: ClusterIP
-     selector:
-       app: campus-backend
-     ports:
-     - port: 8080
-       targetPort: 8080
-   ```
-
-   Appliquez-le et observez :
-   ```bash
-   kubectl apply -f service-backend.yaml
-   kubectl get service campus-backend
-   kubectl get endpoints campus-backend
-   ```
-   *Le Service reçoit immédiatement une adresse IP virtuelle et un nom DNS, mais ses `ENDPOINTS` sont vides (`<none>`) : aucun Pod ne porte encore le label `app=campus-backend`. Il se remplira tout seul au Lab 03, dès que les pods du backend existeront. Vous étudierez ce mécanisme en détail au Lab 04.*
 
 <details>
 <summary>💡 <b>Indice : Sous Windows, quel terminal utiliser ?</b></summary>
@@ -124,7 +49,7 @@ Les commandes de ces ateliers sont écrites en syntaxe **Bash**. Trois pièges a
 * Les commandes sur plusieurs lignes terminées par `\` et les blocs `<< 'EOF'` ne sont pas compris par PowerShell.
 * Les guillemets et les `$(...)` ne s'interprètent pas de la même façon.
 
-**Recommandation :** pour l'Option A sous Windows, utilisez **Git Bash** (installé avec Git for Windows) ou **WSL**, ou bien PowerShell 7 (`winget install Microsoft.PowerShell`), qui écrit en UTF-8. À défaut, utilisez l'Option B (SSH sur `k8s-control`), qui est un vrai terminal Bash.
+**Recommandation :** sous Windows, utilisez **Git Bash** (installé avec Git for Windows) ou **WSL**, ou bien PowerShell 7 (`winget install Microsoft.PowerShell`), qui écrit en UTF-8.
 
 **Piège propre à Git Bash :** il convertit en chemin Windows tout argument qui commence par `/`. Ainsi `kubectl run … -- md5sum /dev/urandom` (Lab 06) transmet au conteneur un chemin transformé (`md5sum: can't open '/Device/Null'`), et la commande échoue. Les labs encapsulent donc ces commandes dans `sh -c "…"`. Si vous tapez vous-même une commande de ce type, désactivez la conversion pour cette seule commande :
 ```bash
@@ -133,270 +58,239 @@ MSYS_NO_PATHCONV=1 kubectl run test --image=busybox:1.36 --restart=Never -- ls /
 Ne l'activez pas globalement : Git Bash ne convertirait plus non plus une variable comme `KUBECONFIG=/c/Users/...`, et `kubectl` ne trouverait plus votre cluster.
 </details>
 
-<details>
-<summary>💡 <b>Indice : Faut-il écrire le namespace dans les manifests YAML ?</b></summary>
+Avant de construire le pod définitif du frontend, l'équipe veut un **pod de test** pour vérifier que l'image `regaieg/campus:frontend-1.0.0` démarre bien sur le cluster. Vous allez écrire son manifest **à la main**, pour bien identifier les rubriques communes à tous les objets Kubernetes.
 
-Deux écoles coexistent :
+1. **Écrire la spécification.** Créez un fichier `pod-frontend-test.yaml` qui décrit un Pod avec les propriétés suivantes :
+   * nom du Pod : `frontend-test`
+   * labels : `app: frontend-test` et `tier: frontend`
+   * nom du conteneur : `frontend`
+   * image du conteneur : `regaieg/campus:frontend-1.0.0`
+   * port exposé par le conteneur : `8080`
+   * alias d'hôte (`hostAliases`) : le nom `campus-backend` associé à l'adresse `192.0.2.1`
 
-* **Namespace porté par le contexte** (labs 02 à 07) : les manifests ne contiennent pas de `metadata.namespace`. Le même fichier peut être appliqué en dev ou en prod avec `kubectl apply -f fichier.yaml -n <namespace>`. C'est l'approche des outils comme Kustomize et Helm.
-* **Namespace écrit dans le manifest** (Lab 08) : `metadata.namespace: campus-prod`. Le fichier est explicite et ne peut pas être appliqué par erreur au mauvais endroit.
+   > ⚠️ **Pourquoi `hostAliases` ?** Le Nginx du frontend relaie les appels `/api/` vers l'hôte `campus-backend:8080` et vérifie ce nom **dès son démarrage** : s'il est introuvable, il s'arrête (`host not found in upstream "campus-backend"`) et le pod part en `CrashLoopBackOff`. Or le backend n'existe pas encore. `hostAliases` ajoute une ligne au fichier `/etc/hosts` du conteneur : le nom existe, Nginx démarre. L'adresse `192.0.2.1` est réservée à la documentation et ne répond jamais. Cette astuce ne sert qu'à ce lab de test : plus tard, un vrai **Service** Kubernetes portera ce nom.
 
-En revanche, ne laissez jamais le hasard décider : vérifiez toujours votre namespace courant avant un `kubectl apply` ou un `kubectl delete`.
-</details>
-
----
-
-## Exercice 1 : Déploiement Impératif vs Déclaratif
-
-1. Lancez un premier pod nommé `frontend-test` de manière **impérative** avec l'image `regaieg/campus:frontend-1.0.0` sur le port `8080` :
-   ```bash
-   kubectl run frontend-test --image=regaieg/campus:frontend-1.0.0 --port=8080
-   ```
-2. Observez l'état du pod jusqu'à ce qu'il passe au statut `Running` :
-   ```bash
-   kubectl get pods -w
-   ```
-   *L'option `-w` (*watch*) garde la commande ouverte et affiche chaque changement d'état. Quittez avec `Ctrl + C`.*
+   > 💡 Ne précisez pas de namespace : le pod sera créé dans votre namespace courant `campus-dev` (défini en début d'atelier). Indentez **uniquement avec des espaces**, jamais avec des tabulations.
 
 <details>
-<summary>💡 <b>Indice : le pod passe en <code>CrashLoopBackOff</code></b></summary>
+<summary>💡 <b>Indice 1 : squelette à compléter</b></summary>
 
-Lisez la raison : `kubectl logs frontend-test`. Si vous voyez `host not found in upstream "campus-backend"`, le Service `campus-backend` de l'exercice 0 (étape 6) n'existe pas dans votre namespace courant. Vérifiez avec `kubectl get svc campus-backend`, créez-le, puis supprimez et recréez le pod.
-</details>
-
-3. Supprimez ce pod de test :
-   ```bash
-   kubectl delete pod frontend-test
-   ```
-
----
-
-## Exercice 2 : La Technique DevOps du `--dry-run` & Manifeste Déclaratif
-
-En production, **on n'écrit jamais de YAML à partir d'une page blanche**. On utilise la commande `kubectl run` combinée avec `--dry-run=client -o yaml` pour générer un squelette propre et valide.
-
-1. Générez un manifest nommé `pod-frontend.yaml` sans exécuter la création sur le cluster :
-
-#### Sous Windows (PowerShell) :
-```powershell
-kubectl run campus-frontend --image=regaieg/campus:frontend-1.0.0 --port=8080 --dry-run=client -o yaml | Out-File -Encoding utf8 pod-frontend.yaml
-```
-
-#### Sous Linux (Ubuntu) / macOS (Bash) :
-```bash
-kubectl run campus-frontend --image=regaieg/campus:frontend-1.0.0 --port=8080 --dry-run=client -o yaml > pod-frontend.yaml
-```
-
-2. Enrichissez la section `metadata.labels` de votre fichier YAML pour y inclure les labels d'entreprise :
-   * `app: campus`
-   * `tier: frontend`
-   * `environment: dev`
-   * `version: "1.0.0"`
-
-<details>
-<summary>💡 <b>Indice 1 : Structure YAML attendue</b></summary>
+Remplacez chaque `....` par la valeur demandée :
 
 ```yaml
 apiVersion: v1
 kind: Pod
 metadata:
-  name: campus-frontend
+  name: ...............
   labels:
-    app: campus
+    app: ...............
+    tier: ...............
+spec:
+  hostAliases:
+  - ip: "..........."
+    hostnames:
+    - ...............
+  containers:
+  - name: ...............
+    image: ...............
+    ports:
+    - containerPort: ....
+```
+
+Tout objet Kubernetes suit le même plan :
+
+* `apiVersion` + `kind` : le type d'objet (`v1` et `Pod`).
+* `metadata` : son identité (`name`, `labels`).
+* `spec` : l'état désiré. Pour un Pod, `containers` est une **liste de dictionnaires** : chaque conteneur commence par un tiret `-` et contient `name`, `image`, `ports`. `hostAliases` se place dans `spec`, au même niveau que `containers`.
+* `status` : l'état réel. Il est ajouté par Kubernetes : **vous ne l'écrivez jamais**.
+
+Pour connaître les champs disponibles : `kubectl explain pod.spec.containers`. Dans VS Code, l'extension *YAML* (Red Hat) propose l'autocomplétion et souligne les erreurs d'indentation.
+</details>
+
+<details>
+<summary>💡 <b>Indice 2 : manifest complet</b></summary>
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: frontend-test
+  labels:
+    app: frontend-test
     tier: frontend
-    environment: dev
-    version: "1.0.0"
 spec:
+  hostAliases:
+  - ip: "192.0.2.1"
+    hostnames:
+    - campus-backend
   containers:
-  - name: campus-frontend
+  - name: frontend
     image: regaieg/campus:frontend-1.0.0
     ports:
     - containerPort: 8080
 ```
 </details>
 
-3. Appliquez le manifest de manière **déclarative** :
+2. **Créer le Pod** à partir du fichier :
    ```bash
-   kubectl apply -f pod-frontend.yaml
+   kubectl apply -f pod-frontend-test.yaml
    ```
 
----
-
-## Exercice 3 : Variables d'Environnement & Inspection Interne
-
-Un Pod ne doit pas être une boîte noire. Vous devez savoir lui injecter des paramètres dynamiques et inspecter son fonctionnement interne.
-
-1. Modifiez votre fichier `pod-frontend.yaml` pour injecter deux variables d'environnement dans le conteneur via la section `env` :
-   * `CAMPUS_APP_NAME` : `"Horizon Stages"`
-   * `CAMPUS_ENV` : `"development"`
-
-<details>
-<summary>💡 <b>Indice 2 : Exemple d'ajout de variables d'environnement</b></summary>
-
-```yaml
-spec:
-  containers:
-  - name: campus-frontend
-    image: regaieg/campus:frontend-1.0.0
-    ports:
-    - containerPort: 8080
-    env:
-    - name: CAMPUS_APP_NAME
-      value: "Horizon Stages"
-    - name: CAMPUS_ENV
-      value: "development"
-```
-</details>
-
-2. Réappliquez le manifest :
+3. **Suivre son démarrage** jusqu'au statut `Running` :
    ```bash
-   kubectl replace --force -f pod-frontend.yaml
-   ```
-   *(Un Pod existant ne peut pas modifier ses variables à chaud : l'option `--force` détruit et recrée le pod avec la nouvelle définition).*
-
-3. **Exécuter une commande à l'intérieur du conteneur (`kubectl exec`)** :
-   Vérifiez que la variable est bien présente dans le système Linux du conteneur :
-   ```bash
-   kubectl exec campus-frontend -- env | grep CAMPUS
-   ```
-   *Outre vos deux variables, vous voyez des variables `CAMPUS_BACKEND_SERVICE_HOST`, `CAMPUS_BACKEND_PORT`… : Kubernetes injecte automatiquement dans chaque conteneur l'adresse des Services existant dans le namespace au moment de sa création (ici le Service `campus-backend` de l'exercice 0). Le DNS (Lab 04) reste la méthode recommandée.*
-
-4. **Tester la réponse HTTP locale du serveur web** :
-   ```bash
-   kubectl exec campus-frontend -- wget -qO- http://127.0.0.1:8080 | head -n 15
-   ```
-   > 💡 **Précision réseau :** Nous ciblons `127.0.0.1:8080` plutôt que `localhost:8080` car sous les distributions légères comme Alpine Linux, `localhost` résout par défaut sur IPv6 (`::1`), alors que le serveur Nginx écoute sur le socket IPv4 `0.0.0.0:8080`.
-
-5. **Consulter les journaux d'accès (logs)** :
-   ```bash
-   kubectl logs campus-frontend
-   ```
-
----
-
-## Exercice 4 : Allocation & Gouvernance des Ressources (Requests & Limits)
-
-En environnement d'entreprise partagé, ne pas borner la mémoire et le CPU d'un conteneur expose le serveur physique à la saturation (phénomène du *Noisy Neighbor*).
-
-* **`requests` (demande garantie)** : Quantité minimale de CPU et de RAM réservée par le Scheduler sur le nœud worker pour accepter de placer le Pod.
-* **`limits` (plafond absolu)** : Plafond maximal autorisé. Si le conteneur dépasse la limite mémoire, le noyau Linux le tue immédiatement (**OOMKilled**). S'il dépasse la limite CPU, il subit du bridage temporel (*CPU Throttling*).
-
-1. Complétez la définition du conteneur dans `pod-frontend.yaml` avec les ressources suivantes :
-   * Requests : `100m` de CPU (10% d'un cœur vCPU) et `128Mi` de RAM.
-   * Limits : `250m` de CPU (25% d'un cœur vCPU) et `256Mi` de RAM.
-
-<details>
-<summary>💡 <b>Indice 3 : Bloc resources dans le manifest</b></summary>
-
-```yaml
-spec:
-  containers:
-  - name: campus-frontend
-    image: regaieg/campus:frontend-1.0.0
-    ports:
-    - containerPort: 8080
-    resources:
-      requests:
-        cpu: "100m"
-        memory: "128Mi"
-      limits:
-        cpu: "250m"
-        memory: "256Mi"
-```
-</details>
-
-2. Appliquez la mise à jour :
-   ```bash
-   kubectl replace --force -f pod-frontend.yaml
-   ```
-
-3. Vérifiez la prise en compte des quotas dans la description officielle de Kubernetes :
-   ```bash
-   kubectl describe pod campus-frontend | grep -A 8 "Limits:"
-   ```
-
----
-
-## Exercice 5 : Pattern Avancé d'Initialisation (InitContainers)
-
-Un **InitContainer** s'exécute et se termine **avant** que le conteneur applicatif principal ne démarre. C'est le pattern recommandé par la CNCF pour télécharger des dépendances, attendre qu'une base de données réponde ou valider des prérequis réseau.
-
-1. Ajoutez un bloc `initContainers` dans votre fichier `pod-frontend.yaml`, **au-dessus** du bloc `containers`, sans supprimer les sections `env` et `resources` ajoutées précédemment (elles sont masquées ci-dessous pour la lisibilité) :
-   ```yaml
-   spec:
-     initContainers:
-     - name: init-check-env
-       image: busybox:1.36
-       command: ['sh', '-c', 'echo "[Init] Verification des prérequis Campus..." && sleep 5 && echo "[Init] Pret!"']
-     containers:
-     - name: campus-frontend
-       image: regaieg/campus:frontend-1.0.0
-       ports:
-       - containerPort: 8080
-       # ... env et resources des exercices 3 et 4 ...
-   ```
-
-2. Appliquez le manifest et observez la transition d'état en direct :
-   ```bash
-   kubectl replace --force -f pod-frontend.yaml
    kubectl get pods -w
    ```
-   *Observez la progression des statuts : `Init:0/1` → `PodInitializing` → `Running` !*
+   *L'option `-w` (*watch*) garde la commande ouverte et affiche chaque changement d'état : `ContainerCreating` (le kubelet télécharge l'image et prépare le conteneur), puis `Running`. Quittez avec `Ctrl + C`.*
 
-3. Affichez les logs spécifiques du conteneur d'initialisation :
+   Affichez ensuite la vue détaillée :
    ```bash
-   kubectl logs campus-frontend -c init-check-env
+   kubectl get pods -o wide
+   ```
+   *Repérez la colonne `NODE` (le nœud choisi par le scheduler : sur Minikube, il n'y en a qu'un, `minikube`) et la colonne `IP` : chaque pod reçoit sa propre adresse IP.*
+
+<details>
+<summary>💡 <b>Indice : le pod passe en <code>CrashLoopBackOff</code></b></summary>
+
+Lisez la raison : `kubectl logs frontend-test`. Si vous voyez `host not found in upstream "campus-backend"`, le bloc `hostAliases` manque ou est mal indenté (il doit être dans `spec`, au même niveau que `containers`). Un pod ne se modifie pas après sa création : corrigez le fichier, puis supprimez et recréez le pod avec `kubectl delete -f pod-frontend-test.yaml` et `kubectl apply -f pod-frontend-test.yaml`.
+</details>
+
+4. **Observer les détails du Pod.** Affichez sa description et retrouvez l'**image** utilisée par le conteneur `frontend`, le **nœud** qui l'héberge et son **adresse IP** :
+   ```bash
+   kubectl describe pod frontend-test
+   ```
+   *Lisez la section `Events` en bas de la sortie : `Scheduled` (le scheduler a choisi un nœud), `Pulling` / `Pulled` (le kubelet a téléchargé l'image), `Created` / `Started` (le conteneur a démarré). C'est le premier réflexe en cas de problème.*
+
+   Comparez votre fichier avec le manifest stocké par le cluster :
+   ```bash
+   kubectl get pod frontend-test -o yaml
+   kubectl get pod frontend-test -o jsonpath='{.status.phase}'
+   ```
+   *Kubernetes a complété votre manifest avec des valeurs par défaut et a ajouté la rubrique `status`, qui contient l'état réel (ici la phase `Running`).*
+
+5. **Accéder à l'application via un port-forward.** Ouvrez un tunnel du port `8888` local vers le port `8080` du pod. La commande reste au premier plan tant que le tunnel est ouvert :
+   ```bash
+   kubectl port-forward pod/frontend-test 8888:8080
    ```
 
----
+   Ouvrez `http://localhost:8888` dans votre navigateur.
 
-## Exercice 6 : Maîtrise des Labels, Annotations & Limites du Pod Isolé
+   *La page **Campus Summer Portal** s'affiche : c'est le contenu servi par le pod. Les blocs de données, eux, restent vides puis affichent une erreur (`502 Bad Gateway`) au bout de quelques secondes à une minute selon le réseau : les appels `/api/` partent vers l'adresse fictive `192.0.2.1`. Le vrai backend sera branché dans les labs suivants.*
 
-1. **Filtrer avec des sélecteurs stricts** :
-   * Filtrer par composant frontend :
-     ```bash
-     kubectl get pods -l tier=frontend
-     ```
-   * Filtrer par application et environnement :
-     ```bash
-     kubectl get pods -l app=campus,environment=dev
-     ```
-   * Filtrer par négation (tous les pods qui ne sont pas backend) :
-     ```bash
-     kubectl get pods -l 'tier!=backend'
-     ```
-
-2. **Labels vs Annotations (Différence Fondamentale)** :
-   * Les **Labels** sont indexés par le Control Plane pour l'ordonnancement, les Services et les sélecteurs (`kubectl get -l`). Ils obéissent à une syntaxe stricte (alphanumérique, pas d'arobase ni d'espaces).
-   * Les **Annotations** servent aux métadonnées non sélectionnables (adresses e-mail, numéros de commit Git, payloads JSON, timestamps) :
-     ```bash
-     kubectl annotate pod campus-frontend contact="devops-team" release-note="initial-deployment-summer-2026" email="equipe-devops@horizon.univ"
-     ```
-   * Tentez de filtrer les pods par le contact annoté :
-     ```bash
-     kubectl get pods -l contact=devops-team
-     ```
-     *Constat : Aucune ressource trouvée (`No resources found`) ! Même avec une syntaxe valide, les annotations ne sont pas indexées par le sélecteur d'etcd.*
-
-3. **Le crash-test du Pod isolé** :
-   Supprimez le pod `campus-frontend` :
+   Arrêtez le tunnel avec `Ctrl + C`, puis **lisez les logs du conteneur** :
    ```bash
-   kubectl delete pod campus-frontend
+   kubectl logs frontend-test --tail=5
+   ```
+   *Vous y voyez vos requêtes (`"GET / HTTP/1.1" 200`) et l'erreur de Nginx quand la page appelle `/api/` (`connect() failed … upstream: "http://192.0.2.1:8080/…"`). Les logs montrent **ce que fait l'application**, alors que `describe` montre ce que fait Kubernetes.*
+
+6. **Provoquer une erreur classique.** Lancez un pod de manière **impérative** (sans fichier) avec une version d'image qui n'existe pas :
+   ```bash
+   kubectl run frontend-typo --image=regaieg/campus:frontend-9.9.9
    kubectl get pods
    ```
-   *Question de réflexion :* Le pod est-il réapparu tout seul ?  
-   *Réponse :* **Non !** Un Pod isolé (*bare pod*) n'est rattaché à aucun contrôleur. S'il plante, meurt ou est supprimé, il est définitivement perdu.  
-   👉 C'est la raison d'être des **Deployments**, étudiés dans le Lab 03 !
+   *Le statut passe à `ErrImagePull`, puis à `ImagePullBackOff`.* Trouvez la cause avec `describe`, dans la section `Events` :
+   ```bash
+   kubectl describe pod frontend-typo
+   ```
+
+   > 💡 **La colonne STATUS, en résumé :** problème de **placement** ou d'**image** (`Pending` qui dure, `ImagePullBackOff`) → `kubectl describe`, section `Events`. Problème dans l'**application** (`CrashLoopBackOff`) → `kubectl logs`.
+
+7. **Supprimer les Pods.** Le pod déclaratif se supprime avec son fichier, le pod impératif avec son nom :
+   ```bash
+   kubectl delete -f pod-frontend-test.yaml
+   kubectl delete pod frontend-typo
+   kubectl get pods
+   ```
+
+8. **Rejouer le manifest.** Les deux pods ont disparu. Recréez `frontend-test` en relançant simplement son fichier :
+   ```bash
+   kubectl apply -f pod-frontend-test.yaml
+   kubectl get pods
+   ```
+   *Le pod revient à l'identique : même nom, mêmes labels, même image, même port, même `hostAliases`.*
+
+   *Question de réflexion :* que vous faudrait-il pour recréer `frontend-typo` ?  
+   *Réponse :* retrouver la commande exacte dans l'historique de votre terminal : rien d'autre ne l'a enregistrée.
+
+   > 💡 `kubectl run` est une commande qui sera oubliée. `pod-frontend-test.yaml` est un fichier que vous pouvez rejouer et versionner dans Git : c'est l'approche **déclarative** utilisée dans la suite de la formation.
+
+   Supprimez à nouveau le pod de test :
+   ```bash
+   kubectl delete -f pod-frontend-test.yaml
+   ```
+
+9. **Générer un manifest avec `--dry-run`.** Écrire un manifest à la main, comme à l'étape 1, permet de comprendre sa structure mais prend du temps et favorise les fautes d'indentation. En pratique, **on ne part pas d'une page blanche** : on génère un squelette propre et valide avec `kubectl run` combiné avec `--dry-run=client -o yaml`, puis on le complète. Générez le manifest `pod-frontend.yaml` sans rien créer sur le cluster :
+   * Sous Windows (PowerShell) :
+     ```powershell
+     kubectl run campus-frontend --image=regaieg/campus:frontend-1.0.0 --port=8080 --dry-run=client -o yaml | Out-File -Encoding utf8 pod-frontend.yaml
+     ```
+   * Sous Linux (Ubuntu) / macOS (Bash) :
+     ```bash
+     kubectl run campus-frontend --image=regaieg/campus:frontend-1.0.0 --port=8080 --dry-run=client -o yaml > pod-frontend.yaml
+     ```
+
+10. **Compléter le manifest généré.** Ouvrez `pod-frontend.yaml` dans votre éditeur et comparez-le avec celui de l'étape 1. Repérez ce que `kubectl` a généré pour vous : le label `run: campus-frontend`, `resources: {}`, `dnsPolicy`, `restartPolicy` et `status: {}`. Puis :
+    * supprimez la ligne `status: {}` : cette rubrique est remplie par Kubernetes, vous ne l'écrivez jamais ;
+    * ajoutez dans `spec` le bloc `hostAliases` de l'étape 1 : `kubectl run` ne sait pas le générer, et sans lui Nginx ne démarre pas.
+
+<details>
+<summary>💡 <b>Indice 3 : manifest attendu</b></summary>
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: campus-frontend
+  name: campus-frontend
+spec:
+  hostAliases:
+  - ip: "192.0.2.1"
+    hostnames:
+    - campus-backend
+  containers:
+  - image: regaieg/campus:frontend-1.0.0
+    name: campus-frontend
+    ports:
+    - containerPort: 8080
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+```
+</details>
+
+11. **Appliquer le manifest** de manière **déclarative** :
+    ```bash
+    kubectl apply -f pod-frontend.yaml
+    ```
+
+12. **Exécuter une commande à l'intérieur du conteneur (`kubectl exec`)** et tester la réponse HTTP du serveur web :
+    ```bash
+    kubectl exec campus-frontend -- wget -qO- http://127.0.0.1:8080 | head -n 15
+    ```
+    Affichez aussi le fichier `/etc/hosts` du conteneur : la dernière ligne est celle ajoutée par `hostAliases`.
+    ```bash
+    kubectl exec campus-frontend -- sh -c "cat /etc/hosts"
+    ```
+    *La commande est encapsulée dans `sh -c "…"` pour que Git Bash ne transforme pas `/etc/hosts` en chemin Windows (voir l'indice sur le terminal Windows en début d'atelier).*
+
+    > 💡 **Précision réseau :** Nous ciblons `127.0.0.1:8080` plutôt que `localhost:8080` car sous les distributions légères comme Alpine Linux, `localhost` résout par défaut sur IPv6 (`::1`), alors que le serveur Nginx écoute sur le socket IPv4 `0.0.0.0:8080`.
+
+13. **Le crash-test du Pod isolé.** Supprimez le pod `campus-frontend` :
+    ```bash
+    kubectl delete pod campus-frontend
+    kubectl get pods
+    ```
+    *Question de réflexion :* Le pod est-il réapparu tout seul ?  
+    *Réponse :* **Non !** Un Pod isolé (*bare pod*) n'est rattaché à aucun contrôleur. S'il plante, meurt ou est supprimé, il est définitivement perdu.  
+    👉 C'est la raison d'être des **Deployments**, étudiés dans le Lab 03 !
 
 ---
 
 ## Critères de Validation (Checklist)
 
 - [ ] Votre namespace courant est `campus-dev` et tous vos objets y sont créés (aucun objet applicatif dans `default`).
-- [ ] Le Service `campus-backend` existe (sans endpoints pour l'instant) et vous savez pourquoi le frontend en a besoin.
+- [ ] Vous savez écrire le manifest d'un Pod et retrouver son image, son nœud et son IP avec `kubectl describe pod`.
+- [ ] Vous avez affiché le frontend via `kubectl port-forward` et savez choisir entre `describe` (placement, image) et `logs` (application) face à un statut anormal.
 - [ ] Vous maîtrisez la génération rapide de manifest avec `--dry-run=client -o yaml`.
-- [ ] Vous savez injecter des variables d'environnement (`env`) et inspecter l'intérieur du conteneur avec `kubectl exec`.
-- [ ] Vous savez encadrer la consommation mémoire et processeur avec `resources.requests` et `resources.limits`.
-- [ ] Vous avez vu tourner un `initContainer` et compris son rôle dans le cycle de vie du Pod.
-- [ ] Vous savez filtrer les ressources avec le paramètre `-l / --selector` et faites la distinction entre Label et Annotation.
+- [ ] Vous savez exécuter une commande à l'intérieur du conteneur avec `kubectl exec` et expliquer le rôle de `hostAliases` dans ce lab.
 - [ ] Vous avez constaté par vous-même l'absence de haute disponibilité d'un pod nu.

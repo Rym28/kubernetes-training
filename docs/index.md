@@ -41,19 +41,11 @@ flowchart LR
     
     [:octicons-arrow-right-24: Accéder au Lab 00](labs/00-provisioning-cluster.md)
 
--   :material-cogs: __Lab 01 : Anatomie du Plan de Contrôle__
+-   :material-cube-outline: __Lab 02 : Premiers Pods__
     
     ---
     
-    Static Pods kubelet, base distribuée etcd en mTLS, requêtes HTTP brutes API Server et simulation de panne du Scheduler.
-    
-    [:octicons-arrow-right-24: Accéder au Lab 01](labs/01-control-plane-anatomy.md)
-
--   :material-cube-outline: __Lab 02 : Premiers Pods & Labels__
-    
-    ---
-    
-    Cycle de vie du Pod, technique DevOps du `--dry-run=client -o yaml`, filtrage avancé par Labels et Selectors.
+    Manifest et cycle de vie du Pod, `port-forward`, technique DevOps du `--dry-run=client -o yaml`, limites du pod isolé.
     
     [:octicons-arrow-right-24: Accéder au Lab 02](labs/02-premiers-pods-labels.md)
 
@@ -69,7 +61,7 @@ flowchart LR
     
     ---
     
-    Volatilité des IP de pods, Service ClusterIP, résolution DNS interne CoreDNS, exposition NodePort et tunneling port-forward.
+    Volatilité des IP de pods, Service ClusterIP, résolution DNS interne CoreDNS, exposition NodePort et répartition de charge.
     
     [:octicons-arrow-right-24: Accéder au Lab 04](labs/04-services-reseau.md)
 
@@ -85,7 +77,7 @@ flowchart LR
     
     ---
     
-    Sondes Liveness & Readiness, inspection de logs et résolution de 3 pannes de production (CrashLoopBackOff, OOMKilled, NotReady).
+    Logs, `kubectl exec`, résolution de 3 pannes (CrashLoopBackOff, OOMKilled, Service sans réponse), Node Problem Detector et supervision Prometheus / Loki / Grafana.
     
     [:octicons-arrow-right-24: Accéder au Lab 06](labs/06-exploitation-debugging.md)
 

@@ -77,9 +77,8 @@ nav:
       - Vue d'Ensemble: labs/index.md
       - "Partie 1 — Déploiement & Fondations":
           - "Lab 00 : Déploiement Infrastructure (IaC)": labs/00-provisioning-cluster.md
-          - "Lab 01 : Anatomie du Plan de Contrôle": labs/01-control-plane-anatomy.md
-          - "Lab 02 : Premiers Pods, Labels & Sélecteurs": labs/02-premiers-pods-labels.md
-          - "Lab 03 : Déploiements, Résilience & Rollback": labs/03-deployments-resilience.md
+          - "Atelier 02 : Les Pods : les Trois Briques du Campus Summer Portal": labs/02-premiers-pods-labels.md
+          - "Atelier 03 : Déploiements — Résilience, Rollback & Scheduling": labs/03-deployments-resilience.md
           - "Lab 04 : Réseau, Services & Découverte DNS": labs/04-services-reseau.md
       - "Partie 2 — Production & Sécurité":
           - "Lab 05 : Stockage & Données Persistantes": labs/05-configuration-persistance.md

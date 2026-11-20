@@ -123,7 +123,7 @@ minikube addons list
 
 * **Un seul nœud** : impossible de simuler la panne d'un worker ou de répartir des Pods sur plusieurs machines (Lab 03).
 * **Stockage sur une seule machine** : on ne voit pas qu'un volume reste attaché au nœud qui l'héberge (Lab 05).
-* **Installation masquée** : Minikube installe Kubernetes à votre place. Avec `kubeadm`, vous verrez ce qui se passe sous le capot (Lab 01).
+* **Installation masquée** : Minikube installe Kubernetes à votre place. Avec `kubeadm`, vous verrez ce qui se passe sous le capot.
 </details>
 
 ✅ **Point de contrôle :** `kubectl get nodes` affiche le nœud `minikube` à l'état `Ready`.
@@ -608,9 +608,7 @@ kubectl get nodes
 | Quand ? | `kubectl` installé et port 6443 accessible | Poste d'entreprise verrouillé |
 | Comment ? | Vous éditez les manifests dans votre IDE et lancez `kubectl apply -f` en local | Vous travaillez dans le terminal MobaXterm, les manifests sont dans `~/labs/` |
 
-> ⚠️ **Le Lab 01 se fait obligatoirement en SSH sur `k8s-control`** : il inspecte les fichiers système du Control Plane (`/etc/kubernetes/manifests`, `etcdctl`).
-
-> 🗂️ **Namespace de travail :** chaque lab commence par créer (s'il n'existe pas encore) et sélectionner le namespace `campus-dev`. Le Lab 02 explique en détail ce qu'est un namespace.
+> 🗂️ **Namespace de travail :** chaque lab commence par créer (s'il n'existe pas encore) et sélectionner le namespace `campus-dev`. La notion de namespace est présentée dans la partie cours.
 
 > ⏱️ **Fin de session AWS.** Les sessions Learner Lab durent **4 h**. À la reprise (**Start Lab**), recopiez les identifiants AWS (étape 3.3) et redémarrez les instances si besoin (`start-session`). `k8s-control` garde son IP publique (Elastic IP) : `kubeconfig.yaml` reste valide. Les **workers changent d'IP publique** : mettez à jour vos sessions SSH vers les workers. Les noms de nœuds et le cluster sont conservés.
 
@@ -640,4 +638,4 @@ kubectl get nodes
 
 Vous avez construit un véritable cluster Kubernetes multi-nœuds : Terraform a créé l'infrastructure, et vous l'avez assemblée avec Kubeadm.
 
-👉 Rendez-vous au [Lab 01 : Anatomie du Plan de Contrôle](01-control-plane-anatomy.md) pour découvrir comment `etcd` et l'API Server fonctionnent sous le capot !
+👉 Rendez-vous au [Lab 02 : Premiers Pods & Labels](02-premiers-pods-labels.md) pour déployer vos premières charges de travail !

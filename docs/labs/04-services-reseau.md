@@ -1,254 +1,252 @@
 # Lab 04 : Réseau, Services & Découverte DNS
 
 ### Objectifs Pédagogiques :
-* Comprendre pourquoi les adresses IP des Pods sont volatiles et éphémères.
-* Comprendre le Service **ClusterIP** `campus-backend` (préparé au Lab 02), le régénérer de façon déclarative et tester la résolution DNS interne (**CoreDNS**).
-* Inspecter l'anatomie des **Endpoints** et **EndpointSlices** et pratiquer la mise en quarantaine d'un Pod.
-* Exposer le frontend vers l'extérieur avec un Service **NodePort** et comprendre la dissociation des 3 ports.
-* Observer la répartition de charge d'un Service entre plusieurs réplicas.
-* Utiliser `kubectl port-forward` pour des tests de connectivité locaux sécurisés.
+* Observer le réseau des Pods (une IP par pod, attribuée par le CNI) et constater que ces adresses changent à chaque recréation, d'où le besoin d'un **Service**.
+* Créer de façon déclarative le Service **ClusterIP** `campus-backend` et vérifier qu'il sélectionne ses pods par leur label.
+* Joindre un Service par son nom DNS court et par son nom complet `<service>.<namespace>.svc.cluster.local` (**CoreDNS**).
+* Exposer le frontend hors du cluster avec un Service **NodePort** et distinguer `targetPort`, `port` et `nodePort`.
+* *(Optionnel)* Observer la répartition de charge d'un Service entre plusieurs réplicas.
 
 > 📌 **Note Compatibilité OS :**  
-> Les commandes de cet atelier (`kubectl expose`, `kubectl get svc`, `kubectl port-forward`) sont **rigoureusement identiques** sous **Windows (PowerShell)**, **Linux (Ubuntu)** et **macOS (Terminal)**.
+> Les commandes de cet atelier (`kubectl expose`, `kubectl get svc`, `kubectl run`) sont **rigoureusement identiques** sous **Windows (PowerShell)**, **Linux (Ubuntu)** et **macOS (Terminal)**. Seul le filtrage des logs de l'étape 16 diffère (`grep` sous Linux/macOS, `Select-String` sous PowerShell) : les deux variantes sont fournies.
 >
-> 💡 **Modalités d'exécution (Au choix) :**  
-> * **Option A (Recommandée - Confort DevOps Local) :** Exécutez les commandes directement depuis votre machine locale avec votre `kubectl` et votre `kubeconfig`.  
-> * **Option B (Secours - PC d'entreprise verrouillé) :** Connectez-vous en SSH sur `k8s-control` : l'outillage et les manifests sont pré-installés dans `~/labs/`.
+> 🖥️ **Environnement : le cluster 3 nœuds (1 control plane + 2 workers) du Lab 00.** Ce lab exploite le fait qu'un NodePort est ouvert sur **chaque** nœud : réalisez-le sur ce cluster, piloté au choix :
+> * **Option A (Recommandée - Confort DevOps Local) :** depuis votre machine locale, avec votre `kubectl` et votre `kubeconfig`.  
+> * **Option B (PC d'entreprise verrouillé) :** en SSH sur `k8s-control` : l'outillage et les manifests sont pré-installés dans `~/labs/`.
 >
-> 🗂️ **Namespace de travail : `campus-dev`.** Avant de commencer, créez-le s'il n'existe pas encore et définissez-le comme namespace courant (les commandes sont sans effet s'il existe déjà) :
+> 🛟 **Secours : Minikube sur votre poste** (session AWS indisponible), piloté forcément depuis votre poste comme en Option A. Tout fonctionne à l'identique, sauf l'accès navigateur des étapes 12 et 13, pour lequel un encadré dédié est fourni.
 >
-> ```bash
-> kubectl create namespace campus-dev --dry-run=client -o yaml | kubectl apply -f -
-> kubectl config set-context --current --namespace=campus-dev
-> kubectl config view --minify -o jsonpath='{..namespace}'   # doit afficher campus-dev
-> ```
->
-> *Le namespace est présenté en détail à l'Exercice 0 du [Lab 02](02-premiers-pods-labels.md#exercice-0-le-namespace-votre-perimetre-de-travail).*
+> 🗂️ **Namespace de travail : `campus-dev`.** Ce lab est **indépendant des autres** : son étape 0 recrée `campus-dev` à neuf et y installe tout ce dont il a besoin. Vous pouvez le réaliser sans avoir fait les labs précédents, ou le recommencer à tout moment.
 
 ---
 
 ## Contexte Métier
-Dans une architecture Kubernetes, les pods naissent, meurent et changent d'adresse IP à chaque mise à jour, incident ou redémarrage. Si le frontend essayait de contacter le backend avec une adresse IP directe de pod, la communication casserait dès la première mise à jour. Nous devons mettre en place un **Service** pour fournir une adresse IP virtuelle stable, un nom DNS interne pérenne et de l'équilibrage de charge automatique (*Load Balancing*).
+Dans une architecture Kubernetes, les pods naissent, meurent et changent d'adresse IP à chaque mise à jour, incident ou redémarrage. Si le frontend contactait le backend par l'adresse IP d'un pod, la communication casserait dès la première mise à jour. Nous mettons en place des **Services** : une adresse IP virtuelle stable, un nom DNS pérenne et une répartition automatique du trafic entre les pods.
 
 ---
 
-## Exercice 1 : Service ClusterIP & Découverte DNS CoreDNS
+## Étape 0 : Préparer l'environnement
 
-### 1. Identifier les pods cibles et leurs labels
-Vérifiez que vos pods backend créés au Lab 03 sont actifs et notez leur label `app=campus-backend` :
+Le dossier `starter/` du lab installe l'état de départ : la base PostgreSQL de développement (avec son Service `postgres`) et l'API `campus-backend` en 3 réplicas, **sans** Service : c'est vous qui allez le créer.
 
-```bash
-kubectl get pods -l app=campus-backend --show-labels
-```
-
-### 2. Le Service ClusterIP `campus-backend` : du squelette au service opérationnel
-Au Lab 02, vous avez créé le Service `campus-backend` alors qu'aucun pod backend n'existait. Depuis le Lab 03, ses endpoints contiennent les adresses de vos pods : **un Service et ses pods sont totalement découplés**, seul le sélecteur de labels les relie.
-
-En production, on ne rédige pas un Service à la main : on le génère à partir du Deployment qu'il doit servir. Régénérez votre manifest avec `kubectl expose` en mode `--dry-run=client -o yaml` :
-* Nom du service : `campus-backend` (le nom DNS attendu par le Nginx du frontend : il ne doit pas changer)
-* Port exposé par le service : `8080`
-* Port cible du conteneur (`targetPort`) : `8080`
-* Type : `ClusterIP` (valeur par défaut)
+Repartez d'un namespace `campus-dev` vide, puis appliquez le starter. Depuis la racine du dépôt (Option A) ou depuis `~` sur `k8s-control` (Option B : mettez d'abord le dépôt à jour avec `git -C ~/formation pull`, puis remplacez `labs/` par `~/labs/`) :
 
 ```bash
-kubectl expose deployment campus-backend --name=campus-backend --port=8080 --target-port=8080 --type=ClusterIP --dry-run=client -o yaml > service-backend.yaml
-kubectl apply -f service-backend.yaml
+kubectl delete namespace campus-dev --ignore-not-found   # ⚠️ supprime tout le contenu de campus-dev
+kubectl create namespace campus-dev
+kubectl config set-context --current --namespace=campus-dev
+kubectl apply -f labs/04-services-reseau/starter/
+kubectl rollout status deployment/campus-backend --timeout=300s
 ```
 
-*Ouvrez `service-backend.yaml` : `kubectl expose` a recopié automatiquement le sélecteur `app: campus-backend` depuis le Deployment. Le `kubectl apply` met à jour le Service existant sans changer son adresse IP.*
-
-Inspectez le service et notez son adresse IP virtuelle (`CLUSTER-IP`) :
-
-```bash
-kubectl get svc campus-backend
-```
-
-### 3. Valider la résolution DNS avec un conteneur éphémère
-Kubernetes intègre un serveur DNS interne (**CoreDNS**). Tout service nommé `<svc>` dans le namespace `<ns>` est joignable sous son nom court `http://<svc>:<port>` ou son FQDN complet `http://<svc>.<ns>.svc.cluster.local:<port>`.
-
-Démarrez un pod temporaire de diagnostic équipé de `curl` :
-
-```bash
-kubectl run test-dns --image=curlimages/curl --rm -it --restart=Never -- sh
-```
-
-Depuis le terminal de ce conteneur éphémère, exécutez les vérifications suivantes :
-
-```sh
-# 1. Résolution DNS du nom court
-nslookup campus-backend
-
-# 2. Requête HTTP vers le endpoint de santé Spring Boot
-curl -i http://campus-backend:8080/actuator/health
-
-# 3. Requête avec le FQDN complet (Fully Qualified Domain Name)
-curl -i http://campus-backend.campus-dev.svc.cluster.local:8080/actuator/health
-
-# 4. Inspection de la configuration DNS injectée par le Kubelet
-cat /etc/resolv.conf
-```
-
-> 💡 **Observation clé :** Observez la directive `search campus-dev.svc.cluster.local svc.cluster.local cluster.local` dans `/etc/resolv.conf`. C'est elle qui permet de résoudre `campus-backend` sans saisir le suffixe complet !
-
-Tapez `exit` pour quitter et détruire le conteneur de test.
+*La suppression du namespace peut prendre jusqu'à une minute. Spring Boot met ensuite 20 secondes à 2 minutes à démarrer.*
 
 ---
 
-## Exercice 2 : Anatomie des Endpoints, EndpointSlices & Quarantaine
-
-### 1. Inspecter les Endpoints et EndpointSlices
-Le Service n'est qu'une règle de routage virtuelle gérée par `kube-proxy` (via iptables ou IPVS). La liste réelle des adresses IP des pods sains est maintenue dans un objet séparé : **Endpoints** (et **EndpointSlices** en Kubernetes moderne) :
-
-```bash
-kubectl get endpoints campus-backend
-kubectl get endpointslices -l kubernetes.io/service-name=campus-backend
-```
-
-Constatez que les adresses IP listées dans les Endpoints correspondent exactement aux IP des pods backend (`kubectl get pods -l app=campus-backend -o wide`).
-
-### 2. Mettre un Pod en Quarantaine en Production (Cas d'Usage Réel)
-En production, lorsqu'un pod produit des erreurs intermittentes, détruire le pod efface les preuves. La technique DevOps recommandée consiste à **modifier le label du pod** pour le sortir instantanément des Endpoints du Service sans l'arrêter :
-
-1. Choisissez le nom d'un de vos pods backend :
+1. **Repérer les adresses IP des pods backend.** Listez vos pods backend avec leur adresse IP et notez-les :
    ```bash
-   POD_TARGET=$(kubectl get pods -l app=campus-backend -o jsonpath='{.items[0].metadata.name}')
-   echo "Pod ciblé : $POD_TARGET"
+   kubectl get pods -l app=campus-backend -o wide
+   ```
+   *Chaque pod reçoit sa propre adresse IP à sa création (plage `192.168.x.x`), attribuée par le plugin réseau (**CNI**) : Calico sur votre cluster. La colonne `NODE` montre que les pods sont répartis sur les deux workers : ils se joignent pourtant directement, d'un nœud à l'autre, sans traduction d'adresse (NAT).*
+
+2. **Supprimer un pod backend** (remplacez `<nom-du-pod>` par un nom de la liste) :
+   ```bash
+   kubectl delete pod <nom-du-pod>
    ```
 
-2. Changez son label `app` pour l'isoler :
+3. **Constater le changement d'adresse.** Relancez la commande de l'étape 1 :
    ```bash
-   kubectl label pod $POD_TARGET app=campus-backend-debug --overwrite
+   kubectl get pods -l app=campus-backend -o wide
+   ```
+   *Le ReplicaSet a recréé un pod pour revenir à 3 réplicas, mais ce nouveau pod porte un **autre nom et une autre adresse IP**.*
+
+   > 💡 **Observation clé :** une adresse IP de pod n'est jamais une adresse fiable. Les clients doivent passer par un **Service**, qui regroupe les pods grâce à leur label et leur offre une adresse et un nom stables.
+
+4. **Générer et appliquer le Service ClusterIP `campus-backend`.** **Un Service et ses pods sont découplés** : seul le sélecteur de labels les relie. Plutôt que de rédiger le Service à la main, générez-le à partir du Deployment qu'il doit servir, avec `kubectl expose` en mode `--dry-run=client -o yaml` :
+   * Nom du service : `campus-backend` (le nom DNS attendu par le Nginx du frontend : il ne doit pas changer)
+   * Port exposé par le service (`port`) : `8080`
+   * Port du conteneur (`targetPort`) : `8080`
+   * Type : `ClusterIP` (valeur par défaut, accessible uniquement depuis l'intérieur du cluster)
+
+   ```bash
+   kubectl expose deployment campus-backend --name=campus-backend --port=8080 --target-port=8080 --type=ClusterIP --dry-run=client -o yaml > service-backend.yaml
+   kubectl apply -f service-backend.yaml
    ```
 
-3. Observez immédiatement les Endpoints du service :
+5. **Lire le manifest.** Ouvrez `service-backend.yaml` et repérez les trois éléments d'un Service :
+
+   | Champ | Valeur | Rôle |
+   | :--- | :--- | :--- |
+   | `spec.type` | `ClusterIP` | Service interne au cluster |
+   | `spec.ports` | `port: 8080`, `targetPort: 8080` | Port du Service → port du conteneur |
+   | `spec.selector` | `app: campus-backend` | Les pods qui recevront le trafic (recopié depuis le Deployment par `kubectl expose`) |
+
+   > 💡 **Pas d'étiquette, pas de trafic :** le Service envoie le trafic aux pods dont les **labels** correspondent à son **sélecteur**. Si aucun pod ne correspond (faute de frappe dans un label, par exemple), le Service existe bien, mais il ne transmet rien.
+
+6. **Vérifier l'adresse du Service et les pods sélectionnés.** Notez l'adresse IP virtuelle du Service (`CLUSTER-IP`), puis la liste des pods qu'il a sélectionnés (ses **Endpoints**) :
    ```bash
+   kubectl get svc campus-backend
    kubectl get endpoints campus-backend
    ```
-   *L'adresse IP du pod ciblé a instantanément disparu de la liste des Endpoints ! Aucun utilisateur ne sera plus dirigé vers lui.*
+   *Les adresses affichées par `get endpoints` sont exactement celles de vos pods backend (`kubectl get pods -l app=campus-backend -o wide`).*
 
-4. Constatez également que le ReplicaSet du Deployment a immédiatement créé un nouveau pod de remplacement pour respecter le nombre de réplicas désiré (`replicas: 3` en fin de Lab 03) !
-
-5. Remettez de l'ordre en supprimant le pod en quarantaine :
+7. **Vérifier la stabilité du Service.** Supprimez de nouveau un pod backend, attendez que son remplaçant soit `Running`, puis relancez les deux commandes :
    ```bash
-   kubectl delete pod $POD_TARGET
+   kubectl delete pod <nom-du-pod>
+   kubectl get svc campus-backend
+   kubectl get endpoints campus-backend
    ```
 
----
+   > 💡 **Observation clé :** la liste des Endpoints s'est mise à jour automatiquement avec la nouvelle adresse du pod, alors que la `CLUSTER-IP` du Service **n'a pas changé**. Les clients du Service ne voient rien.
 
-## Exercice 3 : Exposition Externe via NodePort & Détection de Pièges
+8. **Tester la découverte DNS (CoreDNS).** Kubernetes intègre un serveur DNS interne (**CoreDNS**). Un Service `<svc>` du namespace `<ns>` est joignable :
+   * sous son **nom court** `<svc>` depuis un pod du même namespace ;
+   * sous son **nom complet (FQDN)** `<svc>.<ns>.svc.cluster.local` depuis n'importe quel namespace.
 
-### 1. Déployer le composant Frontend
-Déployez le frontend de l'application (2 réplicas). Il démarre sans erreur car le nom `campus-backend`, attendu par son Nginx, existe dans le namespace depuis le Lab 02 :
+   Démarrez un pod de test temporaire équipé de `curl` et `nslookup` :
+   ```bash
+   kubectl run test-dns --image=curlimages/curl:8.11.1 --rm -it --restart=Never -- sh
+   ```
 
-```bash
-kubectl create deployment campus-frontend --image=regaieg/campus:frontend-1.0.0 --replicas=2 --port=8080 --dry-run=client -o yaml > deployment-frontend.yaml
-kubectl apply -f deployment-frontend.yaml
-```
+   Depuis le terminal de ce conteneur, exécutez :
+   ```sh
+   # a. Résolution du nom court (même namespace)
+   nslookup campus-backend
 
-### 2. Créer le Service NodePort
-Créez un fichier `service-frontend.yaml` :
+   # b. Requête HTTP vers le endpoint de santé du backend, par le nom court
+   curl -i http://campus-backend:8080/actuator/health
 
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: campus-frontend-svc
-spec:
-  type: NodePort
-  selector:
-    app: campus-frontend
-  ports:
-  - port: 80
-    targetPort: 8080
-    nodePort: 30088
-```
+   # c. Même requête avec le FQDN complet
+   curl -i http://campus-backend.campus-dev.svc.cluster.local:8080/actuator/health
 
-> 💡 **Note d'attribution de port :** Nous allouons le port statique `30088` car `30080` est réservé par le contrôleur Ingress NGINX sur le cluster.
+   # d. Le nom de la base : c'est ce nom que le backend utilise
+   nslookup postgres
 
-Appliquez le Service :
+   # e. Un Service d'un AUTRE namespace : le DNS du cluster (kube-dns), dans kube-system
+   nslookup kube-dns.kube-system.svc.cluster.local
+   curl -s -o /dev/null -w "%{http_code}\n" http://kube-dns.kube-system:9153/metrics
 
-```bash
-kubectl apply -f service-frontend.yaml
-kubectl get svc campus-frontend-svc
-```
+   # f. Configuration DNS injectée dans le pod
+   cat /etc/resolv.conf
+   ```
 
-### 3. Comprendre la dissociation des 3 ports réseau
+   > ⚠️ **Lecture de `nslookup` :** l'outil essaie chaque suffixe de la directive `search` (voir commande f) et affiche des lignes `** server can't find campus-backend.svc.cluster.local: NXDOMAIN`. Elles sont normales : seule compte la ligne `Name: campus-backend.campus-dev.svc.cluster.local`, suivie de l'adresse `CLUSTER-IP` du Service. En revanche, `nslookup` n'applique pas ces suffixes à un nom qui contient déjà un point : c'est pourquoi la commande e l'interroge avec le nom complet, et vérifie la forme courte `kube-dns.kube-system` avec `curl` (réponse `200`), comme le ferait une vraie application.
 
-| Paramètre | Valeur dans notre lab | Rôle en architecture Kubernetes |
-| :--- | :--- | :--- |
-| `port` | `80` | Port virtuel interne exposé par le Service au sein du cluster (utilisé par d'autres pods). |
-| `targetPort` | `8080` | Port sur lequel le conteneur applicatif écoute réellement à l'intérieur du Pod. |
-| `nodePort` | `30088` | Port statique ouvert sur **chaque nœud (Node Worker)** du cluster dans la plage 30000-32767. |
+   > 💡 **Observation clé :** chaque brique appelle la suivante par le **nom** de son Service : le backend se connecte à `jdbc:postgresql://postgres:5432/campus`, sans jamais connaître une IP. La directive `search campus-dev.svc.cluster.local svc.cluster.local cluster.local` de `/etc/resolv.conf` complète le nom court avec le namespace du pod : `postgres` désigne donc la base **du même namespace**. Pour joindre un Service d'un autre namespace, ajoutez ce namespace (`kube-dns.kube-system`, ou `postgres.campus-prod` pour la base de production du Lab 08) ou utilisez le nom complet. C'est pourquoi la même configuration fonctionne en dev comme en prod.
 
-### 4. Accéder à l'application via le NodePort sur AWS
+   Tapez `exit` pour quitter : le pod de test est supprimé automatiquement (`--rm`).
 
-Sur votre cluster AWS multi-nœuds :
-1. Récupérez l'adresse IP publique de votre nœud worker `k8s-worker-1` (notée lors du Lab 00 dans votre session MobaXterm ou console AWS).
-2. Ouvrez votre navigateur web à l'adresse : **`http://<IP_PUBLIQUE_WORKER>:30088`**.
-3. Vous accédez directement au portail web d'accueil servi par le frontend : le tableau de bord affiche les offres de stage lues par l'API dans PostgreSQL. La chaîne complète **navigateur → NodePort → frontend → Service `campus-backend` → API → Service `postgres` → base** fonctionne !
+<details>
+<summary>💡 <b>Indice : <code>nslookup campus-backend</code> échoue</b></summary>
+
+* Vérifiez que le Service existe dans le bon namespace : `kubectl get svc campus-backend -n campus-dev`.
+* Vérifiez que le pod de test a bien été créé dans `campus-dev` : `kubectl config view --minify -o jsonpath='{..namespace}'`.
+* Si le nom se résout mais que `curl` échoue, le Service n'a pas d'Endpoints : `kubectl get endpoints campus-backend` doit lister des adresses.
+</details>
+
+9. **Déployer le frontend** (2 réplicas). Il démarre sans erreur car le nom `campus-backend`, attendu par son Nginx, existe dans le namespace depuis l'étape 4 :
+   ```bash
+   kubectl create deployment campus-frontend --image=regaieg/campus:frontend-1.0.0 --replicas=2 --port=8080 --dry-run=client -o yaml > deployment-frontend.yaml
+   kubectl apply -f deployment-frontend.yaml
+   ```
+
+10. **Créer le Service NodePort.** Créez un fichier `service-frontend.yaml` :
+    ```yaml
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: campus-frontend-svc
+    spec:
+      type: NodePort
+      selector:
+        app: campus-frontend
+      ports:
+      - targetPort: 8080   # ① port du conteneur
+        port: 80           # ② port du Service
+        nodePort: 30088    # ③ port ouvert sur chaque nœud
+    ```
+
+    > 💡 **Note d'attribution de port :** nous fixons le port `30088` car `30080` est réservé au contrôleur Ingress NGINX du cluster.
+
+    Appliquez le Service, puis listez les Services du namespace :
+    ```bash
+    kubectl apply -f service-frontend.yaml
+    kubectl get services
+    ```
+    *Vous retrouvez les deux Services `ClusterIP` (`postgres`, `campus-backend`) et le `NodePort` `campus-frontend-svc`, affiché `80:30088/TCP`. Remarquez qu'il possède lui aussi une `CLUSTER-IP` : un NodePort **inclut** un ClusterIP.*
+
+11. **Distinguer les 3 ports d'un Service NodePort**, de l'intérieur vers l'extérieur :
+
+    | Paramètre | Valeur dans notre lab | Rôle |
+    | :--- | :--- | :--- |
+    | ① `targetPort` | `8080` | Port sur lequel le conteneur écoute réellement dans le pod. |
+    | ② `port` | `80` | Port de l'adresse IP virtuelle du Service, utilisé par les autres pods du cluster. |
+    | ③ `nodePort` | `30088` | Port ouvert sur **chaque nœud** du cluster (plage 30000-32767), accessible de l'extérieur. |
+
+    Une requête venue de l'extérieur suit donc le chemin inverse : **`nodePort` → `port` → `targetPort`**.
+
+    > 💡 **Et le type LoadBalancer ?** Dans le cloud (EKS, AKS, GKE), il ajoute devant les NodePorts un répartiteur de charge avec une vraie IP publique. Notre cluster kubeadm n'a pas de fournisseur cloud : un tel Service resterait en `EXTERNAL-IP <pending>`. D'où la règle : trafic interne → `ClusterIP`, accès externe sur notre cluster → `NodePort`, production dans le cloud → `LoadBalancer`.
+
+12. **Accéder à l'application depuis votre navigateur.** Récupérez l'adresse IP publique de votre nœud worker `k8s-worker-1` (notée lors du Lab 00 dans MobaXterm ou la console AWS), puis ouvrez **`http://<IP_PUBLIQUE_WORKER>:30088`**.
+    *Le portail affiche les offres de stage lues par l'API dans PostgreSQL : la chaîne **navigateur → NodePort → frontend → Service `campus-backend` → API → Service `postgres` → base** fonctionne.*
+
+13. **Constater que le NodePort est ouvert sur chaque nœud.** Ouvrez maintenant **`http://<IP_PUBLIQUE_k8s-worker-2>:30088`** : le portail répond aussi, que ce nœud héberge ou non un pod frontend (vérifiez le placement avec `kubectl get pods -l app=campus-frontend -o wide`).
+
+> 🛟 **Vous êtes sur Minikube (secours) ?** Avec le pilote Docker sous Windows ou macOS, l'adresse du nœud Minikube n'est pas joignable depuis votre poste. Remplacez l'étape 12 par un tunnel vers le Service :
+>
+> ```bash
+> minikube service campus-frontend-svc -n campus-dev --url
+> ```
+>
+> La commande affiche une adresse `http://127.0.0.1:<port>` : ouvrez-la dans votre navigateur et **laissez le terminal ouvert** tant que vous l'utilisez (`Ctrl + C` pour fermer le tunnel). L'étape 13 n'a pas d'équivalent : Minikube n'a qu'un seul nœud.
 
 <details>
 <summary>💡 <b>Indice : la page ne s'affiche pas ou le tableau de bord reste vide</b></summary>
 
-* **Le navigateur n'obtient aucune réponse :** vérifiez que vous utilisez l'IP **publique** d'un worker (pas l'IP privée `172.31.x.x`) et le port `30088`. Les IP publiques des workers changent à chaque redémarrage de la session AWS.
-* **La page s'affiche mais les données sont absentes :** testez l'API à travers le frontend avec `curl http://<IP_PUBLIQUE_WORKER>:30088/actuator/health`. Une erreur `502 Bad Gateway` signifie que le Service `campus-backend` n'a pas d'endpoints : vérifiez `kubectl get endpoints campus-backend`.
+* **Le navigateur n'obtient aucune réponse :** utilisez l'IP **publique** d'un worker (pas l'IP privée `172.31.x.x`) et le port `30088`. Les IP publiques changent à chaque redémarrage de la session AWS.
+* **Le port est bloqué par le pare-feu de votre entreprise (Option A) :** passez par un tunnel, comme au [Lab 02](02-premiers-pods-labels.md) : `kubectl port-forward svc/campus-frontend-svc 8081:80` lancé **depuis votre poste**, puis ouvrez `http://localhost:8081`. En Option B, ce tunnel s'ouvrirait sur `k8s-control` et non sur votre poste : il ne vous aiderait pas.
+* **La page s'affiche mais les données sont absentes :** testez l'API à travers le frontend avec `curl http://<IP_PUBLIQUE_WORKER>:30088/actuator/health`. Une erreur `502 Bad Gateway` signifie que le Service `campus-backend` ne transmet rien : appliquez le réflexe **« Service muet ? `kubectl get endpoints` »**. Une liste vide signifie que le sélecteur du Service et les labels des pods ne correspondent pas.
 </details>
 
----
+> 🧭 **Pour aller plus loin (optionnel) – étapes 14 à 17 :** observer la répartition de charge du Service. À faire si le temps le permet : le lab est complet à l'étape 13.
 
-## Exercice 4 : Répartition de Charge & Scalabilité
+14. **(Optionnel) Passer le frontend à 3 réplicas.** Un Service distribue les requêtes entre tous les pods qu'il sélectionne. Nous l'observons sur le frontend, car Nginx écrit une ligne de log pour **chaque** requête reçue :
+    ```bash
+    kubectl scale deployment campus-frontend --replicas=3
+    kubectl wait --for=condition=ready pod -l app=campus-frontend --timeout=60s
+    ```
 
-### 1. Tester la répartition du trafic
-Testons comment un Service distribue les requêtes entre plusieurs réplicas. Nous utilisons le frontend, car Nginx écrit une ligne de log pour **chaque** requête reçue (Spring Boot, lui, ne journalise pas les appels à `/actuator/health`).
+15. **(Optionnel) Envoyer 12 requêtes au Service** depuis un pod de test :
+    ```bash
+    kubectl run test-lb --image=curlimages/curl:8.11.1 --rm -it --restart=Never -- sh -c 'for i in $(seq 1 12); do curl -s -o /dev/null -w %{http_code}, http://campus-frontend-svc/; done; echo'
+    ```
+    *Vous devez obtenir douze codes `200`.*
 
-1. Montez le nombre de réplicas du frontend à 3 :
-   ```bash
-   kubectl scale deployment campus-frontend --replicas=3
-   kubectl wait --for=condition=ready pod -l app=campus-frontend --timeout=60s
-   ```
+16. **(Optionnel) Observer la répartition.** **Dans les 30 secondes qui suivent**, affichez les requêtes reçues par les 3 pods frontend :
+    ```bash
+    # Linux / macOS
+    kubectl logs -l app=campus-frontend --since=30s --prefix=true | grep curl
+    ```
+    ```powershell
+    # Windows (PowerShell)
+    kubectl logs -l app=campus-frontend --since=30s --prefix=true | Select-String curl
+    ```
+    *`--prefix=true` affiche le nom du pod en tête de chaque ligne : vous comptez 12 lignes, réparties entre les réplicas.*
 
-2. Lancez une boucle de 12 requêtes vers le Service depuis un conteneur de test :
-   ```bash
-   kubectl run test-lb --image=curlimages/curl --rm -it --restart=Never -- sh -c 'for i in $(seq 1 12); do curl -s -o /dev/null -w "%{http_code} " http://campus-frontend-svc/ ; done; echo'
-   ```
-   *Vous devez obtenir douze codes `200`.*
+    > 💡 **Équilibrée, mais pas alternée :** chaque nouvelle connexion part vers un pod choisi au hasard. Il est normal qu'un pod reçoive 7 requêtes et un autre 2. Si vous relancez la boucle, attendez 30 secondes avant : sinon `--since=30s` additionne les deux séries.
 
-3. Affichez les dernières lignes de log des 3 pods frontend :
-   ```bash
-   kubectl logs -l app=campus-frontend --tail=12 --prefix=true | grep curl
-   ```
-   *L'indicateur `--prefix=true` affiche le nom du pod en tête de chaque ligne : les 12 requêtes (agent `curl`) sont réparties entre les réplicas. Relancez la boucle si un pod n'en a reçu aucune : c'est rare, mais possible (voir ci-dessous).*
-
-> 💡 **Aléatoire, pas tourniquet :** en mode `iptables` (le mode par défaut de `kube-proxy`), chaque nouvelle connexion est envoyée vers un pod tiré au hasard. La répartition est équilibrée en moyenne, mais pas strictement alternée (*round-robin*) : il est normal qu'un pod reçoive 5 requêtes et un autre 3.
-
-4. Ramenez le frontend à 2 réplicas :
-   ```bash
-   kubectl scale deployment campus-frontend --replicas=2
-   ```
-
----
-
-## Exercice 5 : Port-Forwarding et Débogage Local Sécurisé
-
-En environnement d'entreprise, ouvrir un NodePort ou un LoadBalancer public n'est pas toujours autorisé pour des raisons de conformité de sécurité. La commande `kubectl port-forward` permet d'établir un tunnel chiffré direct via l'API Server pour accéder à un service interne.
-
-1. Lancez un tunnel de port-forwarding vers le service frontend :
-   ```bash
-   kubectl port-forward svc/campus-frontend-svc 8081:80
-   ```
-
-2. Ouvrez un second terminal (ou votre navigateur) à l'adresse : **`http://localhost:8081`**
-   * Vous devez voir s'afficher l'interface d'accueil du **Campus Summer Portal** !
-
-3. Pour interrompre le tunnel, appuyez sur `Ctrl + C` dans le terminal où tourne la commande.
+17. **(Optionnel) Ramener le frontend à 2 réplicas :**
+    ```bash
+    kubectl scale deployment campus-frontend --replicas=2
+    ```
 
 ---
 
 ## Critères de Validation (Checklist)
 
-- [ ] `campus-backend` est de type `ClusterIP` et résolu par CoreDNS (`nslookup campus-backend`).
-- [ ] Vous avez inspecté les `endpoints` et compris la mise en quarantaine d'un pod par son label.
-- [ ] `campus-frontend-svc` est exposé en `NodePort` sur le port `30088`.
-- [ ] Vous distinguez clairement `port` (80), `targetPort` (8080) et `nodePort` (30088).
-- [ ] Vous avez observé la répartition du trafic d'un Service entre plusieurs réplicas (aléatoire en mode `iptables`).
-- [ ] Vous savez utiliser `kubectl port-forward` pour inspecter un service en toute sécurité.
+- [ ] Vous avez constaté qu'un pod recréé change d'adresse IP (`kubectl get pods -o wide`).
+- [ ] `campus-backend` est un Service `ClusterIP` dont les Endpoints listent les pods backend, et vous savez qu'une liste vide signale un sélecteur qui ne correspond à aucun label (`kubectl get endpoints campus-backend`).
+- [ ] `campus-backend` répond par son nom court et par son FQDN `campus-backend.campus-dev.svc.cluster.local`, et vous savez joindre un Service d'un autre namespace (`<svc>.<ns>`).
+- [ ] `campus-frontend-svc` est exposé en `NodePort` sur le port `30088` et le portail s'affiche dans le navigateur via l'IP de chacun des deux workers.
+- [ ] Vous distinguez `targetPort` (8080), `port` (80) et `nodePort` (30088).
+- [ ] *(Optionnel)* Vous avez observé la répartition des requêtes entre les réplicas du frontend.

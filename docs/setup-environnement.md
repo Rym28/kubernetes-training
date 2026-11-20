@@ -77,7 +77,7 @@ Requis pour automatiser le déploiement multi-nœuds AWS dans le Lab 00 :
 
 ### 2. MobaXterm & FreeLens
 * **MobaXterm** (Windows) : Client SSH avec mode Multi-Exec et SFTP intégré ([mobaxterm.mobatek.net](https://mobaxterm.mobatek.net/)).
-* **FreeLens** *(optionnel, utilisé au Lab 06)* : IDE open-source pour visualiser l'état du cluster Kubernetes ([freelensapp.github.io](https://freelensapp.github.io/)).
+* **FreeLens** *(optionnel)* : IDE open-source pour visualiser l'état du cluster Kubernetes ([freelensapp.github.io](https://freelensapp.github.io/)).
 
 ---
 

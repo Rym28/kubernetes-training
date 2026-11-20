@@ -14,20 +14,41 @@
 > * **Option A (Recommandée - Confort DevOps Local) :** Exécutez les commandes directement depuis votre machine locale avec votre `kubectl` et votre `kubeconfig`.  
 > * **Option B (Secours - PC d'entreprise verrouillé) :** Connectez-vous en SSH sur `k8s-control` : l'outillage et les manifests sont pré-installés dans `~/labs/`.
 >
-> 🗂️ **Namespace de travail : `campus-dev`.** Avant de commencer, créez-le s'il n'existe pas encore et définissez-le comme namespace courant (les commandes sont sans effet s'il existe déjà) :
->
-> ```bash
-> kubectl create namespace campus-dev --dry-run=client -o yaml | kubectl apply -f -
-> kubectl config set-context --current --namespace=campus-dev
-> kubectl config view --minify -o jsonpath='{..namespace}'   # doit afficher campus-dev
-> ```
->
-> *Le namespace est présenté en détail à l'Exercice 0 du [Lab 02](../02-premiers-pods-labels/README.md#exercice-0--le-namespace-votre-périmètre-de-travail).*
+> 🗂️ **Namespace de travail : `campus-dev`.** Ce lab est **indépendant des autres** : son étape 0 recrée `campus-dev` à neuf et y installe tout ce dont il a besoin. Vous pouvez le réaliser sans avoir fait les labs précédents, ou le recommencer à tout moment.
 
 ---
 
 ## Contexte Métier
 En environnement partagé ou de production réglementée (secteur bancaire, assurance, santé), laisser un conteneur consommer toute la mémoire d'un nœud physique ou permettre à n'importe quel conteneur compromis d'accéder directement au port 5432 de la base de données PostgreSQL constitue une faille critique de sécurité. Cet atelier vous guide pour verrouiller les ressources système, cloisonner le réseau et durcir les conteneurs au niveau du noyau Linux.
+
+---
+
+## Étape 0 : Préparer l'environnement
+
+Le dossier `starter/` du lab installe l'application complète dans l'état de fin du Lab 06 :
+
+| Fichier | Contenu |
+| :--- | :--- |
+| `01-config.yaml` | Le ConfigMap `campus-config` (paramètres non sensibles de l'API). |
+| `02-postgres.yaml` | Le PVC `pvc-postgres`, la base PostgreSQL persistante et son Service `postgres`. |
+| `03-backend.yaml` | L'API `campus-backend` (2 réplicas, ConfigMap, Secret et sondes de santé, **sans** `securityContext` ni ressources : ce lab les ajoute) et son Service `campus-backend`. |
+| `04-frontend.yaml` | Le frontend et son Service NodePort `campus-frontend-svc` (port `30088`). |
+
+Les identifiants de la base ne sont **pas** versionnés dans le starter : vous créez le Secret `campus-db-credentials` par une commande, comme au Lab 05.
+
+Repartez d'un namespace `campus-dev` vide, puis appliquez le starter. Depuis la racine du dépôt (Option A) ou depuis `~` sur `k8s-control` (Option B : mettez d'abord le dépôt à jour avec `git -C ~/formation pull`, puis remplacez `labs/` par `~/labs/`) :
+
+```bash
+kubectl delete namespace campus-dev --ignore-not-found   # ⚠️ supprime tout le contenu de campus-dev
+kubectl create namespace campus-dev
+kubectl config set-context --current --namespace=campus-dev
+kubectl create secret generic campus-db-credentials --from-literal=POSTGRES_DB=campus --from-literal=POSTGRES_USER=campus --from-literal='POSTGRES_PASSWORD=CampusSecret2026!'
+kubectl apply -f labs/07-securite-quotas/starter/
+kubectl rollout status deployment/campus-postgres --timeout=180s
+kubectl rollout status deployment/campus-backend --timeout=300s
+```
+
+*La suppression du namespace peut prendre jusqu'à une minute. Spring Boot met ensuite 20 secondes à 2 minutes à démarrer.*
 
 ---
 
@@ -268,7 +289,6 @@ kubectl run rogue-pod --image=postgres:16-alpine --rm -i --restart=Never -- pg_i
 <summary>💡 <b>Indice : le portail reste inaccessible après l'application des règles</b></summary>
 
 * Vérifiez les labels de vos pods : `kubectl get pods --show-labels`. Les règles reposent sur `app=campus-frontend`, `app=campus-backend` et `app=campus-postgres`.
-* Un pod remis en quarantaine au Lab 04 (`app=campus-backend-debug`) est volontairement exclu.
 * Listez les règles actives et leur cible : `kubectl describe networkpolicy`.
 </details>
 
@@ -281,7 +301,7 @@ kubectl run rogue-pod --image=postgres:16-alpine --rm -i --restart=Never -- pg_i
 Selon le guide de durcissement Kubernetes de la NSA et de la CISA, un conteneur de production ne doit jamais s'exécuter en tant qu'utilisateur `root` (UID 0), ne doit jamais pouvoir élever ses privilèges et doit idéalement monter son disque racine en lecture seule (*Read-only root filesystem*).
 
 ### 1. Intégrer les directives de sécurité au déploiement Backend
-Complétez votre fichier `deployment-backend.yaml` (état de fin du Lab 06) avec un bloc `securityContext` au niveau du pod et du conteneur, ainsi que des ressources explicites (sans elles, le `LimitRange` de l'exercice 1 imposerait ses valeurs par défaut) :
+Créez le fichier `deployment-backend.yaml` en partant de `starter/03-backend.yaml` (partie Deployment) et complétez-le avec un bloc `securityContext` au niveau du pod et du conteneur, ainsi que des ressources explicites (sans elles, le `LimitRange` de l'exercice 1 imposerait ses valeurs par défaut) :
 
 ```yaml
 apiVersion: apps/v1
@@ -474,7 +494,7 @@ C'est un compromis de formation pour que chacun puisse utiliser `kubectl` depuis
 ```bash
 sudo ls -l /etc/kubernetes/pki/etcd/
 ```
-*Les fichiers `.key` sont en mode `600` et appartiennent à `root`. C'est pourquoi toutes les commandes `etcdctl` du Lab 01 étaient préfixées par `sudo` : un accès SSH non privilégié au nœud ne suffit pas pour lire `etcd`.*
+*Les fichiers `.key` sont en mode `600` et appartiennent à `root`. C'est pourquoi toute commande `etcdctl` doit être préfixée par `sudo` : un accès SSH non privilégié au nœud ne suffit pas pour lire `etcd`.*
 
 ### 4. Verrou des données : vos Secrets sont-ils chiffrés dans `etcd` ?
 
