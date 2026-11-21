@@ -1,0 +1,10 @@
+# Lab 07 - Exercice 2 : Zéro-Trust. Tout trafic entrant vers tous les pods
+# du namespace est refusé (podSelector vide = tous les pods).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress

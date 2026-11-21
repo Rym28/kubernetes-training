@@ -1,11 +1,11 @@
 # ==============================================================================
-# Starter du Lab 04 - Base PostgreSQL de DÉVELOPPEMENT (éphémère)
+# Starter du Lab 05 - Base PostgreSQL de DÉVELOPPEMENT (éphémère)
 # ------------------------------------------------------------------------------
-# Même base que celle du Lab 03 (labs/03-deployments-resilience/starter/).
+# Même base que celle du Lab 03 (labs/03-Les Deploiements & Scheduling/starter/).
 # L'API campus-backend se connecte à PostgreSQL dès son démarrage : sans base
 # joignable, elle s'arrête en erreur.
 # Les données sont dans un volume emptyDir : elles DISPARAISSENT à chaque
-# recréation du pod (le Lab 05 rend la base persistante et sécurisée).
+# recréation du pod (ce lab la rend persistante et sécurisée).
 # ==============================================================================
 apiVersion: apps/v1
 kind: Deployment

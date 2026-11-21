@@ -13,6 +13,7 @@
 * **AWS Academy Learner Lab** : un compte AWS temporaire (sessions de 4 h) fourni par la formation.
 * **EC2** : le service de machines virtuelles d'AWS ; une machine s'appelle une **instance**.
 * **Terraform** : crée les instances EC2 à partir de fichiers de configuration, sans clic dans la console AWS.
+* **AWS CLI** : la commande `aws`, qui vérifie vos identifiants AWS et démarre ou arrête les instances.
 * **Client SSH** : `ssh` en ligne de commande, ou **MobaXterm** sous Windows, qui ouvre plusieurs sessions et peut taper la même commande dans toutes (*Multi-Exec*).
 * **kubeadm** : l'outil officiel qui initialise un plan de contrôle et fait rejoindre les nœuds au cluster.
 * **kubelet** et **containerd** : l'agent du nœud et le runtime de conteneurs, installés par le script `bootstrap.sh` du dépôt.
@@ -74,7 +75,7 @@ git clone https://github.com/Rym28/kubernetes-training.git formation
 cd formation
 ```
 
-> 📂 Tous les chemins de ce lab (ex. `labs/00-provisioning-cluster/terraform/`) sont relatifs à ce dossier `formation`.
+> 📂 Tous les chemins de ce lab (ex. `labs/01-Installation-Cluster/terraform/`) sont relatifs à ce dossier `formation`.
 
 ✅ **Point de contrôle :** `ls` (ou `dir`) affiche notamment le dossier `labs/`.
 
@@ -150,7 +151,7 @@ Cliquez sur **AWS Details** :
 
 ![Panneau AWS Details](img/pem.png)
 
-1. **Download SSH Key** : enregistrez la clé privée `labsuser.pem` dans `labs/00-provisioning-cluster/terraform/`.
+1. **Download SSH Key** : enregistrez la clé privée `labsuser.pem` dans `labs/01-Installation-Cluster/terraform/`.
 2. **AWS CLI → Show** : gardez cette fenêtre ouverte, vous copierez les 3 identifiants à l'étape 3.3.
 
 > 🔒 **Sécurité :** la clé `.pem` et les identifiants donnent accès à votre compte AWS. Ne les committez jamais (le `.gitignore` exclut `*.pem`) et ne les collez dans aucune messagerie ni aucun outil en ligne. Les identifiants **expirent après 4 heures** : recopiez-les à chaque nouvelle session.
@@ -173,7 +174,9 @@ Cliquez sur **AWS Details** :
    t3.large (2 vCPU, 8 Go) · Ubuntu 24.04 · Security Group k8s-formation-sg
 ```
 
-### 3.1 Installer Terraform
+### 3.1 Installer Terraform et l'AWS CLI
+
+#### Terraform
 
 **Votre poste — PowerShell ou terminal Linux**
 
@@ -189,14 +192,36 @@ Si la commande n'est pas reconnue :
 | macOS | `brew tap hashicorp/tap && brew install hashicorp/tap/terraform` |
 | Linux | Suivre la [procédure APT officielle HashiCorp](https://developer.hashicorp.com/terraform/install#linux) |
 
-> 💡 **Sans droits administrateur (Windows) :** téléchargez le zip sur [developer.hashicorp.com/terraform/install](https://developer.hashicorp.com/terraform/install) et copiez `terraform.exe` dans `labs/00-provisioning-cluster/terraform/`.
+> 💡 **Sans droits administrateur (Windows) :** téléchargez le zip sur [developer.hashicorp.com/terraform/install](https://developer.hashicorp.com/terraform/install) et copiez `terraform.exe` dans `labs/01-Installation-Cluster/terraform/`.
+
+#### AWS CLI
+
+L'**AWS CLI** (commande `aws`) sert à fixer la région (`aws configure`), à vérifier vos identifiants (étape 3.3) et à exécuter les scripts `start-session` / `stop-session`.
+
+**Votre poste — PowerShell ou terminal Linux**
+
+```bash
+aws --version
+```
+
+Si la commande n'est pas reconnue :
+
+| Système | Commande |
+| :--- | :--- |
+| Windows (PowerShell) | `winget install Amazon.AWSCLI` |
+| macOS | `brew install awscli` |
+| Linux | `curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o awscliv2.zip && unzip awscliv2.zip && sudo ./aws/install` |
+
+> 💡 Après l'installation, **fermez et rouvrez votre terminal** pour que la commande `aws` soit reconnue. Sans droits administrateur sous Windows, utilisez `pip install --user awscli` si Python est installé, ou demandez de l'aide au formateur. La procédure officielle est sur [docs.aws.amazon.com/cli](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html).
+
+✅ **Point de contrôle :** `terraform version` et `aws --version` affichent chacune un numéro de version.
 
 ### 3.2 Se placer dans le dossier Terraform
 
 **Votre poste — PowerShell ou terminal Linux**
 
 ```bash
-cd labs/00-provisioning-cluster/terraform
+cd labs/01-Installation-Cluster/terraform
 ls
 ```
 
@@ -238,37 +263,70 @@ Le script `scripts/bootstrap.sh` est injecté dans le `user_data` de chaque inst
 
 > 📦 Le script clone aussi le dépôt de la formation dans `~/formation` et crée le raccourci `~/labs` sur chaque nœud.
 
-### 3.3 Exporter les identifiants AWS
+### 3.3 Enregistrer les identifiants AWS
 
 **Pourquoi ?** Terraform crée les instances en appelant l'API d'AWS depuis votre poste. AWS doit donc savoir **qui** fait la demande et **sur quel compte** : sans identifiants, `terraform apply` est refusé.
 
-* `AWS_ACCESS_KEY_ID` et `AWS_SECRET_ACCESS_KEY` : l'identifiant et le mot de passe de votre compte Learner Lab pour l'API.
-* `AWS_SESSION_TOKEN` : un jeton temporaire, propre au Learner Lab, qui expire avec la session (4 h).
-* `AWS_DEFAULT_REGION` : la région où créer les instances (`us-east-1`).
+Le bloc affiché dans **AWS Details → AWS CLI** contient 3 identifiants :
 
-Terraform lit automatiquement ces **variables d'environnement** : aucun identifiant n'est écrit dans un fichier, donc rien de secret ne risque d'être committé.
+* `aws_access_key_id` et `aws_secret_access_key` : l'identifiant et le mot de passe de votre compte Learner Lab pour l'API.
+* `aws_session_token` : un jeton temporaire, propre au Learner Lab, qui expire avec la session (4 h).
+
+Vous allez les enregistrer dans le fichier standard `credentials` du dossier `.aws`, situé dans votre dossier utilisateur. Terraform, l'AWS CLI et les scripts `start-session` / `stop-session` le lisent automatiquement, **dans tous vos terminaux**, même après les avoir fermés.
+
+| Système | Emplacement du fichier |
+| :--- | :--- |
+| Windows | `C:\Users\<votre_nom>\.aws\credentials` (noté `$HOME\.aws\credentials` en PowerShell) |
+| macOS / Linux | `~/.aws/credentials` (soit `/Users/<votre_nom>/.aws/` sur macOS, `/home/<votre_nom>/.aws/` sur Linux) |
+
+> 🔒 Ce fichier est dans votre dossier personnel, **hors du dépôt** : il ne peut pas être committé. Ne copiez jamais ces identifiants dans un fichier du dépôt, une messagerie ou un outil en ligne.
 
 > 🔑 Ne confondez pas : la clé `labsuser.pem` (étape 2.2) sert à vous connecter **aux instances** en SSH ; ces identifiants servent à **créer** les instances via l'API AWS.
 
-Collez les valeurs affichées dans **AWS Details → AWS CLI** :
+**1. Fixer la région** (une seule fois, AWS CLI installée à l'étape 3.1) :
 
-**Votre poste — Windows (PowerShell)**
-```powershell
-$env:AWS_ACCESS_KEY_ID="ASI..."
-$env:AWS_SECRET_ACCESS_KEY="..."
-$env:AWS_SESSION_TOKEN="..."
-$env:AWS_DEFAULT_REGION="us-east-1"
-```
-
-**Votre poste — Linux / macOS (Bash)**
+**Votre poste — PowerShell ou terminal Linux**
 ```bash
-export AWS_ACCESS_KEY_ID="ASI..."
-export AWS_SECRET_ACCESS_KEY="..."
-export AWS_SESSION_TOKEN="..."
-export AWS_DEFAULT_REGION="us-east-1"
+aws configure set region us-east-1
 ```
 
-> Ces variables ne valent que pour le terminal où vous les avez définies : lancez Terraform dans ce même terminal.
+Cette commande crée le fichier voisin `config`, qui ne contient que `[default]` et `region = us-east-1`.
+
+**2. Enregistrer les identifiants :**
+
+1. Dans **AWS Details → AWS CLI → Show**, copiez **tout le bloc**, de `[default]` jusqu'à la fin de la ligne `aws_session_token=...`.
+2. Ouvrez le fichier `credentials` avec VS Code ou le Bloc-notes, **remplacez tout son contenu** par ce bloc, puis enregistrez.
+
+   ```ini
+   [default]
+   aws_access_key_id=ASI...
+   aws_secret_access_key=...
+   aws_session_token=...
+   ```
+
+   > 💡 Le fichier n'existe pas ? Créez le dossier `.aws` dans votre dossier utilisateur, puis un fichier nommé exactement `credentials`, **sans extension** (attention au `.txt` ajouté par le Bloc-notes).
+
+   > ⚠️ Ne collez **pas** ce bloc dans le fichier `config` : sans région, les commandes `aws ec2 ...` des scripts `start-session` / `stop-session` échouent.
+
+**3. Vérifier :**
+
+**Votre poste — PowerShell ou terminal Linux**
+```bash
+aws sts get-caller-identity
+```
+
+La commande affiche votre `Account` et un `Arn` contenant `voclabs`.
+
+<details>
+<summary>💡 <b>Indice : <code>ExpiredToken</code> alors que le fichier vient d'être mis à jour</b></summary>
+
+D'anciennes variables d'environnement `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` ou `AWS_SESSION_TOKEN` sont définies dans votre terminal : elles sont **prioritaires** sur le fichier. Vérifiez avec `aws configure list` : la colonne **Type** affiche `env` au lieu de `shared-credentials-file`. Ouvrez un nouveau terminal, ou supprimez-les :
+
+* PowerShell : `Remove-Item Env:AWS_ACCESS_KEY_ID, Env:AWS_SECRET_ACCESS_KEY, Env:AWS_SESSION_TOKEN -ErrorAction SilentlyContinue`
+* Bash : `unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN`
+</details>
+
+✅ **Point de contrôle :** `aws sts get-caller-identity` affiche un `Arn` contenant `voclabs`.
 
 ### 3.4 Lancer le provisionnement
 
@@ -287,7 +345,7 @@ En **1 à 2 minutes**, les 3 instances sont créées. Notez l'**IP publique** et
 <details>
 <summary>💡 <b>Indice : <code>terraform apply</code> échoue</b></summary>
 
-* `ExpiredToken` / `InvalidClientTokenId` : identifiants expirés ou incomplets. Recopiez-les depuis *AWS Details* (le `AWS_SESSION_TOKEN` est très long).
+* `ExpiredToken` / `InvalidClientTokenId` : identifiants expirés ou incomplets. Mettez à jour le fichier `credentials` (étape 3.5) ; la ligne `aws_session_token` est très longue, vérifiez qu'elle n'est pas coupée.
 * `UnauthorizedOperation` : le Learner Lab n'autorise que `us-east-1` et `us-west-2` (variable `aws_region`, voir 3.2).
 * `InvalidKeyPair.NotFound` : la paire de clés doit s'appeler `vockey` (variable `key_name`).
 </details>
@@ -302,7 +360,7 @@ En **1 à 2 minutes**, les 3 instances sont créées. Notez l'**IP publique** et
 .\scripts\stop-session.ps1     # Windows
 ```
 
-Le matin, relancez-les avec `start-session.sh` / `start-session.ps1`. Ces scripts utilisent l'**AWS CLI** et les identifiants de l'étape 3.3 (à recopier à chaque session).
+Le matin, relancez-les avec `start-session.sh` / `start-session.ps1`. Ces scripts utilisent l'**AWS CLI** et des identifiants valides : si la session AWS a expiré, rafraîchissez-les d'abord (étape 3.5).
 
 > `k8s-control` garde son IP publique (Elastic IP) : votre kubeconfig reste valide. Les **workers changent d'IP publique** : notez les nouvelles adresses pour les NodePorts (Labs 04 et 08).
 
@@ -314,6 +372,19 @@ terraform destroy -auto-approve
 </details>
 
 ✅ **Point de contrôle :** les 3 instances `k8s-control`, `k8s-worker-1` et `k8s-worker-2` sont à l'état *Running* dans la console EC2.
+
+### 3.5 Session AWS expirée : rafraîchir les identifiants en 30 secondes
+
+> ⏭️ **À faire uniquement si votre session AWS a expiré** : voyant rouge sur AWS Academy, nouveau **Start Lab** après les 4 h, ou erreur `ExpiredToken` / `InvalidClientTokenId`. Votre session est encore active ? **Passez directement à l'étape 4.**
+
+À chaque **Start Lab**, AWS Academy génère de nouveaux identifiants : ceux du fichier `credentials` ne fonctionnent plus.
+
+1. Sur AWS Academy, cliquez sur **Start Lab** et attendez le voyant vert.
+2. Ouvrez **AWS Details → AWS CLI → Show** et copiez tout le bloc.
+3. Dans le fichier `credentials` (étape 3.3), **remplacez tout le contenu** par le nouveau bloc, puis enregistrez.
+4. Vérifiez avec `aws sts get-caller-identity`, puis relancez vos instances si besoin (`start-session`).
+
+La région (fichier `config`) n'est pas à refaire.
 
 ---
 
@@ -503,7 +574,7 @@ Un cluster Kubeadm de base ne fournit que le strict minimum. Le script `setup-ad
 **k8s-control — SSH**
 
 ```bash
-bash ~/labs/00-provisioning-cluster/scripts/setup-addons.sh
+bash ~/labs/01-Installation-Cluster/scripts/setup-addons.sh
 source ~/.bashrc
 kubectl get storageclass
 kubectl get pods -n ingress-nginx
@@ -534,7 +605,7 @@ ln -sfn ~/formation/labs ~/labs
 
 ### 6.1 Récupérer et adapter le kubeconfig
 
-Le kubeconfig se trouve sur `k8s-control` (`~/.kube/config`, créé à l'étape 5.1). Vous allez en faire une copie **sur votre poste**, nommée `kubeconfig.yaml`, dans le dossier **`labs/00-provisioning-cluster/terraform/`**, à côté de `labsuser.pem`.
+Le kubeconfig se trouve sur `k8s-control` (`~/.kube/config`, créé à l'étape 5.1). Vous allez en faire une copie **sur votre poste**, nommée `kubeconfig.yaml`, dans le dossier **`labs/01-Installation-Cluster/terraform/`**, à côté de `labsuser.pem`.
 
 1. **Copiez le fichier sur votre poste**, avec l'une des trois méthodes suivantes :
 
@@ -585,7 +656,7 @@ Ce raccourci est acceptable pour un cluster de formation, **jamais en production
 
 ### 6.2 Tester `kubectl` depuis votre poste
 
-Depuis le dossier `labs/00-provisioning-cluster/terraform/`, qui contient `kubeconfig.yaml` :
+Depuis le dossier `labs/01-Installation-Cluster/terraform/`, qui contient `kubeconfig.yaml` :
 
 **Votre poste — Windows (PowerShell)**
 ```powershell
@@ -610,7 +681,7 @@ kubectl get nodes
 
 > 🗂️ **Namespace de travail :** chaque lab commence par créer (s'il n'existe pas encore) et sélectionner le namespace `campus-dev`. La notion de namespace est présentée dans la partie cours.
 
-> ⏱️ **Fin de session AWS.** Les sessions Learner Lab durent **4 h**. À la reprise (**Start Lab**), recopiez les identifiants AWS (étape 3.3) et redémarrez les instances si besoin (`start-session`). `k8s-control` garde son IP publique (Elastic IP) : `kubeconfig.yaml` reste valide. Les **workers changent d'IP publique** : mettez à jour vos sessions SSH vers les workers. Les noms de nœuds et le cluster sont conservés.
+> ⏱️ **Fin de session AWS.** Les sessions Learner Lab durent **4 h**. À la reprise (**Start Lab**), rafraîchissez les identifiants AWS (étape 3.5) et redémarrez les instances si besoin (`start-session`). `k8s-control` garde son IP publique (Elastic IP) : `kubeconfig.yaml` reste valide. Les **workers changent d'IP publique** : mettez à jour vos sessions SSH vers les workers. Les noms de nœuds et le cluster sont conservés.
 
 ---
 
@@ -638,4 +709,4 @@ kubectl get nodes
 
 Vous avez construit un véritable cluster Kubernetes multi-nœuds : Terraform a créé l'infrastructure, et vous l'avez assemblée avec Kubeadm.
 
-👉 Rendez-vous au [Lab 02 : Premiers Pods & Labels](../02-premiers-pods-labels/README.md) pour déployer vos premières charges de travail !
+👉 Rendez-vous au [Lab 02 : Premiers Pods & Labels](../02-Les%20Pods/README.md) pour déployer vos premières charges de travail !
