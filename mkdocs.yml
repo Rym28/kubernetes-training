@@ -74,6 +74,12 @@ markdown_extensions:
   - toc:
       permalink: true
 
+# Ateliers 05 à 07 masqués aux stagiaires pour le moment (retirer ces lignes pour les publier)
+exclude_docs: |
+  labs/05-*.md
+  labs/06-*.md
+  labs/07-*.md
+
 nav:
   - Accueil: index.md
   - Architecture & Environnement:
@@ -86,9 +92,5 @@ nav:
           - "Atelier 02 : Les Pods : les Trois Briques du Campus Summer Portal": labs/02-pods-trois-briques.md
           - "Atelier 03 : Déploiements — Résilience & Rollback": labs/03-deploiements-resilience-rollback.md
           - "Atelier 04 : Réseau, Services & Découverte DNS": labs/04-reseau-services-dns.md
-      - "Partie 2 — Persistance, Exploitation & Sécurité (Jour 2)":
-          - "Atelier 05 : Configuration & Stockage Persistant (PV / PVC / PostgreSQL)": labs/05-configuration-stockage-persistant.md
-          - "Atelier 06 : Exploitation, Observabilité & Reverse Debugging": labs/06-exploitation-observabilite-debugging.md
-          - "Atelier 07 : Sécurité, Quotas de Ressources & Isolement Réseau (NetworkPolicy)": labs/07-securite-quotas-isolement-reseau.md
   - Support de Cours: support-cours.md
   - Évaluation des Acquis: evaluation.md

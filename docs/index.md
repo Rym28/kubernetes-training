@@ -64,30 +64,6 @@ flowchart LR
     
     [:octicons-arrow-right-24: Accéder à l'Atelier 04](labs/04-reseau-services-dns.md)
 
--   :material-database: __Atelier 05 : Configuration & Stockage Persistant (PV / PVC / PostgreSQL)__
-    
-    ---
-    
-    ConfigMaps (`--from-literal` / `--from-file`), Secrets base64, StorageClass, PV/PVC et PostgreSQL avec preuve de la persistance après crash.
-    
-    [:octicons-arrow-right-24: Accéder à l'Atelier 05](labs/05-configuration-stockage-persistant.md)
-
--   :material-bug-outline: __Atelier 06 : Exploitation, Observabilité & Reverse Debugging__
-    
-    ---
-    
-    Logs et événements, `kubectl exec`, dépannage méthodique de 3 incidents (CrashLoopBackOff, OOMKilled, Service sans réponse), panne de nœud (Node Problem Detector, `cordon`), Metrics Server et Prometheus / Fluent Bit / Loki / Grafana.
-    
-    [:octicons-arrow-right-24: Accéder à l'Atelier 06](labs/06-exploitation-observabilite-debugging.md)
-
--   :material-shield-lock-outline: __Atelier 07 : Sécurité, Quotas de Ressources & Isolement Réseau (NetworkPolicy)__
-    
-    ---
-    
-    LimitRange & ResourceQuota, NetworkPolicies Zéro-Trust, conteneurs non-root (SecurityContext), RBAC avec ServiceAccount en lecture seule, protection de l'API Server et d'etcd.
-    
-    [:octicons-arrow-right-24: Accéder à l'Atelier 07](labs/07-securite-quotas-isolement-reseau.md)
-
 </div>
 
 ---

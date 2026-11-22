@@ -2,7 +2,7 @@
 
 <div class="admonition note">
 <p class="admonition-title">Parcours Pratique Progressif</p>
-<p>Les 7 ateliers pratiques (de l'Atelier 01 à l'Atelier 07) suivent une progression : chacun ajoute une brique à l'application fil rouge <b>Campus Summer Portal</b>, de la création du cluster jusqu'à la sécurisation de la plateforme en production.</p>
+<p>Les ateliers pratiques suivent une progression : chacun ajoute une brique à l'application fil rouge <b>Campus Summer Portal</b>, de la création du cluster jusqu'à la sécurisation de la plateforme en production.</p>
 </div>
 
 <div class="admonition tip">
@@ -36,15 +36,11 @@ Dans chaque atelier, vous trouverez des blocs d'indices progressifs pliables :
 
 ### Partie 2 — Persistance, Exploitation & Sécurité (Jour 2)
 
-| Atelier | Titre de l'atelier | Concepts Clés Traités |
-| :---: | :--- | :--- |
-| **[Atelier 05](05-configuration-stockage-persistant.md)** | **Configuration & Stockage Persistant (PV / PVC / PostgreSQL)** | `ConfigMap` (literal/file), `Secret` encodé base64, StorageClass, volumes PV/PVC, PostgreSQL et crash-test de persistance SQL. |
-| **[Atelier 06](06-exploitation-observabilite-debugging.md)** | **Exploitation, Observabilité & Reverse Debugging** | Logs et événements, `kubectl exec`, méthode de dépannage sur 3 incidents, Node Problem Detector & `cordon`, Metrics Server, Prometheus, Fluent Bit, Loki, Grafana (FreeLens en option). |
-| **[Atelier 07](07-securite-quotas-isolement-reseau.md)** | **Sécurité, Quotas de Ressources & Isolement Réseau (NetworkPolicy)** | Admission `LimitRange` + `ResourceQuota`, `NetworkPolicy` Zéro-Trust (*default deny* + 3 flux autorisés), conteneurs non-root (`securityContext`), RBAC (`auth can-i`, ServiceAccount en lecture seule), exposition de l'API Server et protection d'`etcd` (démonstration formateur). |
+Les ateliers 05 à 07 seront publiés au Jour 2.
 
 ---
 
 ## Prérequis Techniques
 Consultez le [Guide d'installation de l'environnement](../setup-environnement.md) avant de démarrer le premier atelier.
 
-En cas d'indisponibilité de la session AWS, les ateliers 03 à 07 peuvent être réalisés en secours sur **Minikube** : chaque atelier signale les étapes qui diffèrent.
+En cas d'indisponibilité de la session AWS, les ateliers à partir du 03 peuvent être réalisés en secours sur **Minikube** : chaque atelier signale les étapes qui diffèrent.

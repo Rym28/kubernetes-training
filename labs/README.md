@@ -43,12 +43,7 @@ Bravo ! En cliquant sur cette ampoule, vous découvrez des explications méthodo
 
 ### Partie 2 : Persistance, Exploitation & Sécurité de Production (Jour 2)
 
-| Atelier | Titre de l'atelier | Concepts Clés Traités |
-| :---: | :--- | :--- |
-| **[Atelier 05](./05-Les%20Volumes/README.md)** | **Configuration & Stockage Persistant** | `ConfigMap` (literal/file), `Secret` encodé base64, StorageClass, volumes PV/PVC, PostgreSQL et crash-test de persistance SQL. |
-| **[Atelier 06](./06-Administration%20&%20Supervision/README.md)** | **Exploitation, Observabilité & Debugging** | Logs, `kubectl exec`, méthode de dépannage sur 3 pannes, Node Problem Detector & cordon/drain, Metrics Server, Prometheus, Fluent Bit, Loki, Grafana. |
-| **[Atelier 07](./07-Sécurité%20Cluster/README.md)** | **Sécurité, Quotas & Isolement Réseau** | Admission `LimitRange` + `ResourceQuota`, `NetworkPolicy` Zéro-Trust (*default deny* + 3 flux autorisés), conteneurs non-root, RBAC et restrictions d'accès à `etcd`. |
-| **[Atelier 08](./08-challenge-integration/README.md)** | **Challenge Final d'Intégration** | Déploiement en autonomie de la plateforme 3-tiers dans `campus-prod`, script d'auto-évaluation et crash-test de résilience. |
+Les ateliers 05 à 07 seront publiés au Jour 2.
 
 ---
 
