@@ -13,12 +13,24 @@ Le support de présentation reprend les apports théoriques du formateur (enviro
 
 ## Support de présentation
 
-Le support de cours **Kubernetes — XW335** (135 diapositives) est consultable en lecture seule ci-dessous. Le téléchargement sera ouvert par le formateur en fin de session.
+Le support de cours **Kubernetes — XW335** (133 diapositives) est consultable en lecture seule ci-dessous. Naviguez avec les boutons ou les flèches du clavier (cliquez d'abord sur la visionneuse).
 
-
+<!-- Support en lecture seule : le PDF n'est pas publié (il est conservé hors du dépôt, dans supports/).
+Pour ouvrir le téléchargement en fin de session : copier supports/XW335_Kubernetes_Support-Cours.pdf
+dans docs/assets/, puis ajouter ici :
 [:material-file-pdf-box: Télécharger le support de cours (PDF)](assets/XW335_Kubernetes_Support-Cours.pdf){ .md-button .md-button--primary }
+-->
 
-<iframe src="../assets/XW335_Kubernetes_Support-Cours.pdf#toolbar=0&navpanes=0" title="Support de cours XW335" width="100%" height="720" style="border:1px solid var(--md-default-fg-color--lightest);border-radius:4px;" oncontextmenu="return false;"></iframe>
+<div id="slide-viewer" class="slide-viewer" tabindex="0" data-total="133" data-base="../assets/slides/">
+  <div class="sv-stage"><img class="sv-img" src="../assets/slides/slide-001.webp" alt="Diapositive 1" draggable="false"></div>
+  <div class="sv-bar">
+    <button type="button" class="sv-first md-button" title="Première diapositive">⏮</button>
+    <button type="button" class="sv-prev md-button" title="Précédente">◀</button>
+    <span class="sv-count"><input class="sv-input" type="number" min="1" value="1" aria-label="Numéro de diapositive"> / <span class="sv-total">133</span></span>
+    <button type="button" class="sv-next md-button" title="Suivante">▶</button>
+    <button type="button" class="sv-full md-button" title="Plein écran">⛶</button>
+  </div>
+</div>
 
 ---
 

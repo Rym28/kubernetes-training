@@ -40,6 +40,9 @@ theme:
     - content.code.copy
     - content.code.annotate
 
+extra_javascript:
+  - javascripts/slides.js
+
 extra_css:
   - stylesheets/extra.css
 

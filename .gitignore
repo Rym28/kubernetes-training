@@ -60,3 +60,7 @@ scripts/
 .githooks/
 __pycache__/
 /config
+
+# Support de cours source (PDF) : jamais publié, lecture seule via docs/assets/slides/
+supports/
+*Support-Cours*.pdf
