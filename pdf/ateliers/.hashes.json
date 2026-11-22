@@ -1,0 +1,9 @@
+{
+  "01-Installation-Cluster": "4a045e99946abbd5a1b5a900b68e7e070d28b2d3a2cbf26a1c69c8631459759a",
+  "02-Les Pods": "fea7a7429c3d9f94e3dfcf74889d9d3ce93f36eafe6955ac5d5a2392ed031133",
+  "03-Les Deploiements & Scheduling": "4abbc58d742c2e1a92fb10e06441d64dcabef1faa1c8f81c67eb72ed581e80c3",
+  "04-Les Services": "6ce7b537a9622ec5a475edd5a940ce7c091e54fa817b601e95cf700334d8a11d",
+  "05-Les Volumes": "efa8c17282bcd93139e3aa0e04d386a9cbdc56330bacd7fa896b96be7ee77d21",
+  "06-Administration & Supervision": "1b605c19f057b0135f229f8cd84dbc625d33c7abd052bc853a24ef8f4c4ce173",
+  "07-Sécurité Cluster": "8ea2ab228533d8a8665ca6414e70b1d37126fd428ade0658d12c1214e29fd1b1"
+}
