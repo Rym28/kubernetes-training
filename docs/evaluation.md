@@ -1,32 +1,31 @@
 # Évaluation des Acquis
 
-Conformément au programme de la formation **XW335**, votre progression est évaluée à trois moments :
+Conformément au programme de la formation **XW335**, votre progression est évaluée à deux moments :
 
 | Moment | Support | Durée |
 | :--- | :--- | :--- |
-| Avant la formation | [Test de positionnement](#test-de-positionnement-entree-et-sortie) (partie A + partie B) | 10 min |
 | Fin du Jour 1 | [QCM Jour 1](#qcm-jour-1-architecture-installation-et-deploiements) | 10 min |
-| Fin du Jour 2 | [QCM Jour 2](#qcm-jour-2-administration-et-securite) puis **le même test de positionnement** qu'à l'entrée | 20 min |
+| Fin du Jour 2 | [QCM Jour 2](#qcm-jour-2-administration-et-securite) puis le [test de positionnement](#test-de-positionnement-fin-de-formation) | 20 min |
 
-Les mises en situation pratiques (atelier de *reverse debugging* de l'Atelier 06 et challenge final de l'Atelier 08) complètent ces questionnaires.
+La mise en situation pratique (atelier de *reverse debugging* de l'Atelier 06) complète ces questionnaires.
 
-> 💡 Notez vos réponses sur une feuille ou dans un fichier : vous comparerez votre test d'entrée et votre test de sortie pour mesurer votre progression.
+> 💡 Notez vos réponses sur une feuille ou dans un fichier : vous pourrez les comparer au corrigé avec le formateur.
 
 ---
 
-## Test de Positionnement (Entrée et Sortie)
+## Test de Positionnement (Fin de Formation)
 
 ### Partie A : Auto-évaluation sur les objectifs de la formation
 
 Pour chaque objectif, attribuez-vous une note de **1** (je ne sais pas faire) à **4** (je sais le faire seul et l'expliquer à un collègue).
 
-| # | Objectif de la formation | Entrée (1-4) | Sortie (1-4) |
-| :---: | :--- | :---: | :---: |
-| 1 | Connaître le fonctionnement de Kubernetes et ses différents composants | | |
-| 2 | Savoir installer, configurer et administrer Kubernetes | | |
-| 3 | Être à même de placer automatiquement ses conteneurs sur un cluster ou dans le Cloud | | |
-| 4 | Savoir automatiser les déploiements d'applications conteneurisées | | |
-| 5 | Définir les bonnes pratiques pour travailler avec Kubernetes | | |
+| # | Objectif de la formation | Note (1-4) |
+| :---: | :--- | :---: |
+| 1 | Connaître le fonctionnement de Kubernetes et ses différents composants | |
+| 2 | Savoir installer, configurer et administrer Kubernetes | |
+| 3 | Être à même de placer automatiquement ses conteneurs sur un cluster ou dans le Cloud | |
+| 4 | Savoir automatiser les déploiements d'applications conteneurisées | |
+| 5 | Définir les bonnes pratiques pour travailler avec Kubernetes | |
 
 ### Partie B : Connaissances (une seule bonne réponse par question)
 

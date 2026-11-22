@@ -19,7 +19,7 @@ flowchart TD
 
     subgraph K8s["Cluster Kubernetes"]
         subgraph FrontTier["Niveau Présentation"]
-            NodePortSvc["Service NodePort<br/>30088 (campus-dev) / 30089 (campus-prod)"]
+            NodePortSvc["Service NodePort<br/>30088 (campus-dev)"]
             FE_Pod1["Pod Frontend 1<br/>(Nginx unprivileged)"]
             FE_Pod2["Pod Frontend 2<br/>(Nginx unprivileged)"]
         end
@@ -43,7 +43,7 @@ flowchart TD
         end
     end
 
-    Browser -->|HTTP NodePort 30088 / 30089| NodePortSvc
+    Browser -->|HTTP NodePort 30088| NodePortSvc
     NodePortSvc --> FE_Pod1 & FE_Pod2
     FE_Pod1 & FE_Pod2 -->|HTTP 8080| BackSvc
     BackSvc --> BE_Pod1 & BE_Pod2
@@ -52,9 +52,9 @@ flowchart TD
     DB_Pod --- PVC
     PVC --- PV
 
-    CM -.->|Variables non sensibles| BE_Pod1 & BE_Pod2
-    SEC -.->|Identifiants (base64)| BE_Pod1 & BE_Pod2
-    SEC -.->|Identifiants (base64)| DB_Pod
+    CM -.->|"Variables non sensibles"| BE_Pod1 & BE_Pod2
+    SEC -.->|"Identifiants (base64)"| BE_Pod1 & BE_Pod2
+    SEC -.->|"Identifiants (base64)"| DB_Pod
 ```
 
 ---
@@ -86,7 +86,7 @@ flowchart TD
 * **Variables d'Environnement** :
   * `SPRING_DATASOURCE_URL` : `jdbc:postgresql://postgres:5432/campus`
   * `SPRING_DATASOURCE_USERNAME` : Fourni via Secret (`campus`)
-  * `SPRING_DATASOURCE_PASSWORD` : Fourni via Secret (`CampusSecret2026!` en `campus-dev`, `ProductionSecretKey2026!` en `campus-prod`)
+  * `SPRING_DATASOURCE_PASSWORD` : Fourni via Secret (`CampusSecret2026!` en `campus-dev`)
   * `SPRING_PROFILES_ACTIVE` : Fourni via ConfigMap (`production`)
 
 ### 3. La Base de Données (`campus-postgres`)

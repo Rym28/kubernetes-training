@@ -23,24 +23,24 @@ Dans chaque atelier, vous trouverez des blocs d'indices progressifs pliables :
 
 ## Parcours des Ateliers
 
-### Partie 1 : Déploiement du Cluster & Fondations d'Orchestration (Jour 1)
+### Partie 1 — Déploiement du Cluster & Fondations (Jour 1)
 
 | Atelier | Titre de l'atelier | Concepts Clés Traités |
 | :---: | :--- | :--- |
-| **[Atelier 01](00-provisioning-cluster.md)** | **Provisionnement du Cluster** | Cluster local Minikube, provisionnement de 3 instances EC2 par Terraform (AWS Learner Lab), accès SSH, installation du cluster multi-nœuds avec Kubeadm et Calico, composants additionnels (local-path-provisioner, Ingress NGINX, Helm), kubeconfig sur le poste. |
-| **[Atelier 02](02-premiers-pods-labels.md)** | **Les Pods : les Trois Briques du Campus Summer Portal** | Manifest d'un Pod, cycle de vie, `describe`, `port-forward`, diagnostic d'une erreur classique, flux déclaratif `--dry-run=client`, `kubectl exec`, limites du pod isolé. |
-| **[Atelier 03](03-deployments-resilience.md)** | **Déploiements, Résilience & Rollback** | Base PostgreSQL de développement, contrôleur `Deployment`, ReplicaSets, Self-healing, mise à l'échelle impérative et déclarative, RollingUpdate (`maxSurge`/`maxUnavailable`), historique des révisions et Rollback. |
-| **[Atelier 04](04-services-reseau.md)** | **Réseau, Services & Découverte DNS** | IP volatiles des pods, Service `ClusterIP` et Endpoints, découverte DNS, Service `NodePort` et ses 3 ports, accès depuis le navigateur. |
+| **[Atelier 01](01-provisionnement-cluster.md)** | **Provisionnement du Cluster** | Cluster local Minikube, provisionnement de 3 instances EC2 par Terraform (AWS Learner Lab), accès SSH, installation du cluster multi-nœuds avec Kubeadm et Calico, composants additionnels (local-path-provisioner, Ingress NGINX, Helm), kubeconfig sur le poste. |
+| **[Atelier 02](02-pods-trois-briques.md)** | **Les Pods : les Trois Briques du Campus Summer Portal** | Manifest d'un Pod, cycle de vie, `describe`, `port-forward`, diagnostic d'une erreur classique, flux déclaratif `--dry-run=client`, `kubectl exec`, limites du pod isolé. |
+| **[Atelier 03](03-deploiements-resilience-rollback.md)** | **Déploiements — Résilience & Rollback** | Base PostgreSQL de développement, contrôleur `Deployment`, ReplicaSets, Self-healing, mise à l'échelle impérative et déclarative, RollingUpdate (`maxSurge`/`maxUnavailable`), historique des révisions et Rollback. |
+| **[Atelier 04](04-reseau-services-dns.md)** | **Réseau, Services & Découverte DNS** | IP volatiles des pods, Service `ClusterIP` et Endpoints, découverte DNS, Service `NodePort` et ses 3 ports, accès depuis le navigateur. |
 
 ---
 
-### Partie 2 : Persistance, Exploitation & Sécurité de Production (Jour 2)
+### Partie 2 — Persistance, Exploitation & Sécurité (Jour 2)
 
 | Atelier | Titre de l'atelier | Concepts Clés Traités |
 | :---: | :--- | :--- |
-| **[Atelier 05](05-configuration-persistance.md)** | **Configuration & Stockage Persistant** | `ConfigMap` (literal/file), `Secret` encodé base64, StorageClass, volumes PV/PVC, PostgreSQL et crash-test de persistance SQL. |
-| **[Atelier 06](06-exploitation-debugging.md)** | **Exploitation, Observabilité & Reverse Debugging** | Logs et événements, `kubectl exec`, méthode de dépannage sur 3 incidents, Node Problem Detector & `cordon`, Metrics Server, Prometheus, Fluent Bit, Loki, Grafana (FreeLens en option). |
-| **[Atelier 07](07-securite-quotas.md)** | **Sécurité, Quotas & Isolement Réseau** | Admission `LimitRange` + `ResourceQuota`, `NetworkPolicy` Zéro-Trust (*default deny* + 3 flux autorisés), conteneurs non-root (`securityContext`), RBAC (`auth can-i`, ServiceAccount en lecture seule), exposition de l'API Server et protection d'`etcd` (démonstration formateur). |
+| **[Atelier 05](05-configuration-stockage-persistant.md)** | **Configuration & Stockage Persistant (PV / PVC / PostgreSQL)** | `ConfigMap` (literal/file), `Secret` encodé base64, StorageClass, volumes PV/PVC, PostgreSQL et crash-test de persistance SQL. |
+| **[Atelier 06](06-exploitation-observabilite-debugging.md)** | **Exploitation, Observabilité & Reverse Debugging** | Logs et événements, `kubectl exec`, méthode de dépannage sur 3 incidents, Node Problem Detector & `cordon`, Metrics Server, Prometheus, Fluent Bit, Loki, Grafana (FreeLens en option). |
+| **[Atelier 07](07-securite-quotas-isolement-reseau.md)** | **Sécurité, Quotas de Ressources & Isolement Réseau (NetworkPolicy)** | Admission `LimitRange` + `ResourceQuota`, `NetworkPolicy` Zéro-Trust (*default deny* + 3 flux autorisés), conteneurs non-root (`securityContext`), RBAC (`auth can-i`, ServiceAccount en lecture seule), exposition de l'API Server et protection d'`etcd` (démonstration formateur). |
 
 ---
 

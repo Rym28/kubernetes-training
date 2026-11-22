@@ -4,15 +4,15 @@ Ce guide présente les environnements utilisés pour les travaux pratiques du co
 
 | Ateliers | Environnement |
 | :--- | :--- |
-| **01** | Minikube (exercice 1), puis construction du cluster **Kubeadm** sur AWS (exercices 2 à 5) |
+| **01** | Minikube (exercice 1), puis construction du cluster **Kubeadm** sur AWS (exercices 2 à 4) |
 | **02** | **Minikube** sur votre poste |
-| **03 à 07** | Le cluster **Kubeadm 3 nœuds** (1 control plane + 2 workers) construit à l'Atelier 01 |
+| **03 à 07** | Le cluster **Kubeadm 3 nœuds** (1 control plane + 2 workers) construit à l'Atelier 01 ; **Minikube** en secours si la session AWS est indisponible |
 
 ---
 
 ## Option 1 : Minikube (Cluster local mono-nœud)
 
-**Minikube** est l'outil officiel du projet Kubernetes pour exécuter un cluster complet sur sa machine. Il sert à l'exercice 1 de l'Atelier 01 et à tout l'Atelier 02.
+**Minikube** est l'outil officiel du projet Kubernetes pour exécuter un cluster complet sur sa machine. Il sert à l'exercice 1 de l'Atelier 01, à tout l'Atelier 02 et de solution de secours pour les ateliers 03 à 07 (chaque atelier signale les étapes qui diffèrent).
 
 ### 1.1 Prérequis
 - 2 vCPU et 4 Go de RAM libres.
@@ -47,15 +47,15 @@ C'est l'environnement de référence de la formation : un vrai cluster **Kubeadm
 | Région | `us-east-1` par défaut (ou `us-west-2`), seules régions autorisées par le Learner Lab |
 | Adresse du control plane | **Elastic IP** fixe : elle ne change pas après un arrêt/redémarrage (les workers, eux, changent d'IP publique) |
 | Clé SSH | Paire `vockey` ; fichier `labsuser.pem` téléchargé depuis *AWS Details* de **votre** session et placé dans `labs/01-Installation-Cluster/terraform/` (ne jamais le partager ni le versionner) |
-| Provisionnement | Terraform (`labs/01-Installation-Cluster/terraform`) + script d'amorçage `bootstrap.sh` (containerd, kubeadm, kubelet, kubectl **v1.30**, clonage du dépôt dans `~/labs`) |
+| Provisionnement | Terraform (`labs/01-Installation-Cluster/terraform`) + script d'amorçage `bootstrap.sh` (containerd, kubeadm, kubelet, kubectl **v1.30**, clonage du dépôt dans `~/formation`, raccourci `~/labs`) |
 | Amorçage | `kubeadm init` sur `k8s-control`, CNI **Calico**, puis `kubeadm join` sur les workers |
 | Composants additionnels | `setup-addons.sh` : Helm 3, StorageClass `local-path` (par défaut), Ingress NGINX en NodePort (HTTP `30080`, HTTPS `30443`), alias `k` |
 | Accès depuis votre poste | `get-kubeconfig.ps1` / `get-kubeconfig.sh` génère `terraform/kubeconfig.yaml` (à ne jamais versionner) |
 | Budget | 50 $ pour toute la formation : éteignez les instances chaque soir avec `stop-session`, relancez-les avec `start-session`, et `terraform destroy` en fin de formation |
 
-La procédure complète, pas à pas (console AWS, Terraform, SSH, Kubeadm, kubeconfig local), est décrite dans l'[Atelier 01 : Provisionnement du Cluster](labs/00-provisioning-cluster.md).
+La procédure complète, pas à pas (Learner Lab, Terraform, SSH, Kubeadm, Calico, kubeconfig local), est décrite dans l'[Atelier 01 : Provisionnement du Cluster](labs/01-provisionnement-cluster.md).
 
-> 💡 **Pourquoi pas k3s ou microk8s ?** Ces distributions « tout-en-un » masquent le plan de contrôle (Static Pods, `etcd`, certificats). Or l'Atelier 01 l'installe avec `kubeadm` et l'Atelier 07 inspecte les manifests statiques d'`etcd` et de l'API Server : seul un cluster Kubeadm permet de les manipuler tels qu'ils existent en production.
+> 💡 **Pourquoi pas k3s ou microk8s ?** Ces distributions « tout-en-un » masquent le plan de contrôle (Static Pods, `etcd`, certificats). Or l'Atelier 01 l'installe avec `kubeadm` et l'Atelier 07 (exercice 5) inspecte les manifests statiques d'`etcd` et de l'API Server : seul un cluster Kubeadm permet de les manipuler tels qu'ils existent en production.
 
 ---
 
@@ -113,7 +113,7 @@ kubectl get pods -n ingress-nginx   # contrôleur Running
 
 ### Créer votre namespace de travail
 
-Quel que soit l'environnement, les ateliers 02 à 07 se déroulent dans le namespace `campus-dev`. Créez-le et définissez-le comme namespace courant (voir l'encadré « Namespace de travail » en début d'[Atelier 02](labs/02-premiers-pods-labels.md)). Chaque lab rappelle ces commandes, sans effet si le namespace existe déjà :
+Quel que soit l'environnement, les ateliers 02 à 07 se déroulent dans le namespace `campus-dev`. Créez-le et définissez-le comme namespace courant (voir l'encadré « Namespace de travail » en début d'[Atelier 02](labs/02-pods-trois-briques.md)). Chaque lab rappelle ces commandes, sans effet si le namespace existe déjà :
 
 ```bash
 kubectl create namespace campus-dev --dry-run=client -o yaml | kubectl apply -f -
@@ -121,4 +121,4 @@ kubectl config set-context --current --namespace=campus-dev
 kubectl config view --minify -o jsonpath='{..namespace}'   # doit afficher campus-dev
 ```
 
-Tout est prêt ? Vous pouvez passer à l'[Atelier 01 : Provisionnement du Cluster](labs/00-provisioning-cluster.md) !
+Tout est prêt ? Vous pouvez passer à l'[Atelier 01 : Provisionnement du Cluster](labs/01-provisionnement-cluster.md) !

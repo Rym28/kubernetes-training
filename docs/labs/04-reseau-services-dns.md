@@ -494,7 +494,7 @@ Le port `30088` est ouvert sur **tous** les nœuds, qu'ils hébergent ou non un 
 <summary><strong>Indice : la page ne s'affiche pas ou le tableau de bord reste vide</strong></summary>
 
 * **Le navigateur n'obtient aucune réponse :** utilisez l'IP **publique** d'un worker (pas l'IP privée `172.31.x.x`) et le port `30088`. Les IP publiques changent à chaque redémarrage de la session AWS.
-* **Le port est bloqué par le pare-feu de votre entreprise (Option A) :** passez par un tunnel, comme à l'[Atelier 02](02-premiers-pods-labels.md) : `kubectl port-forward svc/campus-frontend-svc 8081:80` lancé **depuis votre poste**, puis ouvrez `http://localhost:8081`. En Option B, ce tunnel s'ouvrirait sur `k8s-control` et non sur votre poste : il ne vous aiderait pas.
+* **Le port est bloqué par le pare-feu de votre entreprise (Option A) :** passez par un tunnel, comme à l'[Atelier 02](02-pods-trois-briques.md) : `kubectl port-forward svc/campus-frontend-svc 8081:80` lancé **depuis votre poste**, puis ouvrez `http://localhost:8081`. En Option B, ce tunnel s'ouvrirait sur `k8s-control` et non sur votre poste : il ne vous aiderait pas.
 * **La page s'affiche mais les données sont absentes :** testez l'API à travers le frontend avec `curl http://<IP_PUBLIQUE_WORKER>:30088/actuator/health`. Une erreur `502 Bad Gateway` signifie que le Service `campus-backend` ne transmet rien : appliquez le réflexe **« Service muet ? `kubectl get endpoints` »**. Une liste vide signifie que le sélecteur du Service et les labels des pods ne correspondent pas.
 
 </details>

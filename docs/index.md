@@ -1,7 +1,7 @@
 # Kubernetes : Orchestration et Déploiement en Production
 
 Bienvenue sur le portail des ateliers pratiques **Kubernetes**.  
-Cet espace regroupe les guides techniques, l'architecture de référence et les **8 ateliers pratiques** articulés autour d'une application d'entreprise multi-tiers : le **Campus Summer Portal**.
+Cet espace regroupe les guides techniques, l'architecture de référence et les **7 ateliers pratiques** articulés autour d'une application d'entreprise multi-tiers : le **Campus Summer Portal**.
 
 ---
 
@@ -11,19 +11,18 @@ Les ateliers sont organisés de manière progressive, de l'infrastructure de bas
 
 ```mermaid
 flowchart LR
-    A["Infrastructure & Cluster"] --> B["Plan de Contrôle K8s"]
-    B --> C["Pods, Labels & Services"]
-    C --> D["Résilience & Rolling Updates"]
-    
-    D --> E["Stockage Persistant PostgreSQL"]
-    E --> F["Reverse Debugging & Sondes"]
-    F --> G["Isolation Réseau & Quotas"]
-    G --> H["Challenge Production Autonome"]
+    A["01 · Provisionnement du Cluster"] --> B["02 · Les Pods"]
+    B --> C["03 · Déploiements & Rollback"]
+    C --> D["04 · Services & DNS"]
+
+    D --> E["05 · Configuration & Stockage Persistant"]
+    E --> F["06 · Exploitation & Reverse Debugging"]
+    F --> G["07 · Sécurité, Quotas & Isolement Réseau"]
 ```
 
 ### Caractéristiques Techniques des Travaux Pratiques
 * **Approche 100% Déclarative & DevOps** : Mise en œuvre des manifestes YAML selon les standards de production.
-* **Environnements Flexibles** : Exécution sur machines virtuelles cloud **AWS** (création manuelle puis industrialisation **Terraform**) ou cluster local **Minikube**.
+* **Environnements Flexibles** : Cluster multi-nœuds **Kubeadm** sur 3 instances **AWS** EC2 provisionnées par **Terraform**, ou cluster local **Minikube** en secours (ateliers 03 à 07).
 * **Indices Interactifs Pliables** : Chaque atelier intègre des indices progressifs permettant de résoudre les blocages de manière autonome.
 * **Compatibilité Multi-OS** : Commandes et syntaxes fournies pour **Windows (PowerShell)** et **Linux (Ubuntu) / macOS (Bash)**.
 
@@ -37,65 +36,57 @@ flowchart LR
     
     ---
     
-    De la console AWS à l'Infrastructure as Code (Terraform) et l'initialisation multi-nœuds Kubeadm / Calico.
+    Cluster local Minikube, puis 3 instances EC2 provisionnées par Terraform (AWS Learner Lab), cluster multi-nœuds Kubeadm / Calico et administration depuis votre poste.
     
-    [:octicons-arrow-right-24: Accéder à l'Atelier 01](labs/00-provisioning-cluster.md)
+    [:octicons-arrow-right-24: Accéder à l'Atelier 01](labs/01-provisionnement-cluster.md)
 
--   :material-cube-outline: __Atelier 02 : Premiers Pods__
+-   :material-cube-outline: __Atelier 02 : Les Pods : les Trois Briques du Campus Summer Portal__
     
     ---
     
-    Manifest et cycle de vie du Pod, `port-forward`, technique DevOps du `--dry-run=client -o yaml`, limites du pod isolé.
+    Manifest et cycle de vie du Pod, `describe`, `port-forward`, diagnostic d'une erreur classique, `--dry-run=client -o yaml`, `kubectl exec` et limites du pod isolé.
     
-    [:octicons-arrow-right-24: Accéder à l'Atelier 02](labs/02-premiers-pods-labels.md)
+    [:octicons-arrow-right-24: Accéder à l'Atelier 02](labs/02-pods-trois-briques.md)
 
--   :material-refresh: __Atelier 03 : Déploiements & Résilience__
+-   :material-refresh: __Atelier 03 : Déploiements — Résilience & Rollback__
     
     ---
     
-    Contrôleurs Deployment & ReplicaSets, auto-guérison (*Self-Healing*), Rolling Updates sans coupure et Rollback d'urgence.
+    Base PostgreSQL de développement, Deployment & ReplicaSets, auto-guérison (*Self-Healing*), mise à l'échelle, Rolling Update sans coupure et Rollback.
     
-    [:octicons-arrow-right-24: Accéder à l'Atelier 03](labs/03-deployments-resilience.md)
+    [:octicons-arrow-right-24: Accéder à l'Atelier 03](labs/03-deploiements-resilience-rollback.md)
 
--   :material-lan: __Atelier 04 : Réseau, Services & DNS__
+-   :material-lan: __Atelier 04 : Réseau, Services & Découverte DNS__
     
     ---
     
-    Volatilité des IP de pods, Service ClusterIP, résolution DNS interne CoreDNS, exposition NodePort et répartition de charge.
+    Volatilité des IP de pods, Service ClusterIP et Endpoints, découverte DNS (CoreDNS), exposition NodePort et accès depuis le navigateur.
     
-    [:octicons-arrow-right-24: Accéder à l'Atelier 04](labs/04-services-reseau.md)
+    [:octicons-arrow-right-24: Accéder à l'Atelier 04](labs/04-reseau-services-dns.md)
 
--   :material-database: __Atelier 05 : Stockage & Données Persistantes__
+-   :material-database: __Atelier 05 : Configuration & Stockage Persistant (PV / PVC / PostgreSQL)__
     
     ---
     
-    ConfigMaps, Secrets base64, StorageClass, PV/PVC et déploiement PostgreSQL avec validation de la persistance post-crash.
+    ConfigMaps (`--from-literal` / `--from-file`), Secrets base64, StorageClass, PV/PVC et PostgreSQL avec preuve de la persistance après crash.
     
-    [:octicons-arrow-right-24: Accéder à l'Atelier 05](labs/05-configuration-persistance.md)
+    [:octicons-arrow-right-24: Accéder à l'Atelier 05](labs/05-configuration-stockage-persistant.md)
 
--   :material-bug-outline: __Atelier 06 : Exploitation & Reverse Debugging__
+-   :material-bug-outline: __Atelier 06 : Exploitation, Observabilité & Reverse Debugging__
     
     ---
     
-    Logs, `kubectl exec`, résolution de 3 pannes (CrashLoopBackOff, OOMKilled, Service sans réponse), Node Problem Detector et supervision Prometheus / Loki / Grafana.
+    Logs et événements, `kubectl exec`, dépannage méthodique de 3 incidents (CrashLoopBackOff, OOMKilled, Service sans réponse), panne de nœud (Node Problem Detector, `cordon`), Metrics Server et Prometheus / Fluent Bit / Loki / Grafana.
     
-    [:octicons-arrow-right-24: Accéder à l'Atelier 06](labs/06-exploitation-debugging.md)
+    [:octicons-arrow-right-24: Accéder à l'Atelier 06](labs/06-exploitation-observabilite-debugging.md)
 
--   :material-shield-lock-outline: __Atelier 07 : Sécurité, Quotas & Réseau__
+-   :material-shield-lock-outline: __Atelier 07 : Sécurité, Quotas de Ressources & Isolement Réseau (NetworkPolicy)__
     
     ---
     
-    Gouvernance de ressources (ResourceQuota, LimitRange), cloisonnement réseau NetworkPolicy et durcissement non-root.
+    LimitRange & ResourceQuota, NetworkPolicies Zéro-Trust, conteneurs non-root (SecurityContext), RBAC avec ServiceAccount en lecture seule, protection de l'API Server et d'etcd.
     
-    [:octicons-arrow-right-24: Accéder à l'Atelier 07](labs/07-securite-quotas.md)
-
--   :material-trophy-outline: __Atelier 08 : Challenge Final d'Intégration__
-    
-    ---
-    
-    Déploiement en totale autonomie de la plateforme 3-tiers complète dans un namespace `campus-prod` durci.
-    
-    [:octicons-arrow-right-24: Accéder à l'Atelier 08](labs/08-challenge-integration.md)
+    [:octicons-arrow-right-24: Accéder à l'Atelier 07](labs/07-securite-quotas-isolement-reseau.md)
 
 </div>
 
@@ -105,4 +96,4 @@ flowchart LR
 
 Consultez le [Guide d'installation de l'environnement](setup-environnement.md) pour préparer votre poste avant d'attaquer le premier atelier.
 
-Avant le premier atelier, répondez au [test de positionnement](evaluation.md) : vous le repasserez en fin de formation pour mesurer votre progression.
+Les modalités d'évaluation (QCM de fin de journée et test de positionnement de fin de formation) sont décrites dans la page [Évaluation des acquis](evaluation.md).

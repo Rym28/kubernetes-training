@@ -498,7 +498,7 @@ k8s-worker-2   Ready    <none>          1m    v1.30.x
 
 #### 16.1 Lancer le script d'installation
 
-Le script installe la StorageClass `local-path` (Atelier 05), Ingress NGINX (Ateliers 04 et 08), Helm et l'alias `k` :
+Le script installe la StorageClass `local-path` (Atelier 05), Ingress NGINX (NodePort `30080`), Helm et l'alias `k` :
 
 **k8s-control — SSH**
 
@@ -598,7 +598,7 @@ Redéfinissez `KUBECONFIG` dans chaque nouveau terminal, aux ateliers suivants �
 
 </div>
 
-### Étape 19 : Choisir votre modalité de travail (Ateliers 02 à 08)
+### Étape 19 : Choisir votre modalité de travail (Ateliers 03 à 07)
 
 | | **Option A : poste local (recommandée)** | **Option B : SSH sur `k8s-control`** |
 | :--- | :--- | :--- |
