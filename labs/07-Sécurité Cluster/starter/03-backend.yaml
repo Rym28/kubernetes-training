@@ -1,7 +1,7 @@
 # ==============================================================================
-# Starter du Lab 07 - API campus-backend et son Service (état de fin du Lab 06)
+# Starter de l'Atelier 07 - API campus-backend et son Service (état de fin de l'Atelier 06)
 # ------------------------------------------------------------------------------
-# ConfigMap + Secret (Lab 05) et sondes startup / readiness / liveness.
+# ConfigMap + Secret (Atelier 05) et sondes startup / readiness / liveness.
 # Pas encore de securityContext ni de ressources : ce lab les ajoute.
 # ==============================================================================
 apiVersion: apps/v1

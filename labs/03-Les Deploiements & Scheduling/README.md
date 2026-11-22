@@ -15,11 +15,11 @@ Toutes les commandes de cet atelier (`kubectl create deployment`, `kubectl scale
 </div>
 
 <div class="admonition note" markdown>
-<p class="admonition-title"><strong>Environnement : le cluster 3 nœuds (1 control plane + 2 workers) du Lab 00</strong></p>
+<p class="admonition-title"><strong>Environnement : le cluster 3 nœuds (1 control plane + 2 workers) de l'Atelier 01</strong></p>
 
 Réalisez ce lab sur ce cluster, piloté au choix :
 
-* **Option A (Recommandée - Confort DevOps Local) :** depuis votre machine locale, avec votre `kubectl` et votre `kubeconfig`. Dans **chaque nouveau terminal**, placé à la racine du dépôt, pointez d'abord `kubectl` vers le fichier `kubeconfig.yaml` récupéré à l'étape 6.1 du Lab 01 :
+* **Option A (Recommandée - Confort DevOps Local) :** depuis votre machine locale, avec votre `kubectl` et votre `kubeconfig`. Dans **chaque nouveau terminal**, placé à la racine du dépôt, pointez d'abord `kubectl` vers le fichier `kubeconfig.yaml` récupéré à l'étape 17 de l'Atelier 01 :
     * Windows (PowerShell) : `$env:KUBECONFIG = "$PWD\labs\01-Installation-Cluster\terraform\kubeconfig.yaml"`
     * Linux / macOS (Bash) : `export KUBECONFIG=$PWD/labs/01-Installation-Cluster/terraform/kubeconfig.yaml`
     * Vérification : `kubectl get nodes` doit afficher les 3 nœuds à l'état `Ready`.
@@ -86,13 +86,13 @@ kubectl delete namespace campus-dev   # ⚠️ supprime tout le contenu de campu
 
 ```yaml
 # ==============================================================================
-# Lab 03 - Base PostgreSQL de DÉVELOPPEMENT (éphémère)
+# Atelier 03 - Base PostgreSQL de DÉVELOPPEMENT (éphémère)
 # ------------------------------------------------------------------------------
 # L'API campus-backend (Spring Boot + JPA) se connecte à PostgreSQL dès son
 # démarrage : sans base joignable, elle s'arrête en erreur.
 # Cette base de développement stocke ses données dans un volume emptyDir :
 # elles DISPARAISSENT à chaque recréation du pod.
-# Le Lab 05 la transformera en base persistante et sécurisée (Secret + PVC).
+# L'Atelier 05 la transformera en base persistante et sécurisée (Secret + PVC).
 # ==============================================================================
 apiVersion: apps/v1
 kind: Deployment
@@ -125,7 +125,7 @@ spec:
         - name: POSTGRES_USER
           value: "campus"
         - name: POSTGRES_PASSWORD
-          value: "campus"          # Mot de passe en clair : acceptable en dev, corrigé au Lab 05
+          value: "campus"          # Mot de passe en clair : acceptable en dev, corrigé à l'Atelier 05
         - name: PGDATA
           value: /var/lib/postgresql/data/pgdata
         volumeMounts:
@@ -150,7 +150,7 @@ spec:
     targetPort: 5432
 ```
 
-Deux choix à remarquer, que vous retravaillerez au Lab 05 :
+Deux choix à remarquer, que vous retravaillerez à l'Atelier 05 :
 
 * les données sont dans un volume **`emptyDir`** : elles sont perdues à chaque recréation du pod ;
 * le mot de passe est écrit **en clair** dans le manifest.
@@ -210,7 +210,7 @@ Ouvrez `deployment-backend.yaml` dans votre éditeur.
 
 1. Où se trouve le nombre d'instances désirées ?
 2. Vous n'avez écrit aucun label dans votre commande. Pourtant, le label `app: campus-backend` apparaît à **deux** endroits sous `spec`. Lesquels ? D'où vient ce label ?
-3. Que décrit la section `spec.template` ? À quel autre manifest du Lab 02 ressemble son contenu, et qu'est-ce qui y manque (nom, `kind`…) ?
+3. Que décrit la section `spec.template` ? À quel autre manifest de l'Atelier 02 ressemble son contenu, et qu'est-ce qui y manque (nom, `kind`…) ?
 4. Quel nom `kubectl` a-t-il donné au conteneur ? D'où vient ce nom ?
 
 </div>
@@ -243,7 +243,7 @@ Modifiez `deployment-backend.yaml` :
 <div class="admonition info" markdown>
 <p class="admonition-title"><strong>Précision d'architecture</strong></p>
 
-L'API Spring Boot initialise son contexte Hibernate/JPA dès le démarrage. Les variables `SPRING_DATASOURCE_*` lui indiquent où trouver la base de développement installée à l'étape 0. Au Lab 05, nous déplacerons ces paramètres dans un ConfigMap et un Secret dédiés.
+L'API Spring Boot initialise son contexte Hibernate/JPA dès le démarrage. Les variables `SPRING_DATASOURCE_*` lui indiquent où trouver la base de développement installée à l'étape 0. À l'Atelier 05, nous déplacerons ces paramètres dans un ConfigMap et un Secret dédiés.
 
 </div>
 
@@ -371,7 +371,7 @@ Juste après la suppression, listez à nouveau les pods du backend.
 
 1. Combien de pods voyez-vous ? Regardez la colonne `AGE` : que remarquez-vous ?
 2. Quel composant a recréé le pod, et en se basant sur quelle valeur du manifest ?
-3. Au Lab 02, que se passait-il quand vous supprimiez un pod créé seul, sans Deployment ?
+3. À l'Atelier 02, que se passait-il quand vous supprimiez un pod créé seul, sans Deployment ?
 
 </div>
 
@@ -526,7 +526,7 @@ Suivez les pods du backend **en continu**, puis quittez avec `Ctrl + C`.
 <p class="admonition-title"><strong>À vous de répondre</strong></p>
 
 1. Quelle commande affiche les pods du backend en continu ?
-2. Quel statut prend le nouveau pod ? Vous l'avez déjà rencontré au Lab 02 : que signifie-t-il ?
+2. Quel statut prend le nouveau pod ? Vous l'avez déjà rencontré à l'Atelier 02 : que signifie-t-il ?
 3. Combien de pods de l'ancienne version sont encore `Running` ? Les utilisateurs subissent-ils une coupure ?
 4. Quel réglage de l'étape 10 explique ce comportement ? Que se serait-il passé avec `maxUnavailable: 1` ?
 

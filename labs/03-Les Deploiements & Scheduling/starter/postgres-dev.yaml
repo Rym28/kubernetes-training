@@ -1,11 +1,11 @@
 # ==============================================================================
-# Lab 03 - Base PostgreSQL de DÉVELOPPEMENT (éphémère)
+# Atelier 03 - Base PostgreSQL de DÉVELOPPEMENT (éphémère)
 # ------------------------------------------------------------------------------
 # L'API campus-backend (Spring Boot + JPA) se connecte à PostgreSQL dès son
 # démarrage : sans base joignable, elle s'arrête en erreur.
 # Cette base de développement stocke ses données dans un volume emptyDir :
 # elles DISPARAISSENT à chaque recréation du pod.
-# Le Lab 05 la transformera en base persistante et sécurisée (Secret + PVC).
+# L'Atelier 05 la transformera en base persistante et sécurisée (Secret + PVC).
 # ==============================================================================
 apiVersion: apps/v1
 kind: Deployment
@@ -38,7 +38,7 @@ spec:
         - name: POSTGRES_USER
           value: "campus"
         - name: POSTGRES_PASSWORD
-          value: "campus"          # Mot de passe en clair : acceptable en dev, corrigé au Lab 05
+          value: "campus"          # Mot de passe en clair : acceptable en dev, corrigé à l'Atelier 05
         - name: PGDATA
           value: /var/lib/postgresql/data/pgdata
         volumeMounts:

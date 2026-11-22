@@ -1,4 +1,4 @@
-# Lab 07 - Exercice 2 : ouverture des trois flux légitimes du portail.
+# Atelier 07 - Exercice 2 : ouverture des trois flux légitimes du portail.
 # Flux 1 : le navigateur (via le NodePort) vers le frontend, sur son port 8080
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy

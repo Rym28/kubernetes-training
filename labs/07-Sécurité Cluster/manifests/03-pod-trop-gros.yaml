@@ -1,4 +1,4 @@
-# Lab 07 - Exercice 1 : un pod qui demande 5 cœurs CPU (le quota en autorise 4).
+# Atelier 07 - Exercice 1 : un pod qui demande 5 cœurs CPU (le quota en autorise 4).
 apiVersion: v1
 kind: Pod
 metadata:

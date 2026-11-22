@@ -82,7 +82,7 @@ flowchart TD
   * `/actuator/health` : santé globale, **base de données comprise** (utilisée par la `readinessProbe`).
   * `/actuator/health/liveness` : vivacité du processus seul (utilisée par les `startupProbe` et `livenessProbe`).
   * `/actuator/prometheus` : métriques au format Prometheus.
-* **Dépendance au démarrage** : l'API se connecte à PostgreSQL et insère ses données de démonstration dès son lancement. Sans base joignable, elle s'arrête en erreur (d'où la base de développement déployée au Lab 03).
+* **Dépendance au démarrage** : l'API se connecte à PostgreSQL et insère ses données de démonstration dès son lancement. Sans base joignable, elle s'arrête en erreur (d'où la base de développement déployée à l'Atelier 03).
 * **Variables d'Environnement** :
   * `SPRING_DATASOURCE_URL` : `jdbc:postgresql://postgres:5432/campus`
   * `SPRING_DATASOURCE_USERNAME` : Fourni via Secret (`campus`)
@@ -110,6 +110,6 @@ Toutes les images applicatives nécessaires ont été pré-compilées, testées 
 | **API Backend v1** | [`regaieg/campus:backend-1.0.0`](https://hub.docker.com/r/regaieg/campus) | ~250 Mo | 8080 |
 | **Base PostgreSQL** | `postgres:16-alpine` | ~80 Mo | 5432 |
 
-> 💡 Il n'existe pas d'image `backend-1.1.0` : la montée de version du Lab 03 est simulée en modifiant le gabarit de pod (variable `CAMPUS_RELEASE`), ce qui suffit à déclencher un *rolling update*.
+> 💡 Il n'existe pas d'image `backend-1.1.0` : la montée de version de l'Atelier 03 est simulée en modifiant le gabarit de pod (variable `CAMPUS_RELEASE`), ce qui suffit à déclencher un *rolling update*.
 
 Grâce à ces images publiques, **aucune étape de compilation Java locale n'est requise** sur les postes des apprenants, ce qui élimine toute friction technique le premier jour.

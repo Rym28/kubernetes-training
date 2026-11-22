@@ -1,5 +1,5 @@
 # ==============================================================================
-# Starter du Lab 05 - API campus-backend et son Service (état de fin du Lab 04)
+# Starter de l'Atelier 05 - API campus-backend et son Service (état de fin de l'Atelier 04)
 # ------------------------------------------------------------------------------
 # 3 réplicas, Rolling Update sans perte de capacité (maxUnavailable: 0),
 # répartition sur les workers (podAntiAffinity).

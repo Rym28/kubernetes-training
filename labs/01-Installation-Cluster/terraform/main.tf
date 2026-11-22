@@ -41,7 +41,7 @@ resource "aws_security_group" "k8s_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # 4. Plage NodePort : Ingress NGINX (30080/30443), frontend Lab 04 (30088), Lab 08 (30089), Grafana (Lab 06)
+  # 4. Plage NodePort : Ingress NGINX (30080/30443), frontend Atelier 04 (30088), Atelier 08 (30089), Grafana (Atelier 06)
   ingress {
     description = "Plage NodePort Kubernetes"
     from_port   = 30000
@@ -82,6 +82,12 @@ resource "aws_instance" "control_plane" {
 
   user_data = templatefile("${path.module}/scripts/bootstrap.sh", { node_name = "k8s-control" })
 
+  # Le cluster est installé à la main (kubeadm) : une nouvelle AMI Ubuntu publiée par Canonical
+  # ou une modification de bootstrap.sh ne doit jamais recréer un nœud existant.
+  lifecycle {
+    ignore_changes = [ami, user_data]
+  }
+
   tags = {
     Name    = "k8s-control"
     Role    = "control-plane"
@@ -118,6 +124,12 @@ resource "aws_instance" "worker_1" {
 
   user_data = templatefile("${path.module}/scripts/bootstrap.sh", { node_name = "k8s-worker-1" })
 
+  # Le cluster est installé à la main (kubeadm) : une nouvelle AMI Ubuntu publiée par Canonical
+  # ou une modification de bootstrap.sh ne doit jamais recréer un nœud existant.
+  lifecycle {
+    ignore_changes = [ami, user_data]
+  }
+
   tags = {
     Name    = "k8s-worker-1"
     Role    = "worker"
@@ -142,6 +154,12 @@ resource "aws_instance" "worker_2" {
   source_dest_check = false
 
   user_data = templatefile("${path.module}/scripts/bootstrap.sh", { node_name = "k8s-worker-2" })
+
+  # Le cluster est installé à la main (kubeadm) : une nouvelle AMI Ubuntu publiée par Canonical
+  # ou une modification de bootstrap.sh ne doit jamais recréer un nœud existant.
+  lifecycle {
+    ignore_changes = [ami, user_data]
+  }
 
   tags = {
     Name    = "k8s-worker-2"

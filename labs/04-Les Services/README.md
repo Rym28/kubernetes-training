@@ -1,4 +1,4 @@
-# Lab 04 : Réseau, Services & Découverte DNS
+# Atelier 04 : Réseau, Services & Découverte DNS
 
 ### Objectifs Pédagogiques :
 * Observer le réseau des Pods (une IP par pod, attribuée par le CNI) et constater que ces adresses changent à chaque recréation, d'où le besoin d'un **Service**.
@@ -14,11 +14,11 @@ Les commandes de cet atelier (`kubectl expose`, `kubectl get svc`, `kubectl run`
 </div>
 
 <div class="admonition note" markdown>
-<p class="admonition-title"><strong>Environnement : le cluster 3 nœuds (1 control plane + 2 workers) du Lab 00</strong></p>
+<p class="admonition-title"><strong>Environnement : le cluster 3 nœuds (1 control plane + 2 workers) de l'Atelier 01</strong></p>
 
 Ce lab exploite le fait qu'un NodePort est ouvert sur **chaque** nœud : réalisez-le sur ce cluster, piloté au choix :
 
-* **Option A (Recommandée - Confort DevOps Local) :** depuis votre machine locale, avec votre `kubectl` et votre `kubeconfig`. Dans **chaque nouveau terminal**, placé à la racine du dépôt, pointez d'abord `kubectl` vers le fichier `kubeconfig.yaml` récupéré à l'étape 6.1 du Lab 01 :
+* **Option A (Recommandée - Confort DevOps Local) :** depuis votre machine locale, avec votre `kubectl` et votre `kubeconfig`. Dans **chaque nouveau terminal**, placé à la racine du dépôt, pointez d'abord `kubectl` vers le fichier `kubeconfig.yaml` récupéré à l'étape 17 de l'Atelier 01 :
     * Windows (PowerShell) : `$env:KUBECONFIG = "$PWD\labs\01-Installation-Cluster\terraform\kubeconfig.yaml"`
     * Linux / macOS (Bash) : `export KUBECONFIG=$PWD/labs/01-Installation-Cluster/terraform/kubeconfig.yaml`
     * Vérification : `kubectl get nodes` doit afficher les 3 nœuds à l'état `Ready`.
@@ -127,7 +127,7 @@ Chaque pod reçoit sa propre adresse IP, mais cette adresse disparaît avec lui.
 <details class="tip" markdown>
 <summary><strong>Indice : qui attribue ces adresses ?</strong></summary>
 
-L'option qui ajoute les colonnes `IP` et `NODE` a déjà servi au Lab 02 et au Lab 03.
+L'option qui ajoute les colonnes `IP` et `NODE` a déjà servi à l'Atelier 02 et à l'Atelier 03.
 
 Chaque pod reçoit son adresse à sa création (plage `192.168.x.x`), attribuée par le plugin réseau (**CNI**) : Calico sur votre cluster. Les pods répartis sur les deux workers se joignent directement, d'un nœud à l'autre, sans traduction d'adresse (NAT).
 
@@ -151,7 +151,7 @@ Relancez la commande de l'étape 1.
 
 1. Combien de pods voyez-vous ? Lequel est nouveau (colonne `AGE`) ?
 2. Le nouveau pod a-t-il repris le **nom** et l'**adresse IP** du pod supprimé ?
-3. Quel composant l'a recréé (revoyez le Lab 03) ?
+3. Quel composant l'a recréé (revoyez l'Atelier 03) ?
 4. Conclusion : pourquoi le frontend ne peut-il pas appeler le backend par l'adresse IP d'un pod ?
 
 </div>
@@ -345,9 +345,9 @@ Créez un Deployment avec les caractéristiques suivantes, en générant d'abord
 <div class="admonition question" markdown>
 <p class="admonition-title"><strong>À vous de répondre</strong></p>
 
-1. Quelle commande génère ce manifest **sans rien créer dans le cluster** (revoyez l'exercice 1 du Lab 03) ?
+1. Quelle commande génère ce manifest **sans rien créer dans le cluster** (revoyez l'exercice 1 de l'Atelier 03) ?
 2. Quelle commande l'applique ?
-3. Au Lab 02, le pod frontend ne démarrait que grâce à un `hostAliases`. Pourquoi démarre-t-il maintenant sans cette astuce ?
+3. À l'Atelier 02, le pod frontend ne démarrait que grâce à un `hostAliases`. Pourquoi démarre-t-il maintenant sans cette astuce ?
 
 </div>
 
@@ -438,7 +438,7 @@ Dans le cloud (EKS, AKS, GKE), il ajoute devant les NodePorts un répartiteur de
 
 ### Étape 12 : Accéder à l'application depuis votre navigateur
 
-Récupérez l'adresse IP publique de votre nœud worker `k8s-worker-1` (dans MobaXterm ou la console AWS), puis ouvrez **`http://<IP_PUBLIQUE_WORKER>:30088`**.
+Récupérez l'adresse IP publique de votre nœud worker `k8s-worker-1` (affichée par `start-session` ou dans la console AWS), puis ouvrez **`http://<IP_PUBLIQUE_WORKER>:30088`**.
 
 <div class="admonition warning" markdown>
 <p class="admonition-title"><strong>Les IP publiques changent à chaque redémarrage de la session AWS</strong></p>
@@ -494,7 +494,7 @@ Le port `30088` est ouvert sur **tous** les nœuds, qu'ils hébergent ou non un 
 <summary><strong>Indice : la page ne s'affiche pas ou le tableau de bord reste vide</strong></summary>
 
 * **Le navigateur n'obtient aucune réponse :** utilisez l'IP **publique** d'un worker (pas l'IP privée `172.31.x.x`) et le port `30088`. Les IP publiques changent à chaque redémarrage de la session AWS.
-* **Le port est bloqué par le pare-feu de votre entreprise (Option A) :** passez par un tunnel, comme au [Lab 02](../02-Les%20Pods/README.md) : `kubectl port-forward svc/campus-frontend-svc 8081:80` lancé **depuis votre poste**, puis ouvrez `http://localhost:8081`. En Option B, ce tunnel s'ouvrirait sur `k8s-control` et non sur votre poste : il ne vous aiderait pas.
+* **Le port est bloqué par le pare-feu de votre entreprise (Option A) :** passez par un tunnel, comme à l'[Atelier 02](../02-Les%20Pods/README.md) : `kubectl port-forward svc/campus-frontend-svc 8081:80` lancé **depuis votre poste**, puis ouvrez `http://localhost:8081`. En Option B, ce tunnel s'ouvrirait sur `k8s-control` et non sur votre poste : il ne vous aiderait pas.
 * **La page s'affiche mais les données sont absentes :** testez l'API à travers le frontend avec `curl http://<IP_PUBLIQUE_WORKER>:30088/actuator/health`. Une erreur `502 Bad Gateway` signifie que le Service `campus-backend` ne transmet rien : appliquez le réflexe **« Service muet ? `kubectl get endpoints` »**. Une liste vide signifie que le sélecteur du Service et les labels des pods ne correspondent pas.
 
 </details>

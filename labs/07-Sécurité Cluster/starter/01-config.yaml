@@ -1,5 +1,5 @@
 # ==============================================================================
-# Starter du Lab 07 - Configuration non sensible de l'API (état de fin du Lab 05)
+# Starter de l'Atelier 07 - Configuration non sensible de l'API (état de fin de l'Atelier 05)
 # ------------------------------------------------------------------------------
 # Le Secret campus-db-credentials n'est volontairement PAS versionné ici :
 # il est créé par une commande kubectl à l'étape 0 du lab.

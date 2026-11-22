@@ -61,7 +61,7 @@ systemctl enable kubelet
 echo "==> [Bonus] Clonage du dépôt de la formation dans /home/ubuntu/formation (raccourci ~/labs)"
 if [ ! -d /home/ubuntu/formation ]; then
   git clone --depth 1 https://github.com/Rym28/kubernetes-training.git /home/ubuntu/formation \
-    || echo "Clonage impossible : clonez le dépôt manuellement (Lab 00, étape 5.4)"
+    || echo "Clonage impossible : clonez le dépôt manuellement (Atelier 01, étape 16)"
 fi
 if [ -d /home/ubuntu/formation/labs ]; then
   ln -sfn /home/ubuntu/formation/labs /home/ubuntu/labs

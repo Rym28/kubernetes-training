@@ -1,101 +1,74 @@
-# Lab 00 : Provisionnement du Cluster — D'un cluster mono-nœud avec Minikube au cluster multi-nœuds avec Kubeadm
+# Atelier 01 : Provisionnement du Cluster — D'un cluster mono-nœud avec Minikube au cluster multi-nœuds avec Kubeadm
 
 ### Objectifs Pédagogiques :
-1. **Installer** un cluster local **Minikube** et en **identifier** les limites.
-2. **Provisionner** les 3 instances EC2 du cluster avec **Terraform**.
-3. **Se connecter** aux nœuds en SSH et **piloter** plusieurs terminaux avec **MobaXterm**.
-4. **Assembler** un cluster multi-nœuds avec **Kubeadm** et le CNI **Calico**.
-5. **Administrer** le cluster depuis son poste avec `kubectl`.
+* **Installer** un cluster local **Minikube**.
+* **Provisionner** les 3 instances EC2 du cluster avec **Terraform**.
+* **Se connecter** aux 3 nœuds en **SSH**.
+* **Assembler** un cluster multi-nœuds avec **Kubeadm** et le CNI **Calico**.
+* **Administrer** le cluster depuis son poste avec `kubectl`.
 
-### Outils nécessaires
+<div class="admonition info" markdown>
+<p class="admonition-title"><strong>Compatibilité OS</strong></p>
 
-* **Minikube** : un cluster Kubernetes à un seul nœud, sur votre poste.
-* **AWS Academy Learner Lab** : un compte AWS temporaire (sessions de 4 h) fourni par la formation.
-* **EC2** : le service de machines virtuelles d'AWS ; une machine s'appelle une **instance**.
-* **Terraform** : crée les instances EC2 à partir de fichiers de configuration, sans clic dans la console AWS.
-* **Client SSH** : `ssh` en ligne de commande, ou **MobaXterm** sous Windows, qui ouvre plusieurs sessions et peut taper la même commande dans toutes (*Multi-Exec*).
-* **kubeadm** : l'outil officiel qui initialise un plan de contrôle et fait rejoindre les nœuds au cluster.
-* **kubelet** et **containerd** : l'agent du nœud et le runtime de conteneurs, installés par le script `bootstrap.sh` du dépôt.
-* **Calico** : le plugin réseau (CNI, *Container Network Interface*) qui donne une adresse IP à chaque pod et relie les pods entre nœuds.
+Sur **votre poste**, les commandes sont données pour **Windows (PowerShell)** et **Linux/macOS (Bash)** lorsqu'elles diffèrent. Les **nœuds** sont sous **Ubuntu**.
 
-### Où lancer les commandes
+</div>
 
-Ce lab utilise deux sortes de machines, que le titre de chaque bloc de commandes désigne :
+<div class="admonition note" markdown>
+<p class="admonition-title"><strong>Environnement : votre poste, puis les 3 nœuds du cluster</strong></p>
 
-* **votre poste** (*Votre poste — …*) : étapes 0 à 3 et étape 6 ;
-* **les nœuds du cluster**, dans une session SSH ouverte à l'étape 4 : *Les trois nœuds — SSH*, *k8s-control — SSH* ou *k8s-worker-1 et k8s-worker-2 — SSH*.
+Le libellé en gras au-dessus de chaque bloc indique où lancer les commandes : **Votre poste**, ou un nœud dans une session SSH (**k8s-control — SSH**, **Les trois nœuds — SSH**…).
 
-> 📌 **Note Compatibilité OS :** sur votre poste, les commandes sont données pour **Windows (PowerShell)** et **Linux/macOS (Bash)** lorsqu'elles diffèrent. Les nœuds sont sous **Ubuntu** : les commandes y sont toujours des commandes Linux, quel que soit le système de votre poste.
-
-### Le parcours en un coup d'œil
-
-```text
- Étape 0          Étape 1          Étape 2           Étape 3             Étape 4         Étape 5              Étape 6
- git clone  ──▶   Minikube   ──▶   AWS Academy ──▶   Terraform     ──▶   SSH        ──▶  kubeadm init/join ──▶ kubectl local
- (dépôt)          (poste local)    (clé + accès)     (3 instances EC2)   (MobaXterm)     (vous installez K8s)  (kubeconfig)
-```
+</div>
 
 ---
 
 ## Contexte Métier
 
-L'Université Horizon lance le **Campus Summer Portal**, un portail de stages pour 25 000 étudiants composé de trois briques : un **frontend** Nginx, une **API** Spring Boot et une base **PostgreSQL**.
-
-Pour le développer, chaque ingénieur dispose d'un cluster local (**Minikube**). Mais pour l'éprouver en conditions réelles (pannes de nœuds, réseau distribué, stockage), il faut un cluster **multi-nœuds** : 1 Control Plane et 2 Workers.
-
-### Solutions d'installation de Kubernetes
-
-| Solution | Usage | Exemple |
-| :--- | :--- | :--- |
-| Cluster local à un nœud | Développement, tests | **Minikube** (étape 1), kind |
-| Installation sur ses propres machines | Contrôle complet, on-premise, formation | **kubeadm** (étapes 3 à 5) |
-| Service managé *(hors programme, pour information)* | Production cloud : le fournisseur gère le plan de contrôle | EKS (AWS), GKE (Google), AKS (Azure) |
-
-Vous allez construire vous-même le cluster multi-nœuds :
+Le **Campus Summer Portal** (frontend Nginx, API Spring Boot, base PostgreSQL) se développe sur **Minikube**, mais s'éprouve sur un cluster **multi-nœuds** : 1 Control Plane et 2 Workers, que vous allez construire.
 
 | Qui ? | Fait quoi ? |
 | :--- | :--- |
-| **Terraform** | Crée l'infrastructure AWS : 3 instances EC2, disques, Security Group, Elastic IP. |
-| **`bootstrap.sh`** (lancé par `cloud-init`) | Prépare l'OS de chaque instance et installe `containerd`, `kubeadm`, `kubelet`, `kubectl`. |
-| **Vous** | Initialisez le Control Plane, installez le réseau Calico et raccordez les Workers. |
+| **Terraform** | Crée 3 instances EC2 sur AWS. |
+| **`bootstrap.sh`** (au démarrage des instances) | Installe `containerd`, `kubeadm`, `kubelet`, `kubectl`. |
+| **Vous** | Initialisez le Control Plane, installez Calico et raccordez les Workers. |
 
-> 💰 Budget AWS Academy : **50 $** pour toute la formation. Pensez à éteindre vos instances chaque soir (voir étape 3.4).
+<div class="admonition note" markdown>
+<p class="admonition-title"><strong>Budget AWS Academy : 50 $ pour toute la formation</strong></p>
+
+Éteignez vos instances chaque soir (encadré « Maîtriser le budget » de l'étape 8).
+
+</div>
 
 ---
 
 ## Étape 0 : Récupérer le dépôt de la formation
 
-> 🎯 **Objectif :** disposer en local des fichiers de la formation (Terraform, scripts, manifests des labs).
-
-**Votre poste — PowerShell ou terminal Linux**
+**Votre poste**
 
 ```bash
 git clone https://github.com/Rym28/kubernetes-training.git formation
 cd formation
 ```
 
-> 📂 Tous les chemins de ce lab (ex. `labs/00-provisioning-cluster/terraform/`) sont relatifs à ce dossier `formation`.
-
-✅ **Point de contrôle :** `ls` (ou `dir`) affiche notamment le dossier `labs/`.
+Tous les chemins de l'atelier sont relatifs à ce dossier `formation`.
 
 ---
 
-## Étape 1 : Le Cluster Local avec Minikube
+## Exercice 1 : Le cluster local avec Minikube
 
-> 🎯 **Objectif :** disposer d'un cluster Kubernetes sur votre poste et lancer vos premières commandes `kubectl`.
+### Étape 1 : Installer Minikube
 
-### 1.1 Installer Minikube
+Prérequis : 2 vCPU, 4 Go de RAM libres et **Docker Desktop** démarré.
 
-**Prérequis :** 2 vCPU, 4 Go de RAM libres et **Docker Desktop** démarré. Vérifiez :
-
-**Votre poste — PowerShell ou terminal Linux**
+**Votre poste**
 
 ```bash
 docker ps
 minikube version
 ```
 
-Si `minikube` n'est pas reconnu, installez-le :
+Si `minikube` n'est pas reconnu :
 
 | Système | Commande |
 | :--- | :--- |
@@ -103,100 +76,77 @@ Si `minikube` n'est pas reconnu, installez-le :
 | macOS | `brew install minikube` |
 | Linux | `curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && sudo install minikube-linux-amd64 /usr/local/bin/minikube` |
 
-> 💡 **Poste d'entreprise verrouillé (pas de Docker, pas de droits admin) ?** Ne perdez pas de temps : passez directement à l'**étape 2**. Le cluster AWS est l'environnement de référence de la formation.
+<div class="admonition info" markdown>
+<p class="admonition-title"><strong>Poste verrouillé (pas de Docker, pas de droits admin) ?</strong></p>
 
-### 1.2 Démarrer et observer le cluster
+Passez directement à l'**exercice 2**.
 
-**Votre poste — PowerShell ou terminal Linux**
+</div>
+
+### Étape 2 : Démarrer le cluster
+
+**Votre poste**
 
 ```bash
 minikube start --cpus=2 --memory=4096 --driver=docker
-minikube status
-kubectl get nodes -o wide
-minikube addons list
+kubectl get nodes
 ```
 
-**Observez :** un **seul nœud** (`minikube`) joue à la fois le rôle de Control Plane et de Worker.
-
-<details>
-<summary>💡 <b>Pourquoi ne pas faire toute la formation sur Minikube ?</b></summary>
-
-* **Un seul nœud** : impossible de simuler la panne d'un worker ou de répartir des Pods sur plusieurs machines (Lab 03).
-* **Stockage sur une seule machine** : on ne voit pas qu'un volume reste attaché au nœud qui l'héberge (Lab 05).
-* **Installation masquée** : Minikube installe Kubernetes à votre place. Avec `kubeadm`, vous verrez ce qui se passe sous le capot.
-</details>
-
-✅ **Point de contrôle :** `kubectl get nodes` affiche le nœud `minikube` à l'état `Ready`.
+Résultat attendu : un seul nœud, `minikube`, à l'état `Ready`.
 
 ---
 
-## Étape 2 : Préparer l'environnement cloud AWS pour construire le cluster multi-nœuds
+## Exercice 2 : Provisionner l'infrastructure AWS avec Terraform
 
-> 🎯 **Objectif :** démarrer votre session AWS Academy et récupérer la clé SSH et les identifiants dont Terraform a besoin.
-
-### 2.1 Démarrer le Learner Lab
+### Étape 3 : Démarrer le Learner Lab
 
 1. Connectez-vous à **AWS Academy**, ouvrez votre cours **Learner Lab** et cliquez sur **Start Lab**.
 
 ![Ecran AWS Academy Start Lab](img/img.png)
 
-2. Attendez 1 à 2 minutes que le voyant passe au **vert** :
+2. Attendez que le voyant passe au **vert** :
 
 ![Voyant vert Ready](img/img_1.png)
 
-### 2.2 Récupérer la clé SSH et les identifiants
+### Étape 4 : Récupérer la clé SSH
 
 Cliquez sur **AWS Details** :
 
 ![Panneau AWS Details](img/pem.png)
 
-1. **Download SSH Key** : enregistrez la clé privée `labsuser.pem` dans `labs/00-provisioning-cluster/terraform/`.
-2. **AWS CLI → Show** : gardez cette fenêtre ouverte, vous copierez les 3 identifiants à l'étape 3.3.
+1. **Download SSH Key** : enregistrez `labsuser.pem` dans `labs/01-Installation-Cluster/terraform/`.
+2. **AWS CLI → Show** : gardez cette fenêtre ouverte pour l'étape 7.
 
-> 🔒 **Sécurité :** la clé `.pem` et les identifiants donnent accès à votre compte AWS. Ne les committez jamais (le `.gitignore` exclut `*.pem`) et ne les collez dans aucune messagerie ni aucun outil en ligne. Les identifiants **expirent après 4 heures** : recopiez-les à chaque nouvelle session.
+<div class="admonition warning" markdown>
+<p class="admonition-title"><strong>Sécurité</strong></p>
 
-✅ **Point de contrôle :** le voyant est vert et `labsuser.pem` est dans le dossier `terraform/`.
+Ne committez et ne partagez jamais la clé `.pem` ni les identifiants AWS.
 
----
+</div>
 
-## Étape 3 : Création des 3 Instances EC2 avec Terraform
+### Étape 5 : Installer Terraform et l'AWS CLI
 
-> 🎯 **Objectif :** créer les 3 serveurs du cluster en **une seule commande**, sans un clic dans la console AWS.
-
-```text
-                 VPC AWS Learner Lab
-                          │
-       ┌──────────────────┼──────────────────┐
-       ▼                  ▼                  ▼
- [ k8s-control ]   [ k8s-worker-1 ]   [ k8s-worker-2 ]
-   Control Plane       Worker             Worker
-   t3.large (2 vCPU, 8 Go) · Ubuntu 24.04 · Security Group k8s-formation-sg
-```
-
-### 3.1 Installer Terraform
-
-**Votre poste — PowerShell ou terminal Linux**
+**Votre poste**
 
 ```bash
 terraform version
+aws --version
 ```
 
-Si la commande n'est pas reconnue :
+Si une commande n'est pas reconnue, installez l'outil puis **rouvrez votre terminal** :
 
-| Système | Commande |
-| :--- | :--- |
-| Windows (PowerShell) | `winget install HashiCorp.Terraform` |
-| macOS | `brew tap hashicorp/tap && brew install hashicorp/tap/terraform` |
-| Linux | Suivre la [procédure APT officielle HashiCorp](https://developer.hashicorp.com/terraform/install#linux) |
+| Système | Terraform | AWS CLI |
+| :--- | :--- | :--- |
+| Windows (PowerShell) | `winget install HashiCorp.Terraform` | `winget install Amazon.AWSCLI` |
+| macOS | `brew tap hashicorp/tap && brew install hashicorp/tap/terraform` | `brew install awscli` |
+| Linux | [Procédure APT HashiCorp](https://developer.hashicorp.com/terraform/install#linux) | [Procédure AWS](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) |
 
-> 💡 **Sans droits administrateur (Windows) :** téléchargez le zip sur [developer.hashicorp.com/terraform/install](https://developer.hashicorp.com/terraform/install) et copiez `terraform.exe` dans `labs/00-provisioning-cluster/terraform/`.
+### Étape 6 : Se placer dans le dossier Terraform
 
-### 3.2 Se placer dans le dossier Terraform
-
-**Votre poste — PowerShell ou terminal Linux**
+**Votre poste**
 
 ```bash
-cd labs/00-provisioning-cluster/terraform
+cd labs/01-Installation-Cluster/terraform
 ls
 ```
 
@@ -206,73 +156,66 @@ Résultat attendu :
 labsuser.pem  main.tf  outputs.tf  provider.tf  scripts  terraform.tfvars.example  variables.tf
 ```
 
-> ⚠️ `labsuser.pem` n'apparaît pas ? Revenez à l'étape 2.2 : la clé doit être dans ce dossier pour les étapes suivantes.
+### Étape 7 : Enregistrer les identifiants AWS
 
-<details>
-<summary>🔍 <b>Pour aller plus loin (optionnel) : ce que Terraform va créer</b></summary>
+Terraform a besoin de vos identifiants AWS pour créer les instances.
 
-* **`variables.tf`** et **`terraform.tfvars.example`** : les réglages et leurs valeurs par défaut (région `us-east-1`, clé `vockey`, type `t3.large`, disques de 35 Go et 30 Go). Pour en changer un, copiez `terraform.tfvars.example` en `terraform.tfvars` et modifiez la copie.
-* **`main.tf`** : les 3 instances EC2, l'Elastic IP de `k8s-control` et le **Security Group**, c'est-à-dire le pare-feu des instances : il liste les ports ouverts et les sources autorisées.
+**1. Fixer la région** (une seule fois) :
 
-| Port | Usage |
+**Votre poste**
+
+```bash
+aws configure set region us-east-1
+```
+
+**2. Enregistrer les identifiants :** dans **AWS Details → AWS CLI → Show**, copiez **tout le bloc** (de `[default]` à la fin de `aws_session_token=...`), puis collez-le à la place de tout le contenu du fichier `credentials`, et enregistrez :
+
+| Système | Fichier |
 | :--- | :--- |
-| 22 | SSH vers les nœuds |
-| 6443 | `kubectl` depuis votre poste vers l'API Server |
-| 30000-32767 | Services NodePort (application, Grafana) |
-| Tout le trafic entre les nœuds | API Server, etcd, kubelet, réseau Calico |
+| Windows | `C:\Users\<votre_nom>\.aws\credentials` |
+| macOS / Linux | `~/.aws/credentials` |
+
+```ini
+[default]
+aws_access_key_id=ASI...
+aws_secret_access_key=...
+aws_session_token=...
+```
+
+Le fichier n'existe pas ? Créez-le, nommé exactement `credentials`, **sans extension**.
+
+**3. Vérifier :**
+
+**Votre poste**
+
+```bash
+aws sts get-caller-identity
+```
+
+Résultat attendu : un `Arn` contenant `voclabs`.
+
+<details class="tip" markdown>
+<summary><strong>Indice : <code>ExpiredToken</code> alors que le fichier vient d'être mis à jour</strong></summary>
+
+Des variables d'environnement `AWS_*` sont définies dans votre terminal et priment sur le fichier. Ouvrez un nouveau terminal, ou supprimez-les :
+
+* PowerShell : `Remove-Item Env:AWS_ACCESS_KEY_ID, Env:AWS_SECRET_ACCESS_KEY, Env:AWS_SESSION_TOKEN -ErrorAction SilentlyContinue`
+* Bash : `unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN`
 
 </details>
 
-#### Ce que `bootstrap.sh` prépare sur chaque nœud
+<details class="warning" markdown>
+<summary><strong>Session AWS expirée (après 4 h) ? Rafraîchissez les identifiants</strong></summary>
 
-Le script `scripts/bootstrap.sh` est injecté dans le `user_data` de chaque instance et exécuté par `cloud-init` au premier démarrage. Il applique les prérequis de `kubeadm` :
+1. Sur AWS Academy, cliquez sur **Start Lab** et attendez le voyant vert.
+2. Copiez le nouveau bloc **AWS Details → AWS CLI → Show** à la place du contenu du fichier `credentials`.
+3. Vérifiez avec `aws sts get-caller-identity`, puis relancez vos instances si besoin (`start-session`).
 
-| Réglage | Pourquoi Kubernetes en a besoin |
-| :--- | :--- |
-| `hostnamectl set-hostname` | Kubernetes reprend le nom d'hôte comme nom de nœud (`k8s-worker-1`…), réutilisé par les labs (`kubectl label node …`). |
-| `swapoff -a` | Le kubelet exige une gestion de la mémoire sans swap. |
-| Modules `overlay` et `br_netfilter` | `overlay` : système de fichiers en couches des images de conteneurs. `br_netfilter` : filtrage du trafic entre pods. |
-| Paramètres `sysctl` | Laissent passer le trafic des pods (routage IP, filtrage des ponts). |
-| `containerd` (`SystemdCgroup = true`) | Le runtime de conteneurs (CRI), configuré pour gérer les ressources des conteneurs avec systemd, comme le kubelet. |
-| `kubelet`, `kubeadm`, `kubectl` v1.30 (`apt-mark hold`) | L'agent du nœud, l'outil d'installation et le client, verrouillés à cette version. |
+</details>
 
-> 📦 Le script clone aussi le dépôt de la formation dans `~/formation` et crée le raccourci `~/labs` sur chaque nœud.
+### Étape 8 : Lancer le provisionnement
 
-### 3.3 Exporter les identifiants AWS
-
-**Pourquoi ?** Terraform crée les instances en appelant l'API d'AWS depuis votre poste. AWS doit donc savoir **qui** fait la demande et **sur quel compte** : sans identifiants, `terraform apply` est refusé.
-
-* `AWS_ACCESS_KEY_ID` et `AWS_SECRET_ACCESS_KEY` : l'identifiant et le mot de passe de votre compte Learner Lab pour l'API.
-* `AWS_SESSION_TOKEN` : un jeton temporaire, propre au Learner Lab, qui expire avec la session (4 h).
-* `AWS_DEFAULT_REGION` : la région où créer les instances (`us-east-1`).
-
-Terraform lit automatiquement ces **variables d'environnement** : aucun identifiant n'est écrit dans un fichier, donc rien de secret ne risque d'être committé.
-
-> 🔑 Ne confondez pas : la clé `labsuser.pem` (étape 2.2) sert à vous connecter **aux instances** en SSH ; ces identifiants servent à **créer** les instances via l'API AWS.
-
-Collez les valeurs affichées dans **AWS Details → AWS CLI** :
-
-**Votre poste — Windows (PowerShell)**
-```powershell
-$env:AWS_ACCESS_KEY_ID="ASI..."
-$env:AWS_SECRET_ACCESS_KEY="..."
-$env:AWS_SESSION_TOKEN="..."
-$env:AWS_DEFAULT_REGION="us-east-1"
-```
-
-**Votre poste — Linux / macOS (Bash)**
-```bash
-export AWS_ACCESS_KEY_ID="ASI..."
-export AWS_SECRET_ACCESS_KEY="..."
-export AWS_SESSION_TOKEN="..."
-export AWS_DEFAULT_REGION="us-east-1"
-```
-
-> Ces variables ne valent que pour le terminal où vous les avez définies : lancez Terraform dans ce même terminal.
-
-### 3.4 Lancer le provisionnement
-
-**Votre poste — PowerShell ou terminal Linux**
+**Votre poste**
 
 ```bash
 terraform init
@@ -280,362 +223,297 @@ terraform apply -auto-approve
 terraform output
 ```
 
-En **1 à 2 minutes**, les 3 instances sont créées. Notez l'**IP publique** et l'**IP privée** (`172.31.x.y`) de chaque instance, affichées par `terraform output`.
+Résultat attendu : en 1 minute environ, les 3 instances sont créées et `terraform output` affiche leurs IP publiques et privées.
 
-> ⏳ Terraform rend la main avant que `cloud-init` ait fini d'installer Kubernetes (**3 à 5 minutes** de plus). Profitez-en pour configurer vos connexions SSH (étape 4).
+<details class="tip" markdown>
+<summary><strong>Indice : <code>terraform apply</code> échoue</strong></summary>
 
-<details>
-<summary>💡 <b>Indice : <code>terraform apply</code> échoue</b></summary>
+* `ExpiredToken` / `InvalidClientTokenId` : identifiants expirés ou incomplets (encadré « Session AWS expirée » de l'étape 7).
+* `UnauthorizedOperation` : seules les régions `us-east-1` et `us-west-2` sont autorisées.
+* `InvalidKeyPair.NotFound` : la paire de clés doit s'appeler `vockey`.
 
-* `ExpiredToken` / `InvalidClientTokenId` : identifiants expirés ou incomplets. Recopiez-les depuis *AWS Details* (le `AWS_SESSION_TOKEN` est très long).
-* `UnauthorizedOperation` : le Learner Lab n'autorise que `us-east-1` et `us-west-2` (variable `aws_region`, voir 3.2).
-* `InvalidKeyPair.NotFound` : la paire de clés doit s'appeler `vockey` (variable `key_name`).
 </details>
 
-<details>
-<summary>💰 <b>Maîtriser le budget : pause du soir et destruction finale</b></summary>
+<details class="note" markdown>
+<summary><strong>Maîtriser le budget : pause du soir et destruction finale</strong></summary>
 
-**Le soir (entre J1 et J2)** : éteignez les instances sans les détruire, le cluster est conservé.
+**Le soir**, éteignez les instances (le cluster est conservé). Depuis le dossier `terraform/` :
 
-```bash
-./scripts/stop-session.sh      # Linux/macOS
-.\scripts\stop-session.ps1     # Windows
+**Votre poste — Windows (PowerShell)**
+
+```powershell
+..\scripts\stop-session.ps1
 ```
 
-Le matin, relancez-les avec `start-session.sh` / `start-session.ps1`. Ces scripts utilisent l'**AWS CLI** et les identifiants de l'étape 3.3 (à recopier à chaque session).
+**Votre poste — Linux / macOS (Bash)**
 
-> `k8s-control` garde son IP publique (Elastic IP) : votre kubeconfig reste valide. Les **workers changent d'IP publique** : notez les nouvelles adresses pour les NodePorts (Labs 04 et 08).
+```bash
+bash ../scripts/stop-session.sh
+```
 
-**En fin de formation** : supprimez tout pour revenir à 0 $.
+**Le matin**, relancez-les avec `start-session`. Les **workers changent d'IP publique** : utilisez les adresses affichées par `start-session`. `k8s-control` garde la sienne (Elastic IP).
+
+**En fin de formation**, supprimez tout :
 
 ```bash
 terraform destroy -auto-approve
 ```
-</details>
 
-✅ **Point de contrôle :** les 3 instances `k8s-control`, `k8s-worker-1` et `k8s-worker-2` sont à l'état *Running* dans la console EC2.
+</details>
 
 ---
 
-## Étape 4 : Connexions SSH & MobaXterm
+## Exercice 3 : Installer le cluster avec Kubeadm
 
-> 🎯 **Objectif :** ouvrir une session sur chacun des 3 nœuds.
+### Étape 9 : Ouvrir une session SSH sur chaque nœud
 
-### 4.1 Connexion SSH en ligne de commande
-
-Depuis le dossier `terraform/`, où se trouve `labsuser.pem`, commencez par **le nœud Control Plane** (`k8s-control`). Remplacez `<IP_PUBLIQUE_CONTROL>` par la valeur `control_plane_public_ip` de `terraform output` :
+Depuis le dossier `terraform/`, restreignez les droits de la clé (une seule fois), puis connectez-vous à `k8s-control` :
 
 **Votre poste — Windows (PowerShell)**
+
 ```powershell
-# Une seule fois : restreindre les droits de la clé
 icacls .\labsuser.pem /inheritance:r
 icacls .\labsuser.pem /grant:r "$($env:USERNAME):(R)"
-# Connexion SSH au nœud Control Plane (k8s-control)
 ssh -i .\labsuser.pem ubuntu@<IP_PUBLIQUE_CONTROL>
 ```
 
 **Votre poste — Linux / macOS (Bash)**
+
 ```bash
-# Une seule fois : restreindre les droits de la clé
 chmod 400 labsuser.pem
-# Connexion SSH au nœud Control Plane (k8s-control)
 ssh -i labsuser.pem ubuntu@<IP_PUBLIQUE_CONTROL>
 ```
 
-`icacls` (Windows) et `chmod` (Linux/macOS) restreignent les droits de la clé à votre seul compte : `ssh` refuse une clé lisible par d'autres comptes (« UNPROTECTED PRIVATE KEY FILE »).
+Ouvrez **deux autres terminaux** (ou onglets), placez-vous dans `terraform/` et connectez-vous aux workers de la même façon :
 
-Le prompt `ubuntu@k8s-control:~$` confirme que vous êtes sur le Control Plane. Ouvrez ensuite **deux autres terminaux** et connectez-vous de la même façon aux workers, en changeant seulement l'IP :
+| Nœud | IP (`terraform output`) | Prompt attendu |
+| :--- | :--- | :--- |
+| `k8s-control` | `control_plane_public_ip` | `ubuntu@k8s-control:~$` |
+| `k8s-worker-1` | `worker_1_public_ip` | `ubuntu@k8s-worker-1:~$` |
+| `k8s-worker-2` | `worker_2_public_ip` | `ubuntu@k8s-worker-2:~$` |
 
-| Nœud | Rôle | IP à utiliser (`terraform output`) | Prompt attendu |
-| :--- | :--- | :--- | :--- |
-| `k8s-control` | Control Plane | `control_plane_public_ip` | `ubuntu@k8s-control:~$` |
-| `k8s-worker-1` | Worker | `worker_1_public_ip` | `ubuntu@k8s-worker-1:~$` |
-| `k8s-worker-2` | Worker | `worker_2_public_ip` | `ubuntu@k8s-worker-2:~$` |
+Le prompt affiche `ubuntu@ip-172-31-…` ? L'installation n'est pas terminée : reconnectez-vous dans une minute.
 
-> ⏳ Le prompt affiche `ubuntu@ip-172-31-…` ? `bootstrap.sh` n'a pas encore renommé le nœud : patientez quelques minutes, puis reconnectez-vous.
+### Étape 10 : Vérifier que les nœuds sont prêts
 
-> 💡 `terraform output ssh_control_plane_command` affiche la commande de connexion au Control Plane, prête à copier.
+**Les trois nœuds — SSH**
 
-### 4.2 MobaXterm : piloter 3 nœuds à la fois
+```bash
+cloud-init status --wait
+kubeadm version -o short
+```
 
-Avec 3 serveurs, répéter chaque commande dans 3 terminaux devient vite fastidieux. **MobaXterm** ([mobaxterm.mobatek.net](https://mobaxterm.mobatek.net/)) règle le problème :
+Résultat attendu : `status: done` et `v1.30.x` sur chaque nœud.
 
-![MobaXterm Multi-Execution](img/mobaxterm-multiexec.png)
+### Étape 11 : Initialiser le Control Plane
 
-1. **Créez 3 sessions** : **Session → SSH**, hôte = IP publique du nœud, utilisateur `ubuntu`, puis **Advanced SSH settings → Use private key** → `labsuser.pem`. Nommez-les `k8s-control`, `k8s-worker-1` et `k8s-worker-2`.
-2. **MultiExec** (barre d'outils) : les trois terminaux s'affichent côte à côte et ce que vous tapez est envoyé à tous.
-   * Pour coller, utilisez **Ctrl + Shift + Insert**.
-   * La case **Exclude "…" from MultiExec mode** sous un terminal le retire de la saisie commune : cochez-la sous `k8s-control` à l'étape 5.2 pour ne viser que les workers.
-   * **Exit multi-execution mode** revient aux onglets séparés.
-3. **Navigateur SFTP** (panneau de gauche) : glissez-déposez des fichiers entre votre poste et le nœud.
+Remplacez `<IP_PUBLIQUE_CONTROL>` par la valeur `control_plane_public_ip` de `terraform output` :
 
-> 🐧 **Linux / macOS :** `tmux` (`:setw synchronize-panes on`), Terminator ou iTerm2 (*broadcast input*) offrent le même mode multi-terminaux.
+**k8s-control — SSH**
 
-✅ **Point de contrôle :** vous avez une session ouverte sur chacun des 3 nœuds.
+```bash
+sudo kubeadm init --pod-network-cidr=192.168.0.0/16 --apiserver-cert-extra-sans=<IP_PUBLIQUE_CONTROL>
+```
 
----
+| Option | Rôle |
+| :--- | :--- |
+| `--pod-network-cidr` | Plage d'adresses des Pods (Calico) |
+| `--apiserver-cert-extra-sans` | Ajoute l'IP publique au certificat de l'API Server, pour que `kubectl` la joigne depuis votre poste (étape 17) |
 
-## Étape 5 : Installation du Cluster avec Kubeadm
+<div class="admonition warning" markdown>
+<p class="admonition-title"><strong>Copiez la commande <code>kubeadm join …</code> affichée à la fin</strong></p>
 
-> 🎯 **Objectif :** transformer vos 3 VMs (instances EC2) en un cluster Kubernetes. C'est le cœur du lab : **c'est vous qui installez Kubernetes**.
+Vous en aurez besoin à l'étape 14.
 
-### 5.1 Initialiser le Control Plane
+</div>
 
-1. **Vérifiez que `bootstrap.sh` a terminé** sur les trois nœuds (MultiExec) :
+### Étape 12 : Donner à `kubectl` l'accès au cluster
 
-   **Les trois nœuds — SSH**
-   ```bash
-   cloud-init status --wait
-   tail -n 3 /var/log/cloud-init-output.log
-   kubeadm version -o short
-   ```
-   La dernière ligne du log doit être `==> Initialisation du nœud terminée avec succès !`.
+`kubeadm init` a créé le fichier de connexion administrateur `/etc/kubernetes/admin.conf` (**kubeconfig**). Copiez-le là où `kubectl` le cherche :
 
-2. **Initialisez le cluster**, sur `k8s-control` uniquement :
+**k8s-control — SSH**
 
-   **k8s-control — SSH**
-   ```bash
-   sudo kubeadm init --pod-network-cidr=192.168.0.0/16
-   ```
-   *`192.168.0.0/16` est la plage d'adresses que Calico attribue aux Pods. Elle ne chevauche pas celle du VPC AWS (`172.31.0.0/16`).*
+```bash
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+kubectl get nodes
+```
 
-   > ⚠️ **Copiez la commande `kubeadm join …` affichée à la fin** : vous en aurez besoin à l'étape 5.2.
+Résultat attendu : `k8s-control` est `NotReady`, car aucun plugin réseau (CNI) n'est encore installé.
 
-3. **Donnez à `kubectl` l'accès au cluster.**
+### Étape 13 : Installer le plugin réseau Calico (CNI)
 
-   Pour envoyer des commandes au cluster, `kubectl` a besoin d'un fichier de connexion appelé **kubeconfig**. Il contient l'adresse de l'API Server et les identifiants (certificats) de l'utilisateur. `kubectl` le cherche par défaut dans `~/.kube/config`.
+**k8s-control — SSH**
 
-   `kubeadm init` a généré ce fichier : `/etc/kubernetes/admin.conf`. Il donne **tous les droits** sur le cluster (administrateur). Mais il appartient à `root` : l'utilisateur `ubuntu` ne peut pas le lire, et `kubectl get nodes` échoue tant qu'il n'est pas copié.
+```bash
+kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/calico.yaml
+kubectl get nodes -w
+```
 
-   Copiez-le à l'emplacement attendu par `kubectl` et rendez-en `ubuntu` propriétaire :
+Résultat attendu : après 20 à 30 secondes, `k8s-control` passe `Ready`. Quittez avec `Ctrl + C`.
 
-   **k8s-control — SSH**
-   ```bash
-   mkdir -p $HOME/.kube                                       # crée le dossier ~/.kube
-   sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config   # copie le kubeconfig admin
-   sudo chown $(id -u):$(id -g) $HOME/.kube/config            # ubuntu devient propriétaire de la copie
-   kubectl get nodes                                          # test : k8s-control apparaît (NotReady)
-   ```
+### Étape 14 : Raccorder les Workers
 
-   Résultat attendu :
+Dans le terminal de `k8s-worker-1`, puis dans celui de `k8s-worker-2`, collez la commande copiée à l'étape 11, **précédée de `sudo`** :
 
-   ```text
-   NAME          STATUS     ROLES           AGE   VERSION
-   k8s-control   NotReady   control-plane   1m    v1.30.x
-   ```
+**k8s-worker-1 et k8s-worker-2 — SSH**
 
-   **Pourquoi `NotReady` ?** Le kubelet ne déclare un nœud `Ready` que si un **plugin réseau (CNI)** est installé sur ce nœud. Sans lui, les Pods ne pourraient pas recevoir d'adresse IP ni communiquer entre eux. Le cluster ne contient pas encore de plugin réseau : c'est l'objet du point suivant.
+```bash
+sudo kubeadm join <IP_PRIVEE_CONTROL>:6443 --token <token> --discovery-token-ca-cert-hash sha256:<hash>
+```
 
-4. **Installez le plugin réseau Calico (CNI) et observez le nœud passer à `Ready` :**
+<details class="tip" markdown>
+<summary><strong>Indice : commande <code>kubeadm join</code> perdue ou expirée (24 h)</strong></summary>
 
-   **k8s-control — SSH**
-   ```bash
-   kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/calico.yaml
-   kubectl get nodes -w
-   ```
-   L'option `-w` (*watch*) suit les changements en continu. Après 1 à 2 minutes, `k8s-control` passe de `NotReady` à `Ready` : quittez avec `Ctrl + C`.
+Régénérez-la sur `k8s-control` :
 
-   ```text
-   NAME          STATUS   ROLES           AGE   VERSION
-   k8s-control   Ready    control-plane   3m    v1.30.x
-   ```
+```bash
+sudo kubeadm token create --print-join-command
+```
 
-   Pour voir ce que Calico a démarré, listez les Pods système :
+</details>
 
-   ```bash
-   kubectl get pods -n kube-system
-   ```
-
-   `calico-node` (l'agent réseau de chaque nœud) et `coredns` (le DNS interne du cluster, qui attendait le réseau pour démarrer) sont `Running`.
-
-### 5.2 Raccorder les Workers (MultiExec)
-
-La commande `kubeadm join` contient :
-
-* un **token**, qui autorise le nœud à rejoindre le cluster ;
-* un **hash du certificat** du plan de contrôle, qui permet au nœud de vérifier qu'il contacte le bon cluster.
-
-1. Dans MobaXterm, activez **MultiExec** et cochez **Exclude** sous `k8s-control`.
-2. Collez la commande copiée à l'étape 5.1, **précédée de `sudo`** :
-
-   **k8s-worker-1 et k8s-worker-2 — SSH**
-   ```bash
-   sudo kubeadm join <IP_PRIVEE_CONTROL>:6443 --token <token> --discovery-token-ca-cert-hash sha256:<hash>
-   ```
-
-> 💡 Commande perdue ? Régénérez-la sur `k8s-control` : `sudo kubeadm token create --print-join-command`.
-
-### 5.3 Valider le cluster
+### Étape 15 : Valider le cluster
 
 **k8s-control — SSH**
 
 ```bash
 kubectl get nodes -o wide
+kubectl get pods -n kube-system
 ```
+
+Résultat attendu : les 3 nœuds sont `Ready` (en 1 minute environ), et les pods `calico-node` et `coredns` sont `Running`.
 
 ```text
-NAME           STATUS   ROLES           AGE     VERSION   INTERNAL-IP
-k8s-control    Ready    control-plane   5m12s   v1.30.x   172.31.20.10
-k8s-worker-1   Ready    <none>          2m45s   v1.30.x   172.31.25.41
-k8s-worker-2   Ready    <none>          2m30s   v1.30.x   172.31.19.87
+NAME           STATUS   ROLES           AGE   VERSION
+k8s-control    Ready    control-plane   3m    v1.30.x
+k8s-worker-1   Ready    <none>          1m    v1.30.x
+k8s-worker-2   Ready    <none>          1m    v1.30.x
 ```
 
-<details>
-<summary>💡 <b>Indice : un worker reste <code>NotReady</code></b></summary>
+<details class="tip" markdown>
+<summary><strong>Indice : un worker reste <code>NotReady</code></strong></summary>
 
-* Sur le worker, `cloud-init status` doit afficher `done`. Si le `join` a été lancé trop tôt, relancez-le.
+* Sur le worker, `cloud-init status` doit afficher `done` ; sinon, relancez le `join` une fois l'installation terminée.
 * Le pod `calico-node` du worker doit être `Running` : `kubectl get pods -n kube-system -o wide | grep calico-node`.
-* Un token `kubeadm join` expire après 24 heures : régénérez-le (voir 5.2).
+
 </details>
 
-### 5.4 Installer les composants additionnels de la formation
+### Étape 16 : Installer les composants additionnels de la formation
 
-Un cluster Kubeadm de base ne fournit que le strict minimum. Le script `setup-addons.sh` ajoute ce dont les labs suivants ont besoin :
-
-| Composant | Rôle | Utilisé au |
-| :--- | :--- | :---: |
-| **local-path-provisioner** | `StorageClass` par défaut : crée les volumes persistants sur le disque des workers | Lab 05 |
-| **Ingress NGINX** (NodePort `30080`) | Point d'entrée HTTP du cluster | Labs 04 et 08 |
-| Helm, autocomplétion, alias `k` | Confort en ligne de commande | Tous |
-
-> 📖 Un **volume persistant** est un espace de stockage qui survit à la suppression d'un pod ; une **StorageClass** décrit comment créer ces volumes à la demande.
+Le script installe la StorageClass `local-path` (Atelier 05), Ingress NGINX (Ateliers 04 et 08), Helm et l'alias `k` :
 
 **k8s-control — SSH**
 
 ```bash
-bash ~/labs/00-provisioning-cluster/scripts/setup-addons.sh
+bash ~/labs/01-Installation-Cluster/scripts/setup-addons.sh
 source ~/.bashrc
 kubectl get storageclass
 kubectl get pods -n ingress-nginx
 ```
 
-`local-path` doit apparaître avec la mention `(default)` et le contrôleur Ingress doit être `Running`.
+Résultat attendu : `local-path (default)` et le contrôleur Ingress `Running`.
 
-<details>
-<summary>💡 <b>Indice : le dossier <code>~/labs</code> n'existe pas</b></summary>
-
-Le clonage automatique a échoué au démarrage. Clonez le dépôt manuellement :
+<details class="tip" markdown>
+<summary><strong>Indice : le dossier <code>~/labs</code> n'existe pas</strong></summary>
 
 ```bash
 git clone --depth 1 https://github.com/Rym28/kubernetes-training.git ~/formation
 ln -sfn ~/formation/labs ~/labs
 ```
+
 </details>
-
-> 💡 Le **Metrics-Server** n'est volontairement pas installé : vous le déploierez au Lab 06.
-
-✅ **Point de contrôle :** 3 nœuds `Ready`, une StorageClass `local-path (default)` et Ingress NGINX `Running`.
 
 ---
 
-## Étape 6 : Administration depuis votre Poste
+## Exercice 4 : Administrer le cluster depuis votre poste
 
-> 🎯 **Objectif :** piloter le cluster AWS depuis votre poste.
+### Étape 17 : Récupérer le kubeconfig sur votre poste
 
-### 6.1 Récupérer et adapter le kubeconfig
-
-Le kubeconfig se trouve sur `k8s-control` (`~/.kube/config`, créé à l'étape 5.1). Vous allez en faire une copie **sur votre poste**, nommée `kubeconfig.yaml`, dans le dossier **`labs/00-provisioning-cluster/terraform/`**, à côté de `labsuser.pem`.
-
-1. **Copiez le fichier sur votre poste**, avec l'une des trois méthodes suivantes :
-
-   **Méthode A — `scp` (recommandée).** Dans un terminal de **votre poste**, placé dans le dossier `terraform/` (étape 3.2), téléchargez le fichier en une commande :
-
-   **Votre poste — Windows (PowerShell)**
-   ```powershell
-   scp -i .\labsuser.pem ubuntu@<IP_PUBLIQUE_CONTROL>:~/.kube/config kubeconfig.yaml
-   ```
-
-   **Votre poste — Linux / macOS (Bash)**
-   ```bash
-   scp -i labsuser.pem ubuntu@<IP_PUBLIQUE_CONTROL>:~/.kube/config kubeconfig.yaml
-   ```
-
-   **Méthode B — MobaXterm.** Dans la session `k8s-control`, le navigateur SFTP (panneau de gauche) affiche le dossier personnel. Activez l'affichage des fichiers cachés, ouvrez `.kube`, faites un clic droit sur `config` → **Download**, choisissez le dossier `terraform/` et renommez le fichier `kubeconfig.yaml` :
-
-   ![Téléchargement du kubeconfig via MobaXterm](img/img_6.png)
-
-   **Méthode C — copier-coller.** Sur `k8s-control`, affichez le fichier avec `cat ~/.kube/config` et sélectionnez **tout** le texte, de `apiVersion: v1` jusqu'à la dernière ligne. Sur votre poste, créez dans le dossier `terraform/` un fichier `kubeconfig.yaml` (VS Code, Bloc-notes…), collez le texte et enregistrez.
-
-   Vérifiez depuis le dossier `terraform/` : `ls` doit afficher `kubeconfig.yaml` à côté de `labsuser.pem`.
-
-   > 🔒 Ce fichier donne **tous les droits** sur votre cluster : ne le committez pas et ne le partagez pas (le `.gitignore` exclut `kubeconfig.yaml`).
-
-2. **Ouvrez `kubeconfig.yaml` sur votre poste** (VS Code, Bloc-notes…) et, dans le bloc `clusters:`, faites **3 modifications**, puis enregistrez :
-
-**Votre poste — fichier `kubeconfig.yaml`**
-
-```yaml
-clusters:
-- cluster:
-    # certificate-authority-data: LS0tLS1CRUdJTi...   # 1. Commenter cette ligne
-    insecure-skip-tls-verify: true                    # 2. Ajouter cette ligne
-    server: https://<IP_PUBLIQUE_CONTROL>:6443        # 3. Remplacer l'IP privée par l'IP publique
-  name: kubernetes
-```
-
-<details>
-<summary>💡 <b>Pourquoi ces modifications ?</b></summary>
-
-`kubeadm` génère le certificat de l'API Server pour l'**IP privée** du nœud (`172.31.x.y`). En vous connectant via l'**IP publique**, le client détecte une discordance et refuse la connexion. `insecure-skip-tls-verify: true` désactive cette vérification, mais le flux reste chiffré en HTTPS.
-
-Ce raccourci est acceptable pour un cluster de formation, **jamais en production** : on y ajoute plutôt l'IP publique au certificat (`kubeadm init --apiserver-cert-extra-sans=<IP>`).
-
-⚠️ Ne laissez pas `certificate-authority-data` et `insecure-skip-tls-verify` ensemble : `kubectl` refuse cette combinaison.
-</details>
-
-### 6.2 Tester `kubectl` depuis votre poste
-
-Depuis le dossier `labs/00-provisioning-cluster/terraform/`, qui contient `kubeconfig.yaml` :
+Le script `get-kubeconfig` copie le kubeconfig de `k8s-control` dans `terraform/kubeconfig.yaml`, y remplace l'IP privée de l'API Server par l'IP publique, puis teste la connexion. Depuis le dossier `terraform/` :
 
 **Votre poste — Windows (PowerShell)**
+
+```powershell
+..\scripts\get-kubeconfig.ps1
+```
+
+**Votre poste — Linux / macOS (Bash)**
+
+```bash
+bash ../scripts/get-kubeconfig.sh
+```
+
+Résultat attendu : le script affiche les 3 nœuds `Ready`.
+
+<div class="admonition warning" markdown>
+<p class="admonition-title"><strong>Ce fichier donne tous les droits sur votre cluster</strong></p>
+
+Ne committez et ne partagez jamais `kubeconfig.yaml`.
+
+</div>
+
+<details class="tip" markdown>
+<summary><strong>Indice : le script échoue</strong></summary>
+
+* **`x509: certificate is valid for …, not <IP_PUBLIQUE>`** : le cluster a été initialisé sans `--apiserver-cert-extra-sans`. Sur `k8s-control`, régénérez le certificat de l'API Server, puis relancez le script :
+
+    ```bash
+    sudo mv /etc/kubernetes/pki/apiserver.{crt,key} ~/
+    sudo kubeadm init phase certs apiserver --apiserver-cert-extra-sans=<IP_PUBLIQUE_CONTROL>
+    sudo crictl rm -f $(sudo crictl ps -q --name kube-apiserver)
+    ```
+
+* **`Permission denied (publickey)` ou délai dépassé** : vérifiez l'IP (`terraform output control_plane_public_ip`) et les droits de la clé (étape 9).
+* **Windows : « l'exécution de scripts est désactivée »** : lancez d'abord `Set-ExecutionPolicy -Scope Process Bypass`.
+
+</details>
+
+### Étape 18 : Utiliser ce kubeconfig dans votre terminal
+
+Depuis le dossier `terraform/` :
+
+**Votre poste — Windows (PowerShell)**
+
 ```powershell
 $env:KUBECONFIG = "$PWD\kubeconfig.yaml"
 kubectl get nodes
 ```
 
 **Votre poste — Linux / macOS (Bash)**
+
 ```bash
 export KUBECONFIG=$PWD/kubeconfig.yaml
 kubectl get nodes
 ```
 
-> ⚠️ La variable `KUBECONFIG` ne vaut que pour le terminal où vous l'avez définie : redéfinissez-la dans chaque nouveau terminal, aux labs suivants également.
+<div class="admonition warning" markdown>
+<p class="admonition-title"><strong>Une variable par terminal</strong></p>
 
-### 6.3 Choisir votre modalité de travail (Labs 02 à 08)
+Redéfinissez `KUBECONFIG` dans chaque nouveau terminal, aux ateliers suivants également.
+
+</div>
+
+### Étape 19 : Choisir votre modalité de travail (Ateliers 02 à 08)
 
 | | **Option A : poste local (recommandée)** | **Option B : SSH sur `k8s-control`** |
 | :--- | :--- | :--- |
 | Quand ? | `kubectl` installé et port 6443 accessible | Poste d'entreprise verrouillé |
-| Comment ? | Vous éditez les manifests dans votre IDE et lancez `kubectl apply -f` en local | Vous travaillez dans le terminal MobaXterm, les manifests sont dans `~/labs/` |
-
-> 🗂️ **Namespace de travail :** chaque lab commence par créer (s'il n'existe pas encore) et sélectionner le namespace `campus-dev`. La notion de namespace est présentée dans la partie cours.
-
-> ⏱️ **Fin de session AWS.** Les sessions Learner Lab durent **4 h**. À la reprise (**Start Lab**), recopiez les identifiants AWS (étape 3.3) et redémarrez les instances si besoin (`start-session`). `k8s-control` garde son IP publique (Elastic IP) : `kubeconfig.yaml` reste valide. Les **workers changent d'IP publique** : mettez à jour vos sessions SSH vers les workers. Les noms de nœuds et le cluster sont conservés.
+| Comment ? | `kubectl` lancé depuis votre poste, avec `KUBECONFIG` | Commandes lancées dans la session SSH, manifests dans `~/labs/` |
 
 ---
 
 ## Critères de Validation (Checklist)
 
-- [ ] `minikube status` indique un cluster local en fonctionnement *(sauf poste verrouillé)*.
-- [ ] `terraform output` affiche les IP publiques des 3 instances.
+- [ ] `minikube status` indique un cluster en fonctionnement *(sauf poste verrouillé)*.
+- [ ] `terraform output` affiche les IP des 3 instances.
 - [ ] `kubectl get nodes` affiche `k8s-control`, `k8s-worker-1` et `k8s-worker-2` à l'état `Ready`.
-- [ ] `kubectl get pods -n kube-system` : les pods `calico-node` et `coredns` sont `Running`.
+- [ ] `kubectl get pods -n kube-system` : `calico-node` et `coredns` sont `Running`.
 - [ ] `kubectl get storageclass` affiche `local-path (default)`.
 - [ ] `kubectl get pods -n ingress-nginx` : le contrôleur est `Running`.
 - [ ] `kubectl get nodes` fonctionne depuis votre poste (Option A) ou depuis `k8s-control` (Option B).
 
 ---
 
-## À retenir
-
-* **Minikube** suffit pour développer ; un cluster **multi-nœuds** est nécessaire pour tester les pannes, le réseau distribué et le stockage.
-* Chaque nœud a besoin d'un runtime (**containerd**), du **kubelet** et de **kubeadm** ; le swap doit être désactivé.
-* **`kubeadm init`** crée le plan de contrôle ; **`kubeadm join`** y rattache les workers.
-* Sans plugin réseau (**CNI**), les nœuds restent `NotReady`.
-* `kubectl` se connecte au cluster grâce au fichier **kubeconfig** : adresse de l'API Server et identifiants.
-
----
-
-Vous avez construit un véritable cluster Kubernetes multi-nœuds : Terraform a créé l'infrastructure, et vous l'avez assemblée avec Kubeadm.
-
-👉 Rendez-vous au [Lab 02 : Premiers Pods & Labels](02-premiers-pods-labels.md) pour déployer vos premières charges de travail !
+👉 Rendez-vous à l'[Atelier 02 : Les Pods](02-premiers-pods-labels.md).

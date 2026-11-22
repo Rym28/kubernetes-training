@@ -1,4 +1,4 @@
-# Lab 05 : Configuration & Stockage Persistant (PV / PVC / PostgreSQL)
+# Atelier 05 : Configuration & Stockage Persistant (PV / PVC / PostgreSQL)
 
 ### Objectifs Pédagogiques :
 * Découpler la configuration du code applicatif à l'aide des **ConfigMaps** (par variables directes et injection globale `envFrom`).
@@ -16,11 +16,11 @@ Les commandes de cet atelier sont **identiques** sous **Windows (PowerShell)**, 
 </div>
 
 <div class="admonition note" markdown>
-<p class="admonition-title"><strong>Environnement : le cluster 3 nœuds (1 control plane + 2 workers) du Lab 00</strong></p>
+<p class="admonition-title"><strong>Environnement : le cluster 3 nœuds (1 control plane + 2 workers) de l'Atelier 01</strong></p>
 
 Réalisez ce lab sur ce cluster, piloté au choix :
 
-* **Option A (Recommandée - Confort DevOps Local) :** depuis votre machine locale, avec votre `kubectl` et votre `kubeconfig`. Dans **chaque nouveau terminal**, placé à la racine du dépôt, pointez d'abord `kubectl` vers le fichier `kubeconfig.yaml` récupéré à l'étape 6.1 du Lab 01 :
+* **Option A (Recommandée - Confort DevOps Local) :** depuis votre machine locale, avec votre `kubectl` et votre `kubeconfig`. Dans **chaque nouveau terminal**, placé à la racine du dépôt, pointez d'abord `kubectl` vers le fichier `kubeconfig.yaml` récupéré à l'étape 17 de l'Atelier 01 :
     * Windows (PowerShell) : `$env:KUBECONFIG = "$PWD\labs\01-Installation-Cluster\terraform\kubeconfig.yaml"`
     * Linux / macOS (Bash) : `export KUBECONFIG=$PWD/labs/01-Installation-Cluster/terraform/kubeconfig.yaml`
     * Vérification : `kubectl get nodes` doit afficher les 3 nœuds à l'état `Ready`.
@@ -40,7 +40,7 @@ Ce lab est **indépendant des autres** : son étape 0 crée `campus-dev` s'il n'
 ---
 
 ## Contexte Métier
-Notre API s'appuie sur une base PostgreSQL de **développement** (`01-postgres-dev.yaml`, la base utilisée depuis le Lab 03) qui cumule deux défauts rédhibitoires en production :
+Notre API s'appuie sur une base PostgreSQL de **développement** (`01-postgres-dev.yaml`, la base utilisée depuis l'Atelier 03) qui cumule deux défauts rédhibitoires en production :
 
 * son mot de passe est écrit **en clair** dans le manifest, donc dans le dépôt Git ;
 * ses données vivent dans un volume `emptyDir` : **toutes les candidatures disparaissent** à la moindre recréation du pod.
@@ -249,7 +249,7 @@ kubectl get secret campus-db-credentials -o jsonpath="{.data.POSTGRES_PASSWORD}"
 <details class="tip" markdown>
 <summary><strong>Indice : comment protège-t-on vraiment un Secret ?</strong></summary>
 
-Base64 n'est qu'un **encodage** : n'importe qui peut le décoder, comme vous venez de le faire. Un Secret est protégé par les **droits d'accès** (RBAC : qui a le droit de faire `get secret`, Lab 07) et, en production, par le **chiffrement au repos** dans `etcd` ou un coffre-fort externe (HashiCorp Vault, AWS Secrets Manager via le pilote CSI Secrets Store).
+Base64 n'est qu'un **encodage** : n'importe qui peut le décoder, comme vous venez de le faire. Un Secret est protégé par les **droits d'accès** (RBAC : qui a le droit de faire `get secret`, Atelier 07) et, en production, par le **chiffrement au repos** dans `etcd` ou un coffre-fort externe (HashiCorp Vault, AWS Secrets Manager via le pilote CSI Secrets Store).
 
 </details>
 
@@ -291,7 +291,7 @@ kubectl get storageclass
 <details class="tip" markdown>
 <summary><strong>Indice : qui crée les PV sur notre cluster ?</strong></summary>
 
-Personne ne les écrit à la main : l'outil `local-path`, installé au Lab 00 (étape 5.4), joue le rôle de l'administrateur. Dès qu'un PVC en a besoin, il crée un PV dans un répertoire du disque d'un worker.
+Personne ne les écrit à la main : l'outil `local-path`, installé à l'Atelier 01 (étape 16), joue le rôle de l'administrateur. Dès qu'un PVC en a besoin, il crée un PV dans un répertoire du disque d'un worker.
 
 Le mode `WaitForFirstConsumer` signifie « attendre le premier pod qui utilise le PVC » : `local-path` saura alors sur quel worker placer les données.
 
@@ -443,8 +443,8 @@ Avec un volume `ReadWriteOnce`, deux pods PostgreSQL ne doivent jamais écrire e
 <p class="admonition-title"><strong>À vous de répondre</strong></p>
 
 1. Quelle commande applique `postgres-deployment.yaml` ?
-2. Quelle commande attend la fin du remplacement du pod PostgreSQL (vue au Lab 03) ?
-3. Le Service `postgres` du starter n'a pas été modifié. Quelle commande (vue au Lab 04) vérifie qu'il envoie bien le trafic au nouveau pod ?
+2. Quelle commande attend la fin du remplacement du pod PostgreSQL (vue à l'Atelier 03) ?
+3. Le Service `postgres` du starter n'a pas été modifié. Quelle commande (vue à l'Atelier 04) vérifie qu'il envoie bien le trafic au nouveau pod ?
 4. Quelle commande affiche les 20 dernières lignes de logs du pod PostgreSQL (label `app=campus-postgres`) ? Quelle phrase indique que la base est prête ?
 
 </div>
@@ -487,7 +487,7 @@ Avec `local-path`, le PV est un répertoire sur le disque **d'un worker**. Les d
 <summary><strong>Indice : le PVC reste <code>Pending</code> alors que le pod PostgreSQL existe</strong></summary>
 
 * Le pod reste lui aussi `Pending` : `kubectl describe pvc pvc-postgres` explique pourquoi dans sa section `Events`.
-* Vérifiez que `local-path` est installé : `kubectl get storageclass` doit afficher `local-path (default)`. Sinon, exécutez le script `setup-addons.sh` sur `k8s-control` (Lab 00, étape 5.4).
+* Vérifiez que `local-path` est installé : `kubectl get storageclass` doit afficher `local-path (default)`. Sinon, exécutez le script `setup-addons.sh` sur `k8s-control` (Atelier 01, étape 16).
 
 </details>
 

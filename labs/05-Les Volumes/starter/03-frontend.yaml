@@ -1,5 +1,5 @@
 # ==============================================================================
-# Starter du Lab 05 - Frontend du Campus Summer Portal (état de fin du Lab 04)
+# Starter de l'Atelier 05 - Frontend du Campus Summer Portal (état de fin de l'Atelier 04)
 # ------------------------------------------------------------------------------
 # Nginx sert le portail et relaie /api/ vers le Service campus-backend :8080.
 # Exposé hors du cluster par le NodePort 30088 (30080 est réservé à Ingress NGINX).

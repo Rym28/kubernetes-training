@@ -1,4 +1,4 @@
-# Lab 07 - Exercice 1 : plafond global du namespace campus-dev.
+# Atelier 07 - Exercice 1 : plafond global du namespace campus-dev.
 apiVersion: v1
 kind: ResourceQuota
 metadata:

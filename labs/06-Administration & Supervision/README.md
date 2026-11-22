@@ -1,4 +1,4 @@
-# Lab 06 : Exploitation, Observabilité & Reverse Debugging
+# Atelier 06 : Exploitation, Observabilité & Reverse Debugging
 
 ### Objectifs Pédagogiques :
 * Lire les logs d'une application (`kubectl logs` en direct, multi-pods, conteneur précédent) et la chronologie des événements du cluster.
@@ -16,11 +16,11 @@ Les commandes de cet atelier sont **rigoureusement identiques** sous **Windows (
 </div>
 
 <div class="admonition note" markdown>
-<p class="admonition-title"><strong>Environnement : le cluster 3 nœuds (1 control plane + 2 workers) du Lab 00</strong></p>
+<p class="admonition-title"><strong>Environnement : le cluster 3 nœuds (1 control plane + 2 workers) de l'Atelier 01</strong></p>
 
 Node Problem Detector surveille les **workers**, et l'étape 11 en retire un du service : réalisez ce lab sur ce cluster, piloté au choix :
 
-* **Option A (Recommandée - Confort DevOps Local) :** depuis votre machine locale, avec votre `kubectl` et votre `kubeconfig`. Dans **chaque nouveau terminal**, placé à la racine du dépôt, pointez d'abord `kubectl` vers le fichier `kubeconfig.yaml` récupéré à l'étape 6.1 du Lab 01 :
+* **Option A (Recommandée - Confort DevOps Local) :** depuis votre machine locale, avec votre `kubectl` et votre `kubeconfig`. Dans **chaque nouveau terminal**, placé à la racine du dépôt, pointez d'abord `kubectl` vers le fichier `kubeconfig.yaml` récupéré à l'étape 17 de l'Atelier 01 :
     * Windows (PowerShell) : `$env:KUBECONFIG = "$PWD\labs\01-Installation-Cluster\terraform\kubeconfig.yaml"`
     * Linux / macOS (Bash) : `export KUBECONFIG=$PWD/labs/01-Installation-Cluster/terraform/kubeconfig.yaml`
     * Vérification : `kubectl get nodes` doit afficher les 3 nœuds à l'état `Ready`.
@@ -70,7 +70,7 @@ Le dossier `starter/` du lab installe l'application complète :
 | `03-backend.yaml` | L'API `campus-backend` (2 réplicas, configuration lue dans le ConfigMap et le Secret) et son Service `campus-backend`. |
 | `04-frontend.yaml` | Le frontend et son Service NodePort `campus-frontend-svc` (port `30088`). |
 
-Les identifiants de la base ne sont **pas** versionnés dans le starter : vous créez le Secret `campus-db-credentials` par une commande, comme au Lab 05.
+Les identifiants de la base ne sont **pas** versionnés dans le starter : vous créez le Secret `campus-db-credentials` par une commande, comme à l'Atelier 05.
 
 Créez le namespace `campus-dev` s'il n'existe pas encore, sélectionnez-le, puis appliquez le starter. Si vous sortez du lab précédent, vos objets sont conservés et simplement mis à jour. Depuis la racine du dépôt (Option A) ou depuis `~` sur `k8s-control` (Option B : mettez d'abord le dépôt à jour avec `git -C ~/formation pull`, puis remplacez `labs/` par `~/labs/`) :
 
@@ -153,7 +153,7 @@ kubectl logs -l app=campus-backend --tail=5 --prefix
 <p class="admonition-title"><strong>À vous de répondre</strong></p>
 
 1. Combien de lignes obtenez-vous, et pour combien de pods ?
-2. Quelle option de `kubectl logs` lirait les logs du conteneur **précédent**, celui qui a planté ? (Vous l'avez vue au Lab 03.)
+2. Quelle option de `kubectl logs` lirait les logs du conteneur **précédent**, celui qui a planté ? (Vous l'avez vue à l'Atelier 03.)
 
 </div>
 
@@ -195,7 +195,7 @@ Quand les logs ne suffisent pas, on vérifie ce que voit le conteneur lui-même 
 
 ### Étape 4 : Vérifier la configuration reçue par le backend
 
-Vous avez utilisé `kubectl exec` au Lab 02. Vous voulez exécuter `env | grep SPRING` dans un pod du Deployment `campus-backend`.
+Vous avez utilisé `kubectl exec` à l'Atelier 02. Vous voulez exécuter `env | grep SPRING` dans un pod du Deployment `campus-backend`.
 
 <div class="admonition question" markdown>
 <p class="admonition-title"><strong>À vous de répondre</strong></p>
@@ -209,7 +209,7 @@ Vous avez utilisé `kubectl exec` au Lab 02. Vous voulez exécuter `env | grep S
 <details class="tip" markdown>
 <summary><strong>Indice : une commande avec un « | » dans le conteneur</strong></summary>
 
-Tout ce qui suit `--` s'exécute dans le conteneur. Le `|` serait interprété par **votre** terminal : encapsulez la commande dans `sh -c "…"`, comme pour `cat /etc/hosts` au Lab 02. On peut viser le Deployment directement (`deployment/campus-backend`) : `kubectl` choisit l'un de ses pods.
+Tout ce qui suit `--` s'exécute dans le conteneur. Le `|` serait interprété par **votre** terminal : encapsulez la commande dans `sh -c "…"`, comme pour `cat /etc/hosts` à l'Atelier 02. On peut viser le Deployment directement (`deployment/campus-backend`) : `kubectl` choisit l'un de ses pods.
 
 </details>
 
@@ -225,7 +225,7 @@ kubectl exec deployment/campus-frontend -- wget -qO- http://campus-backend:8080/
 <p class="admonition-title"><strong>À vous de répondre</strong></p>
 
 1. Que répond l'API ? Le frontend joint-il le backend ?
-2. Par quel nom le frontend joint-il le backend ? Sur quel objet repose ce nom (Lab 04) ?
+2. Par quel nom le frontend joint-il le backend ? Sur quel objet repose ce nom (Atelier 04) ?
 
 </div>
 
@@ -277,7 +277,7 @@ kubectl get pod crash-app -w
 <details class="tip" markdown>
 <summary><strong>Indice : <code>logs --previous</code> ne répond pas</strong></summary>
 
-Si la commande répond `unable to retrieve container logs`, le conteneur est en train de redémarrer : relancez-la quelques secondes plus tard. Le délai entre deux redémarrages double à chaque échec (10 s, 20 s, 40 s… jusqu'à 5 minutes).
+Si la commande répond `unable to retrieve container logs`, le pod est dans le court état `Error`, entre deux redémarrages : relancez-la quand il affiche `CrashLoopBackOff`. Le délai entre deux redémarrages double à chaque échec (10 s, 20 s, 40 s… jusqu'à 5 minutes).
 
 </details>
 
@@ -314,7 +314,7 @@ kubectl run test-api --image=curlimages/curl:8.11.1 --rm -i --restart=Never -- c
 <div class="admonition question" markdown>
 <p class="admonition-title"><strong>À vous de répondre</strong></p>
 
-1. Quel est le réflexe « Service muet ? » vu au Lab 04 ? Que renvoie-t-il ici ?
+1. Quel est le réflexe « Service muet ? » vu à l'Atelier 04 ? Que renvoie-t-il ici ?
 2. Comparez le sélecteur du Service (`kubectl describe service campus-api`) et les labels des pods backend (`kubectl get pods -l app=campus-backend --show-labels`). Où est l'erreur ?
 3. Corrigez le sélecteur avec la commande ci-dessous, puis relancez le pod de test : que répond maintenant l'API ?
 
@@ -383,7 +383,7 @@ kubectl delete pod inject-kernel-err
 <div class="admonition warning" markdown>
 <p class="admonition-title"><strong>Pod privilégié</strong></p>
 
-Un pod privilégié a tous les pouvoirs sur le nœud : il n'est utilisé ici que pour la simulation. Le Lab 07 apprend à l'interdire.
+Un pod privilégié a tous les pouvoirs sur le nœud : il n'est utilisé ici que pour la simulation. L'Atelier 07 montre comment durcir les conteneurs de l'application (`securityContext` : pas de root, pas d'élévation de privilèges).
 
 </div>
 
@@ -409,7 +409,7 @@ kubectl uncordon k8s-worker-1
 <div class="admonition info" markdown>
 <p class="admonition-title"><strong><code>cordon</code> ou <code>drain</code> ?</strong></p>
 
-`cordon` bloque l'arrivée de nouveaux pods. `kubectl drain k8s-worker-1 --ignore-daemonsets` fait un `cordon`, puis déplace les pods du nœud vers les autres nœuds : c'est la commande d'une maintenance. Nous ne la lançons pas ici pour ne pas déplacer la base de données, dont le volume est sur le disque du nœud (Lab 05).
+`cordon` bloque l'arrivée de nouveaux pods. `kubectl drain k8s-worker-1 --ignore-daemonsets` fait un `cordon`, puis déplace les pods du nœud vers les autres nœuds : c'est la commande d'une maintenance. Nous ne la lançons pas ici pour ne pas déplacer la base de données, dont le volume est sur le disque du nœud (Atelier 05).
 
 </div>
 
@@ -447,7 +447,7 @@ Attendez que tous les pods soient `Running` (1 à 2 minutes). Fluent Bit ne coll
 <p class="admonition-title"><strong>À vous de répondre</strong></p>
 
 1. Combien de pods `fluent-bit` voyez-vous ? Pourquoi ce nombre ?
-2. Quelle commande (Lab 03) redémarre progressivement tous les pods du Deployment `campus-backend` ?
+2. Quelle commande (Atelier 03) redémarre progressivement tous les pods du Deployment `campus-backend` ?
 
 </div>
 
@@ -522,7 +522,7 @@ Sur un cluster managé, cette pile est fournie par le cloud. Chez Google, ce ser
 [**FreeLens**](https://freelensapp.github.io/) est un IDE graphique installé sur **votre poste**, qui montre en direct l'état des objets du cluster, sans rien installer dans le cluster. C'est le fork communautaire libre de Lens/OpenLens.
 
 1. Installez FreeLens (Windows, macOS ou Linux) depuis [freelensapp.github.io](https://freelensapp.github.io/).
-2. **Catalog → Clusters → Add from Kubeconfig**, puis sélectionnez le fichier `kubeconfig.yaml` préparé au Lab 00.
+2. **Catalog → Clusters → Add from Kubeconfig**, puis sélectionnez le fichier `kubeconfig.yaml` préparé à l'Atelier 01.
 3. Ouvrez le cluster : rejouez l'incident A (étape 6) et observez le pod changer d'état dans **Workloads → Pods**.
 
 ![Cluster connecté dans FreeLens](img/freelens-cluster.png)

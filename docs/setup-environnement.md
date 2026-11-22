@@ -1,83 +1,91 @@
-# Guide d'Installation de l'Environnement de Lab
+# Guide d'Installation de l'Environnement des Ateliers
 
-Ce guide présente les différentes options d'environnement pour exécuter les travaux pratiques du cours **Kubernetes (Réf. XW335)**. Choisissez l'option la plus adaptée à votre configuration matérielle ou à la politique de votre entreprise.
+Ce guide présente les environnements utilisés pour les travaux pratiques du cours **Kubernetes (Réf. XW335)** et les outils à préparer sur votre poste.
+
+| Ateliers | Environnement |
+| :--- | :--- |
+| **01** | Minikube (exercice 1), puis construction du cluster **Kubeadm** sur AWS (exercices 2 à 5) |
+| **02** | **Minikube** sur votre poste |
+| **03 à 07** | Le cluster **Kubeadm 3 nœuds** (1 control plane + 2 workers) construit à l'Atelier 01 |
 
 ---
 
-## Option 1 : Minikube (Standard du Développement Local sur PC / Mac / Linux)
+## Option 1 : Minikube (Cluster local mono-nœud)
 
-**Minikube** est l'outil officiel du projet Kubernetes pour exécuter un cluster complet directement sur sa machine locale, avec un riche catalogue d'extensions (Ingress, Dashboard, Metrics Server).
+**Minikube** est l'outil officiel du projet Kubernetes pour exécuter un cluster complet sur sa machine. Il sert à l'exercice 1 de l'Atelier 01 et à tout l'Atelier 02.
 
 ### 1.1 Prérequis
-- Docker Desktop, Podman ou Hyper-V / VirtualBox actif.
+- 2 vCPU et 4 Go de RAM libres.
+- **Docker Desktop** démarré (vérifiez avec `docker ps`).
 - `kubectl` installé ([Documentation officielle](https://kubernetes.io/docs/tasks/tools/)).
 
-### 1.2 Démarrage du cluster local
+### 1.2 Installer Minikube
+
+| Système | Commande |
+| :--- | :--- |
+| Windows (PowerShell) | `winget install Kubernetes.minikube` |
+| macOS | `brew install minikube` |
+| Linux | `curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && sudo install minikube-linux-amd64 /usr/local/bin/minikube` |
+
+### 1.3 Démarrer le cluster local
 ```bash
 minikube start --cpus=2 --memory=4096 --driver=docker
-```
-
-### 1.3 Activer les add-ons recommandés
-```bash
-minikube addons enable ingress
-minikube addons enable metrics-server
-```
-
-### 1.4 Accéder aux services NodePort
-```bash
-minikube service <nom-du-service> --url
+kubectl config use-context minikube
+kubectl get nodes        # un nœud « minikube » à l'état Ready
 ```
 
 ---
 
-## Option 2 : KillerCoda (Zéro Installation locale dans le Navigateur)
-
-Idéal pour les postes d'entreprise verrouillés (sans droits administrateur ou sans virtualisation locale).
-
-1. Rendez-vous sur [killercoda.com/playgrounds](https://killercoda.com/playgrounds).
-2. Choisissez l'environnement **Kubernetes Playground (Latest)**.
-3. Vous disposez instantanément d'un cluster Kubernetes 2 nœuds (Control Plane + Worker) dans votre navigateur, avec accès `kubectl` complet.
-
----
-
-## Option 3 : AWS Academy Learner Lab — Cluster Kubeadm Multi-Nœuds (Environnement de Référence)
+## Option 2 : AWS Academy Learner Lab — Cluster Kubeadm Multi-Nœuds (Environnement de Référence)
 
 C'est l'environnement de référence de la formation : un vrai cluster **Kubeadm** composé d'un plan de contrôle et de deux workers, comme en production.
 
 | Élément | Valeur |
 | :--- | :--- |
-| Topologie | 3 instances EC2 Ubuntu : `k8s-control`, `k8s-worker-1`, `k8s-worker-2` |
-| Gabarit | `t3.large` (2 vCPU, 8 Gio RAM) par nœud |
-| Région | `us-east-1` (ou `us-west-2`), seules régions autorisées par le Learner Lab |
-| Clé SSH | `labsuser.pem`, téléchargée depuis *AWS Details* de **votre** session (ne jamais la partager ni la versionner) |
-| Provisionnement | Terraform (`labs/00-provisioning-cluster/terraform`) + script d'amorçage `bootstrap.sh` (containerd, kubeadm, kubelet, kubectl) |
+| Topologie | 3 instances EC2 **Ubuntu 24.04 LTS** : `k8s-control`, `k8s-worker-1`, `k8s-worker-2` |
+| Gabarit | `t3.large` (2 vCPU, 8 Gio RAM) par nœud ; disque gp3 de 35 Gio (control plane) et 30 Gio (workers) |
+| Région | `us-east-1` par défaut (ou `us-west-2`), seules régions autorisées par le Learner Lab |
+| Adresse du control plane | **Elastic IP** fixe : elle ne change pas après un arrêt/redémarrage (les workers, eux, changent d'IP publique) |
+| Clé SSH | Paire `vockey` ; fichier `labsuser.pem` téléchargé depuis *AWS Details* de **votre** session et placé dans `labs/01-Installation-Cluster/terraform/` (ne jamais le partager ni le versionner) |
+| Provisionnement | Terraform (`labs/01-Installation-Cluster/terraform`) + script d'amorçage `bootstrap.sh` (containerd, kubeadm, kubelet, kubectl **v1.30**, clonage du dépôt dans `~/labs`) |
 | Amorçage | `kubeadm init` sur `k8s-control`, CNI **Calico**, puis `kubeadm join` sur les workers |
+| Composants additionnels | `setup-addons.sh` : Helm 3, StorageClass `local-path` (par défaut), Ingress NGINX en NodePort (HTTP `30080`, HTTPS `30443`), alias `k` |
+| Accès depuis votre poste | `get-kubeconfig.ps1` / `get-kubeconfig.sh` génère `terraform/kubeconfig.yaml` (à ne jamais versionner) |
+| Budget | 50 $ pour toute la formation : éteignez les instances chaque soir avec `stop-session`, relancez-les avec `start-session`, et `terraform destroy` en fin de formation |
 
-La procédure complète, pas à pas (console AWS, Terraform, SSH/MobaXterm, Kubeadm, kubeconfig local), est décrite dans le [Lab 00 : Déploiement de l'Infrastructure](labs/00-provisioning-cluster.md).
+La procédure complète, pas à pas (console AWS, Terraform, SSH, Kubeadm, kubeconfig local), est décrite dans l'[Atelier 01 : Provisionnement du Cluster](labs/00-provisioning-cluster.md).
 
-> 💡 **Pourquoi pas k3s ou microk8s ?** Ces distributions « tout-en-un » masquent le plan de contrôle (Static Pods, `etcd`, certificats). Or les labs 01 et 07 inspectent justement ces composants : seul un cluster Kubeadm permet de les manipuler tels qu'ils existent en production.
+> 💡 **Pourquoi pas k3s ou microk8s ?** Ces distributions « tout-en-un » masquent le plan de contrôle (Static Pods, `etcd`, certificats). Or l'Atelier 01 l'installe avec `kubeadm` et l'Atelier 07 inspecte les manifests statiques d'`etcd` et de l'API Server : seul un cluster Kubeadm permet de les manipuler tels qu'ils existent en production.
 
 ---
 
-## Outils Complémentaires Recommandés
+## Outils à Installer sur votre Poste
 
-Pour une expérience optimale lors des ateliers pratiques, préparez les outils suivants sur votre poste :
+Après chaque installation, **rouvrez votre terminal** pour que la commande soit reconnue.
 
-### 1. Terraform (Infrastructure as Code)
-Requis pour automatiser le déploiement multi-nœuds AWS dans le Lab 00 :
-* **Windows (PowerShell)** : `winget install HashiCorp.Terraform` (ou déposez l'exécutable portable `terraform.exe` dans votre dossier).
-* **Linux (Ubuntu / Debian)** :
-  ```bash
-  sudo apt-get update && sudo apt-get install -y gnupg software-properties-common curl
-  wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
-  echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
-  sudo apt update && sudo apt install -y terraform
-  ```
-* **macOS (Homebrew)** : `brew tap hashicorp/tap && brew install hashicorp/tap/terraform`
+| Outil | Usage | Windows (PowerShell) | macOS | Linux |
+| :--- | :--- | :--- | :--- | :--- |
+| **Git** | Cloner le dépôt de la formation | `winget install Git.Git` | `brew install git` | `sudo apt install -y git` |
+| **kubectl** | Piloter les clusters | `winget install Kubernetes.kubectl` | `brew install kubectl` | [Procédure officielle](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/) |
+| **Docker Desktop** + **Minikube** | Cluster local (Option 1) | voir §1 | voir §1 | voir §1 |
+| **Terraform** (≥ 1.5) | Provisionner les 3 instances EC2 | `winget install HashiCorp.Terraform` | `brew tap hashicorp/tap && brew install hashicorp/tap/terraform` | [Procédure APT HashiCorp](https://developer.hashicorp.com/terraform/install#linux) |
+| **AWS CLI** | Identifiants du Learner Lab, scripts `start-session` / `stop-session` | `winget install Amazon.AWSCLI` | `brew install awscli` | [Procédure AWS](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) |
+| **Client SSH** | Connexion aux nœuds (`ssh`, `scp`) | Intégré (OpenSSH) | Intégré | Intégré |
+| **FreeLens** *(optionnel)* | IDE graphique du cluster (Atelier 06) | [freelensapp.github.io](https://freelensapp.github.io/) | idem | idem |
 
-### 2. MobaXterm & FreeLens
-* **MobaXterm** (Windows) : Client SSH avec mode Multi-Exec et SFTP intégré ([mobaxterm.mobatek.net](https://mobaxterm.mobatek.net/)).
-* **FreeLens** *(optionnel)* : IDE open-source pour visualiser l'état du cluster Kubernetes ([freelensapp.github.io](https://freelensapp.github.io/)).
+Vérifiez l'ensemble :
+
+```bash
+git --version
+kubectl version --client
+docker ps
+minikube version
+terraform version
+aws --version
+ssh -V
+```
+
+> 💡 **Poste verrouillé ?** Si `kubectl` ne peut pas être installé ou si le port 6443 est filtré, réalisez les ateliers 03 à 07 en **Option B** : commandes lancées dans la session SSH sur `k8s-control`, manifests dans `~/labs/` (voir l'étape 19 de l'Atelier 01).
 
 ---
 
@@ -96,9 +104,16 @@ kubectl get nodes
 kubectl get pods -n kube-system
 ```
 
+Sur le cluster Kubeadm, vérifiez également les composants installés par `setup-addons.sh` :
+
+```bash
+kubectl get storageclass            # local-path (default)
+kubectl get pods -n ingress-nginx   # contrôleur Running
+```
+
 ### Créer votre namespace de travail
 
-Quel que soit l'environnement choisi (Minikube, KillerCoda ou AWS), tous les ateliers se déroulent dans le namespace `campus-dev`. Créez-le et définissez-le comme namespace courant (détails dans l'Exercice 0 du [Lab 02](labs/02-premiers-pods-labels.md#exercice-0-le-namespace-votre-perimetre-de-travail)). Chaque lab rappelle ces commandes, sans effet si le namespace existe déjà :
+Quel que soit l'environnement, les ateliers 02 à 07 se déroulent dans le namespace `campus-dev`. Créez-le et définissez-le comme namespace courant (voir l'encadré « Namespace de travail » en début d'[Atelier 02](labs/02-premiers-pods-labels.md)). Chaque lab rappelle ces commandes, sans effet si le namespace existe déjà :
 
 ```bash
 kubectl create namespace campus-dev --dry-run=client -o yaml | kubectl apply -f -
@@ -106,4 +121,4 @@ kubectl config set-context --current --namespace=campus-dev
 kubectl config view --minify -o jsonpath='{..namespace}'   # doit afficher campus-dev
 ```
 
-Tout est prêt ? Vous pouvez passer au [Lab 00 : Déploiement de l'Infrastructure](labs/00-provisioning-cluster.md) !
+Tout est prêt ? Vous pouvez passer à l'[Atelier 01 : Provisionnement du Cluster](labs/00-provisioning-cluster.md) !

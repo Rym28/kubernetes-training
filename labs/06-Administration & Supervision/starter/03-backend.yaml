@@ -1,5 +1,5 @@
 # ==============================================================================
-# Starter du Lab 06 - API campus-backend et son Service (état de fin du Lab 05)
+# Starter de l'Atelier 06 - API campus-backend et son Service (état de fin de l'Atelier 05)
 # ------------------------------------------------------------------------------
 # Configuration lue dans le ConfigMap campus-config, identifiants dans le Secret
 # campus-db-credentials. Pas encore de sondes : ce lab les ajoute.

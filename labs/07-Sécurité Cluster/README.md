@@ -1,4 +1,4 @@
-# Lab 07 : Sécurité, Quotas de Ressources & Isolement Réseau (NetworkPolicy)
+# Atelier 07 : Sécurité, Quotas de Ressources & Isolement Réseau (NetworkPolicy)
 
 ### Objectifs Pédagogiques :
 * Protéger le cluster contre la surconsommation et l'effet « Noisy Neighbor » avec le couple **ResourceQuota** et **LimitRange**.
@@ -15,11 +15,11 @@ Les commandes de cet atelier (`kubectl apply`, `kubectl describe resourcequota`,
 </div>
 
 <div class="admonition note" markdown>
-<p class="admonition-title"><strong>Environnement : le cluster 3 nœuds (1 control plane + 2 workers) du Lab 00</strong></p>
+<p class="admonition-title"><strong>Environnement : le cluster 3 nœuds (1 control plane + 2 workers) de l'Atelier 01</strong></p>
 
-Les NetworkPolicies exigent un plugin réseau qui les applique (Calico, installé au Lab 00) : réalisez ce lab sur ce cluster, piloté au choix :
+Les NetworkPolicies exigent un plugin réseau qui les applique (Calico, installé à l'Atelier 01) : réalisez ce lab sur ce cluster, piloté au choix :
 
-* **Option A (Recommandée - Confort DevOps Local) :** depuis votre machine locale, avec votre `kubectl` et votre `kubeconfig`. Dans **chaque nouveau terminal**, placé à la racine du dépôt, pointez d'abord `kubectl` vers le fichier `kubeconfig.yaml` récupéré à l'étape 6.1 du Lab 01 :
+* **Option A (Recommandée - Confort DevOps Local) :** depuis votre machine locale, avec votre `kubectl` et votre `kubeconfig`. Dans **chaque nouveau terminal**, placé à la racine du dépôt, pointez d'abord `kubectl` vers le fichier `kubeconfig.yaml` récupéré à l'étape 17 de l'Atelier 01 :
     * Windows (PowerShell) : `$env:KUBECONFIG = "$PWD\labs\01-Installation-Cluster\terraform\kubeconfig.yaml"`
     * Linux / macOS (Bash) : `export KUBECONFIG=$PWD/labs/01-Installation-Cluster/terraform/kubeconfig.yaml`
     * Vérification : `kubectl get nodes` doit afficher les 3 nœuds à l'état `Ready`.
@@ -56,7 +56,7 @@ Tous les manifests de l'atelier sont **fournis** dans le dossier `labs/07-Sécur
 
 ## Étape 0 : Préparer l'environnement
 
-Le dossier `starter/` du lab installe l'application complète dans l'état de fin du Lab 06 :
+Le dossier `starter/` du lab installe l'application complète dans l'état de fin de l'Atelier 06 :
 
 | Fichier | Contenu |
 | :--- | :--- |
@@ -65,7 +65,7 @@ Le dossier `starter/` du lab installe l'application complète dans l'état de fi
 | `03-backend.yaml` | L'API `campus-backend` (2 réplicas, ConfigMap, Secret et sondes de santé, **sans** `securityContext` ni ressources : ce lab les ajoute) et son Service `campus-backend`. |
 | `04-frontend.yaml` | Le frontend et son Service NodePort `campus-frontend-svc` (port `30088`). |
 
-Les identifiants de la base ne sont **pas** versionnés dans le starter : vous créez le Secret `campus-db-credentials` par une commande, comme au Lab 05.
+Les identifiants de la base ne sont **pas** versionnés dans le starter : vous créez le Secret `campus-db-credentials` par une commande, comme à l'Atelier 05.
 
 Créez le namespace `campus-dev` s'il n'existe pas encore, sélectionnez-le, puis appliquez le starter. Si vous sortez du lab précédent, vos objets sont conservés et simplement mis à jour. Depuis la racine du dépôt (Option A) ou depuis `~` sur `k8s-control` (Option B : mettez d'abord le dépôt à jour avec `git -C ~/formation pull`, puis remplacez `labs/` par `~/labs/`) :
 
@@ -308,7 +308,7 @@ Selon le guide de durcissement Kubernetes de la NSA et de la CISA, un conteneur 
 <details class="tip" markdown>
 <summary><strong>Indice : exécuter une commande dans un conteneur</strong></summary>
 
-Vous avez utilisé `kubectl exec` au Lab 02. Il accepte un nom de pod ou `deployment/<nom>` (il choisit alors l'un de ses pods). La commande à exécuter se place après `--`.
+Vous avez utilisé `kubectl exec` à l'Atelier 02. Il accepte un nom de pod ou `deployment/<nom>` (il choisit alors l'un de ses pods). La commande à exécuter se place après `--`.
 
 </details>
 
@@ -319,7 +319,7 @@ Ouvrez `manifests/06-deployment-backend-secure.yaml`. C'est le backend du starte
 <div class="admonition question" markdown>
 <p class="admonition-title"><strong>À vous de répondre</strong></p>
 
-1. Quelles commandes appliquent le fichier, puis suivent le *rolling update* jusqu'à son terme (revoyez le Lab 03) ?
+1. Quelles commandes appliquent le fichier, puis suivent le *rolling update* jusqu'à son terme (revoyez l'Atelier 03) ?
 2. Que garantissent `runAsNonRoot: true` et `runAsUser: 10001` (bloc ①) ?
 3. Que garantissent `allowPrivilegeEscalation: false` et `capabilities.drop: [ALL]` (bloc ②) ?
 4. Pourquoi le bloc ③ déclare-t-il des ressources explicites, alors que le LimitRange en fournit par défaut ?
@@ -482,18 +482,15 @@ sudo ls -l /etc/kubernetes/pki/etcd/
 
 **c. Un Secret lu directement dans etcd**
 
+L'outil `etcdctl` n'est pas installé sur le nœud : on utilise celui du pod statique `etcd-k8s-control`, qui voit les clés du dossier `/etc/kubernetes/pki/etcd/` :
+
 ```bash
-kubectl create secret generic test-etcd --from-literal=motdepasse=SuperSecret2026
-sudo ETCDCTL_API=3 etcdctl \
-  --endpoints=https://127.0.0.1:2379 \
-  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
-  --cert=/etc/kubernetes/pki/etcd/server.crt \
-  --key=/etc/kubernetes/pki/etcd/server.key \
-  get /registry/secrets/campus-dev/test-etcd | grep -a -o "motdepasse.*SuperSecret2026"
-kubectl delete secret test-etcd
+kubectl create secret generic test-etcd -n campus-dev --from-literal=motdepasse=SuperSecret2026
+kubectl -n kube-system exec etcd-k8s-control -- etcdctl --endpoints=https://127.0.0.1:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key get /registry/secrets/campus-dev/test-etcd | grep -a -o "motdepasse.*SuperSecret2026"
+kubectl delete secret test-etcd -n campus-dev
 ```
 
-*La valeur apparaît en clair : par défaut, kubeadm ne chiffre pas les Secrets au repos.*
+*La valeur apparaît en clair (`motdepasseSuperSecret2026`) : par défaut, kubeadm ne chiffre pas les Secrets au repos.*
 
 **d. La parade : chiffrer les Secrets au repos**
 
@@ -520,8 +517,8 @@ Les nouveaux Secrets sont alors chiffrés avant d'être écrits dans etcd ; les 
 <p class="admonition-title"><strong>À vous de répondre</strong></p>
 
 1. Pourquoi un client sans certificat ne peut-il pas dialoguer avec etcd ? Quel est le seul client légitime ?
-2. Pourquoi faut-il `sudo` pour lancer `etcdctl` ? Un accès SSH non privilégié au nœud suffit-il pour lire etcd ?
-3. Le Secret apparaît en clair dans etcd. Pourquoi l'encodage base64 vu au Lab 05 n'est-il **pas** un chiffrement ? Quelle est la parade ?
+2. Pour lire etcd, il faut les clés du dossier `/etc/kubernetes/pki/etcd/`. Qui peut les lire sur le nœud (partie b) ? Un accès SSH non privilégié suffit-il ? Et quel droit Kubernetes faut-il pour exécuter `etcdctl` dans le pod etcd ?
+3. Le Secret apparaît en clair dans etcd. Pourquoi l'encodage base64 vu à l'Atelier 05 n'est-il **pas** un chiffrement ? Quelle est la parade ?
 
 </div>
 

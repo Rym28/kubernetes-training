@@ -1,4 +1,4 @@
-# Lab 06 - Simulation d'une panne du noyau sur k8s-worker-1.
+# Atelier 06 - Simulation d'une panne du noyau sur k8s-worker-1.
 # Un pod PRIVILÉGIÉ (accès complet au nœud, réservé à cette simulation) écrit dans
 # le journal du noyau (/dev/kmsg) le message d'erreur surveillé par Node Problem Detector.
 # Sur Minikube, remplacez k8s-worker-1 par minikube.

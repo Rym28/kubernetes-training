@@ -35,7 +35,7 @@ helm upgrade -i ingress-nginx ingress-nginx/ingress-nginx \
   --set controller.service.nodePorts.http=30080 \
   --set controller.service.nodePorts.https=30443
 
-# Metrics-Server n'est volontairement pas installé ici : il est déployé par les stagiaires au Lab 06.
+# Metrics-Server n'est volontairement pas installé ici : il est déployé par les stagiaires à l'Atelier 06.
 
 echo "------------------------------------------------------------------"
 echo "Addons installés avec succès ! Vérification avec 'kubectl get pods -A'"

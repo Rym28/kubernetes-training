@@ -1,9 +1,9 @@
 # ==============================================================================
-# Starter du Lab 04 - API campus-backend (état de fin du Lab 03)
+# Starter de l'Atelier 04 - API campus-backend (état de fin de l'Atelier 03)
 # ------------------------------------------------------------------------------
 # 3 réplicas, Rolling Update sans perte de capacité (maxUnavailable: 0),
 # répartition sur les workers (podAntiAffinity).
-# Identifiants de la base en clair : ils passent dans un Secret au Lab 05.
+# Identifiants de la base en clair : ils passent dans un Secret à l'Atelier 05.
 # Le Service campus-backend n'est PAS fourni : vous le créez dans ce lab.
 # ==============================================================================
 apiVersion: apps/v1

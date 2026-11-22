@@ -55,7 +55,7 @@ Les commandes de ces ateliers sont écrites en syntaxe **Bash**. Trois pièges a
 
 **Recommandation :** sous Windows, utilisez **Git Bash** (installé avec Git for Windows) ou **WSL**, ou bien PowerShell 7 (`winget install Microsoft.PowerShell`), qui écrit en UTF-8.
 
-**Piège propre à Git Bash :** il convertit en chemin Windows tout argument qui commence par `/`. Ainsi `kubectl run … -- md5sum /dev/urandom` (Lab 06) transmet au conteneur un chemin transformé (`md5sum: can't open '/Device/Null'`), et la commande échoue. Les labs encapsulent donc ces commandes dans `sh -c "…"`. Si vous tapez vous-même une commande de ce type, désactivez la conversion pour cette seule commande :
+**Piège propre à Git Bash :** il convertit en chemin Windows tout argument qui commence par `/`. Ainsi `kubectl run … -- md5sum /dev/urandom` (Atelier 06) transmet au conteneur un chemin transformé (`md5sum: can't open '/Device/Null'`), et la commande échoue. Les labs encapsulent donc ces commandes dans `sh -c "…"`. Si vous tapez vous-même une commande de ce type, désactivez la conversion pour cette seule commande :
 
 ```bash
 MSYS_NO_PATHCONV=1 kubectl run test --image=busybox:1.36 --restart=Never -- ls /etc
@@ -422,7 +422,7 @@ Sous les distributions légères comme Alpine Linux, `localhost` résout par dé
 <div class="admonition success" markdown>
 <p class="admonition-title"><strong>Et ensuite ?</strong></p>
 
-Pour qu'un pod supprimé soit recréé automatiquement, il faut le confier à un contrôleur : c'est le rôle des **Deployments**, étudiés au Lab 03.
+Pour qu'un pod supprimé soit recréé automatiquement, il faut le confier à un contrôleur : c'est le rôle des **Deployments**, étudiés à l'Atelier 03.
 
 </div>
 

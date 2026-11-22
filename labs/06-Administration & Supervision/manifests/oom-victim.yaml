@@ -1,4 +1,4 @@
-# Lab 06 - Incident B : un conteneur limité à 50 Mi de mémoire tente d'en allouer 150 Mo.
+# Atelier 06 - Incident B : un conteneur limité à 50 Mi de mémoire tente d'en allouer 150 Mo.
 # Le noyau Linux le tue (OOMKilled) à chaque tentative.
 apiVersion: v1
 kind: Pod

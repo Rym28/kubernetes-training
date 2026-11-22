@@ -40,6 +40,9 @@ theme:
     - content.code.copy
     - content.code.annotate
 
+extra_css:
+  - stylesheets/extra.css
+
 markdown_extensions:
   - admonition
   - pymdownx.details
@@ -73,16 +76,15 @@ nav:
   - Architecture & Environnement:
       - Application Fil Rouge: application.md
       - Prérequis & Environnement: setup-environnement.md
-  - Ateliers Pratiques (Labs):
+  - Ateliers Pratiques:
       - Vue d'Ensemble: labs/index.md
       - "Partie 1 — Déploiement & Fondations":
-          - "Lab 00 : Déploiement Infrastructure (IaC)": labs/00-provisioning-cluster.md
+          - "Atelier 01 : Provisionnement du Cluster": labs/00-provisioning-cluster.md
           - "Atelier 02 : Les Pods : les Trois Briques du Campus Summer Portal": labs/02-premiers-pods-labels.md
-          - "Atelier 03 : Déploiements — Résilience, Rollback & Scheduling": labs/03-deployments-resilience.md
-          - "Lab 04 : Réseau, Services & Découverte DNS": labs/04-services-reseau.md
+          - "Atelier 03 : Déploiements — Résilience & Rollback": labs/03-deployments-resilience.md
+          - "Atelier 04 : Réseau, Services & Découverte DNS": labs/04-services-reseau.md
       - "Partie 2 — Production & Sécurité":
-          - "Lab 05 : Stockage & Données Persistantes": labs/05-configuration-persistance.md
-          - "Lab 06 : Exploitation & Diagnostic de Pannes": labs/06-exploitation-debugging.md
-          - "Lab 07 : Sécurité, Quotas & Isolement Réseau": labs/07-securite-quotas.md
-          - "Lab 08 : Challenge Final de Production": labs/08-challenge-integration.md
+          - "Atelier 05 : Stockage & Données Persistantes": labs/05-configuration-persistance.md
+          - "Atelier 06 : Exploitation & Diagnostic de Pannes": labs/06-exploitation-debugging.md
+          - "Atelier 07 : Sécurité, Quotas & Isolement Réseau": labs/07-securite-quotas.md
   - Évaluation des Acquis: evaluation.md

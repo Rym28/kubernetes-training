@@ -1,4 +1,4 @@
-# Lab 07 - Exercice 1 : valeurs par défaut injectées dans les conteneurs
+# Atelier 07 - Exercice 1 : valeurs par défaut injectées dans les conteneurs
 # qui ne déclarent pas de requests / limits.
 apiVersion: v1
 kind: LimitRange

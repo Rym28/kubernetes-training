@@ -1,0 +1,49 @@
+/* ==========================================================================
+   Présentation des énoncés de labs
+   --------------------------------------------------------------------------
+   !!! question "À vous de répondre"  -> encadré ROUGE (questions du stagiaire)
+   ??? tip "Indice : …"               -> encadré pliable (indices progressifs)
+   ========================================================================== */
+
+:root {
+  --lab-question-color: #d32f2f;
+  --lab-question-bg: rgba(211, 47, 47, 0.1);
+}
+
+[data-md-color-scheme="slate"] {
+  --lab-question-color: #ef5350;
+  --lab-question-bg: rgba(239, 83, 80, 0.15);
+}
+
+/* Encadré « question » : bordure, bandeau de titre et icône en rouge */
+.md-typeset .admonition.question,
+.md-typeset details.question {
+  border-color: var(--lab-question-color);
+}
+
+.md-typeset .question > .admonition-title,
+.md-typeset .question > summary {
+  background-color: var(--lab-question-bg);
+}
+
+.md-typeset .question > .admonition-title::before,
+.md-typeset .question > summary::before {
+  background-color: var(--lab-question-color);
+}
+
+.md-typeset .question > .admonition-title,
+.md-typeset .question > summary {
+  color: var(--lab-question-color);
+}
+
+/* Questions numérotées : un peu d'air entre chaque question */
+.md-typeset .question ol > li {
+  margin-bottom: 0.4em;
+}
+
+/* Titres d'étape : séparation visuelle nette entre deux étapes */
+.md-typeset h3[id^="etape"] {
+  margin-top: 2em;
+  padding-top: 0.6em;
+  border-top: 1px solid var(--md-default-fg-color--lightest);
+}

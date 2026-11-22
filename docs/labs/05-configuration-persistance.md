@@ -1,4 +1,4 @@
-# Lab 05 : Configuration & Stockage Persistant (PV / PVC / PostgreSQL)
+# Atelier 05 : Configuration & Stockage Persistant (PV / PVC / PostgreSQL)
 
 ### Objectifs Pédagogiques :
 * Découpler la configuration du code applicatif à l'aide des **ConfigMaps** (par variables directes et injection globale `envFrom`).
@@ -8,24 +8,53 @@
 * Connecter l'API Spring Boot `campus-backend` à la base de données.
 * Réaliser un crash-test de persistance démontrant la survie des données après suppression du pod de base de données.
 
-> 📌 **Note Compatibilité OS :**  
-> Les commandes de création et d'application des manifests sont **identiques**. Seule la syntaxe de décodage base64 dans le terminal diffère entre PowerShell et Linux/macOS.
->
-> 💡 **Modalités d'exécution (Au choix) :**  
-> * **Option A (Recommandée - Confort DevOps Local) :** Exécutez les commandes directement depuis votre machine locale avec votre `kubectl` et votre `kubeconfig`.  
-> * **Option B (Secours - PC d'entreprise verrouillé) :** Connectez-vous en SSH sur `k8s-control` : l'outillage et les manifests sont pré-installés dans `~/labs/`.
->
-> 🗂️ **Namespace de travail : `campus-dev`.** Ce lab est **indépendant des autres** : son étape 0 recrée `campus-dev` à neuf et y installe tout ce dont il a besoin. Vous pouvez le réaliser sans avoir fait les labs précédents, ou le recommencer à tout moment.
+<div class="admonition info" markdown>
+<p class="admonition-title"><strong>Compatibilité OS</strong></p>
+
+Les commandes de cet atelier sont **identiques** sous **Windows (PowerShell)**, **Linux (Ubuntu)** et **macOS (Terminal)**, sauf le décodage base64 de l'étape 4 : les deux variantes sont fournies. Toutes les commandes tiennent sur **une seule ligne** : elles fonctionnent telles quelles dans PowerShell.
+
+</div>
+
+<div class="admonition note" markdown>
+<p class="admonition-title"><strong>Environnement : le cluster 3 nœuds (1 control plane + 2 workers) de l'Atelier 01</strong></p>
+
+Réalisez ce lab sur ce cluster, piloté au choix :
+
+* **Option A (Recommandée - Confort DevOps Local) :** depuis votre machine locale, avec votre `kubectl` et votre `kubeconfig`. Dans **chaque nouveau terminal**, placé à la racine du dépôt, pointez d'abord `kubectl` vers le fichier `kubeconfig.yaml` récupéré à l'étape 17 de l'Atelier 01 :
+    * Windows (PowerShell) : `$env:KUBECONFIG = "$PWD\labs\01-Installation-Cluster\terraform\kubeconfig.yaml"`
+    * Linux / macOS (Bash) : `export KUBECONFIG=$PWD/labs/01-Installation-Cluster/terraform/kubeconfig.yaml`
+    * Vérification : `kubectl get nodes` doit afficher les 3 nœuds à l'état `Ready`.
+* **Option B (PC d'entreprise verrouillé) :** en SSH sur `k8s-control` : l'outillage et les manifests sont pré-installés dans `~/labs/`.
+
+🛟 **Secours : Minikube sur votre poste** (session AWS indisponible), piloté forcément depuis votre poste comme en Option A. Tout fonctionne à l'identique ; seul le comportement du PVC à l'étape 6 diffère (un encadré l'indique).
+
+</div>
+
+<div class="admonition note" markdown>
+<p class="admonition-title"><strong>Namespace de travail : <code>campus-dev</code></strong></p>
+
+Ce lab est **indépendant des autres** : son étape 0 crée `campus-dev` s'il n'existe pas encore, puis y installe ou met à jour tout ce dont il a besoin. Vous pouvez le réaliser sans avoir fait les labs précédents ; pour le recommencer à zéro, utilisez l'encadré « Repartir de zéro » de l'étape 0.
+
+</div>
 
 ---
 
 ## Contexte Métier
-Notre API s'appuie sur une base PostgreSQL de **développement** (`01-postgres-dev.yaml`, la base utilisée depuis le Lab 03) qui cumule deux défauts rédhibitoires en production :
+Notre API s'appuie sur une base PostgreSQL de **développement** (`01-postgres-dev.yaml`, la base utilisée depuis l'Atelier 03) qui cumule deux défauts rédhibitoires en production :
 
 * son mot de passe est écrit **en clair** dans le manifest, donc dans le dépôt Git ;
 * ses données vivent dans un volume `emptyDir` : **toutes les candidatures disparaissent** à la moindre recréation du pod.
 
 Dans cet atelier, vous externalisez la configuration (ConfigMap), protégez les identifiants (Secret) et rendez la base persistante (PVC), puis vous le prouvez par un crash-test.
+
+<div class="admonition tip" markdown>
+<p class="admonition-title"><strong>Mode d'emploi</strong></p>
+
+* Les encadrés rouges **« À vous de répondre »** contiennent les questions. Pour les commandes déjà vues dans les labs précédents, on vous demande la commande au lieu de vous la donner : cherchez avec `kubectl --help`, `kubectl <commande> --help` ou `kubectl explain`.
+* Les commandes nouvelles et les manifests longs sont donnés : copiez-les.
+* Les encadrés **« Indice »** sont repliés : cliquez dessus seulement si vous bloquez.
+
+</div>
 
 ---
 
@@ -39,137 +68,237 @@ Le dossier `starter/` du lab installe l'application complète dans son état de 
 | `02-backend.yaml` | L'API `campus-backend` (3 réplicas, identifiants en clair) et son Service `campus-backend`. |
 | `03-frontend.yaml` | Le frontend et son Service NodePort `campus-frontend-svc` (port `30088`). |
 
-Repartez d'un namespace `campus-dev` vide, puis appliquez le starter. Depuis la racine du dépôt (Option A) ou depuis `~` sur `k8s-control` (Option B : mettez d'abord le dépôt à jour avec `git -C ~/formation pull`, puis remplacez `labs/` par `~/labs/`) :
+Créez le namespace `campus-dev` s'il n'existe pas encore, sélectionnez-le, puis appliquez le starter. Si vous sortez du lab précédent, vos objets sont conservés et simplement mis à jour. Depuis la racine du dépôt (Option A) ou depuis `~` sur `k8s-control` (Option B : mettez d'abord le dépôt à jour avec `git -C ~/formation pull`, puis remplacez `labs/` par `~/labs/`) :
 
 ```bash
-kubectl delete namespace campus-dev --ignore-not-found   # ⚠️ supprime tout le contenu de campus-dev
-kubectl create namespace campus-dev
+kubectl create namespace campus-dev --dry-run=client -o yaml | kubectl apply -f -   # sans effet s'il existe déjà
 kubectl config set-context --current --namespace=campus-dev
-kubectl apply -f labs/05-configuration-persistance/starter/
+kubectl apply -f "labs/05-Les Volumes/starter/"
 kubectl rollout status deployment/campus-backend --timeout=300s
 ```
 
-*La suppression du namespace peut prendre jusqu'à une minute. Spring Boot met ensuite 20 secondes à 2 minutes à démarrer.*
+<details class="warning" markdown>
+<summary><strong>Environnement incohérent ou lab à recommencer ? Repartez de zéro</strong></summary>
+
+Supprimez le namespace et tout son contenu, puis relancez les commandes ci-dessus :
+
+```bash
+kubectl delete namespace campus-dev   # ⚠️ supprime tout le contenu de campus-dev
+```
+
+*La suppression peut prendre jusqu'à une minute : `kubectl` rend la main quand elle est terminée.*
+
+</details>
+
+L'API n'a pas de sonde de santé : `rollout status` rend la main dès que les conteneurs tournent, avant que Spring Boot ait fini de démarrer (20 secondes à 2 minutes). Vérifiez que chaque pod backend a bien démarré :
+
+**Linux / macOS**
+
+```bash
+kubectl logs -l app=campus-backend --prefix --tail=-1 | grep "Started CampusOpsApplication"
+```
+
+**Windows (PowerShell)**
+
+```powershell
+kubectl logs -l app=campus-backend --prefix --tail=-1 | Select-String "Started CampusOpsApplication"
+```
+
+Relancez la commande jusqu'à obtenir **3 lignes**, une par pod backend.
+
+<div class="admonition note" markdown>
+<p class="admonition-title"><strong>Un redémarrage au premier lancement est normal</strong></p>
+
+Les pods créent en même temps les tables de la base neuve : l'un d'eux peut échouer (`relation ... already exists`) avant de repartir.
+
+</div>
 
 ---
 
-## Exercice 1 : Externaliser la Configuration avec un ConfigMap
+## Exercice 1 : Externaliser la configuration avec un ConfigMap
 
-### 1. Créer un ConfigMap avec des variables directes
-Créez un ConfigMap nommé `campus-config` contenant les paramètres non sensibles de configuration de l'application :
-* `SPRING_PROFILES_ACTIVE` : `production`
-* `SERVER_PORT` : `8080`
-* `LOGGING_LEVEL_COM_OKDLAB` : `INFO`
-* `JAVA_TOOL_OPTIONS` : `-XX:MaxRAMPercentage=75`
+<div class="admonition abstract" markdown>
+<p class="admonition-title"><strong>Ce que vous allez comprendre</strong></p>
 
-> 💡 **Pourquoi `JAVA_TOOL_OPTIONS` ?** Dans un conteneur, la JVM réserve par défaut seulement 25 % de la limite mémoire au tas (*heap*). Avec une limite de 512 Mi, Spring Boot n'aurait que 128 Mi et risquerait des erreurs `OutOfMemoryError`. Porter ce ratio à 75 % est un réglage classique des applications Java sur Kubernetes.
+Un **ConfigMap** range les paramètres non sensibles **hors** de l'image et du manifest de l'application : on change la configuration sans reconstruire ni réécrire le Deployment.
 
-```bash
-kubectl create configmap campus-config \
-  --from-literal=SPRING_PROFILES_ACTIVE=production \
-  --from-literal=SERVER_PORT=8080 \
-  --from-literal=LOGGING_LEVEL_COM_OKDLAB=INFO \
-  --from-literal=JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75 \
-  --dry-run=client -o yaml > configmap.yaml
+</div>
 
-kubectl apply -f configmap.yaml
-```
+### Étape 1 : Créer le ConfigMap `campus-config`
 
-Inspectez le contenu enregistré dans etcd :
+Créez un ConfigMap nommé `campus-config` avec les paramètres non sensibles de l'API :
+
+| Clé | Valeur |
+| :--- | :--- |
+| `SPRING_PROFILES_ACTIVE` | `production` |
+| `SERVER_PORT` | `8080` |
+| `LOGGING_LEVEL_COM_OKDLAB` | `INFO` |
+| `JAVA_TOOL_OPTIONS` | `-XX:MaxRAMPercentage=75` |
+
+La commande génère le manifest avec `--dry-run=client -o yaml` et l'envoie directement à `kubectl apply` (le `-` final signifie « lire le manifest sur l'entrée standard ») :
 
 ```bash
-kubectl get configmap campus-config -o yaml
+kubectl create configmap campus-config --from-literal=SPRING_PROFILES_ACTIVE=production --from-literal=SERVER_PORT=8080 --from-literal=LOGGING_LEVEL_COM_OKDLAB=INFO --from-literal=JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75 --dry-run=client -o yaml | kubectl apply -f -
 ```
 
-### 2. Créer un ConfigMap à partir d'un fichier de configuration
-Il est également très fréquent d'injecter des fichiers de configuration entiers (`application.properties`, `nginx.conf`, etc.).
+<div class="admonition info" markdown>
+<p class="admonition-title"><strong>Pourquoi <code>JAVA_TOOL_OPTIONS</code> ?</strong></p>
 
-1. Créez un fichier local `extra-config.properties` (avec votre éditeur, ou en ligne de commande) :
-   * **Bash (Linux, macOS, Git Bash, `k8s-control`)** :
-     ```bash
-     cat << 'EOF' > extra-config.properties
-     campus.feature.registration=enabled
-     campus.notification.channel=email
-     campus.max.students=250
-     EOF
-     ```
-   * **Windows PowerShell** :
-     ```powershell
-     @"
-     campus.feature.registration=enabled
-     campus.notification.channel=email
-     campus.max.students=250
-     "@ | Out-File -Encoding utf8 extra-config.properties
-     ```
+Dans un conteneur, la JVM réserve par défaut seulement 25 % de la limite mémoire au tas (*heap*). Avec une limite de 512 Mi, Spring Boot n'aurait que 128 Mi et risquerait des erreurs `OutOfMemoryError`. Porter ce ratio à 75 % est un réglage classique des applications Java sur Kubernetes.
 
-2. Créez un second ConfigMap depuis ce fichier :
-   ```bash
-   kubectl create configmap campus-app-props --from-file=extra-config.properties
-   kubectl describe configmap campus-app-props
-   ```
-   *Constatez que le nom du fichier devient la clé, et son contenu devient la valeur !*
+</div>
+
+<div class="admonition question" markdown>
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+
+1. Quelle commande affiche le ConfigMap `campus-config` au **format YAML** ?
+2. Sous quelle rubrique du manifest sont rangées les quatre valeurs ?
+3. Les valeurs sont-elles lisibles en clair ? Pourrait-on y ranger un mot de passe ?
+
+</div>
+
+### Étape 2 : Créer un ConfigMap à partir d'un fichier
+
+On injecte aussi très souvent des **fichiers de configuration entiers** (`application.properties`, `nginx.conf`…). Avec votre éditeur, créez un fichier `extra-config.properties` contenant ces trois lignes :
+
+```properties
+campus.feature.registration=enabled
+campus.notification.channel=email
+campus.max.students=250
+```
+
+Créez un second ConfigMap à partir de ce fichier :
+
+```bash
+kubectl create configmap campus-app-props --from-file=extra-config.properties
+```
+
+<div class="admonition question" markdown>
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+
+1. Quelle commande affiche la description détaillée du ConfigMap `campus-app-props` ?
+2. Combien de clés contient-il ? Quel est le nom de la clé, et que contient sa valeur ?
+3. Dans quel cas préférez-vous `--from-file` à `--from-literal` ?
+
+</div>
 
 ---
 
-## Exercice 2 : Sécuriser les Identifiants avec un Secret
+## Exercice 2 : Protéger les identifiants avec un Secret
 
-### 1. Créer un Secret pour PostgreSQL
-Créez un Secret de type `generic` nommé `campus-db-credentials` contenant les identifiants d'accès à la base de données :
-* `POSTGRES_DB` : `campus`
-* `POSTGRES_USER` : `campus`
-* `POSTGRES_PASSWORD` : `CampusSecret2026!`
+<div class="admonition abstract" markdown>
+<p class="admonition-title"><strong>Ce que vous allez comprendre</strong></p>
 
-```bash
-kubectl create secret generic campus-db-credentials \
-  --from-literal=POSTGRES_DB=campus \
-  --from-literal=POSTGRES_USER=campus \
-  --from-literal='POSTGRES_PASSWORD=CampusSecret2026!' \
-  --dry-run=client -o yaml > secret.yaml
+Un **Secret** s'utilise comme un ConfigMap, mais il est réservé aux données sensibles. Attention : ses valeurs sont **encodées** en base64, pas chiffrées.
 
-kubectl apply -f secret.yaml
-```
+</div>
 
-### 2. Observer l'encodage Base64
-Affichez le Secret au format YAML :
+### Étape 3 : Créer le Secret `campus-db-credentials`
+
+Créez un Secret de type `generic` nommé `campus-db-credentials` avec les identifiants de la base :
+
+| Clé | Valeur |
+| :--- | :--- |
+| `POSTGRES_DB` | `campus` |
+| `POSTGRES_USER` | `campus` |
+| `POSTGRES_PASSWORD` | `CampusSecret2026!` |
 
 ```bash
-kubectl get secret campus-db-credentials -o yaml
+kubectl create secret generic campus-db-credentials --from-literal=POSTGRES_DB=campus --from-literal=POSTGRES_USER=campus --from-literal='POSTGRES_PASSWORD=CampusSecret2026!' --dry-run=client -o yaml | kubectl apply -f -
 ```
 
-*Remarquez que les valeurs sont encodées en base64 pour éviter l'affichage accidentel en clair dans les logs ou les consoles.*
+<div class="admonition question" markdown>
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
 
-### 3. Décoder une valeur du Secret
+1. Contrairement à un Deployment, on n'enregistre pas ce manifest dans un fichier du dépôt. Pourquoi ?
 
-* **Sous Windows (PowerShell)** :
-  ```powershell
-  # Remplacez <chaine_base64> par la valeur affichée pour POSTGRES_PASSWORD
-  [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("<chaine_base64>"))
-  ```
+</div>
 
-* **Sous Linux (Ubuntu) / macOS (Bash)** :
-  ```bash
-  # Récupération et décodage direct en une commande :
-  kubectl get secret campus-db-credentials -o jsonpath="{.data.POSTGRES_PASSWORD}" | base64 --decode ; echo
-  ```
+### Étape 4 : Lire et décoder le Secret
 
-> ⚠️ **Sécurité en Production :** L'encodage Base64 n'est pas un chiffrement (n'importe qui peut le décoder). En production d'entreprise, les secrets doivent être chiffrés au repos dans etcd (*Encryption at Rest*) et gérés via des coffres-forts externes comme HashiCorp Vault ou AWS Secrets Manager via le pilote CSI Secrets Store.
+<div class="admonition question" markdown>
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+
+1. Quelle commande affiche le Secret `campus-db-credentials` au **format YAML** ?
+2. Les valeurs sont-elles lisibles en clair ? Sous quelle forme apparaissent-elles ?
+
+</div>
+
+Décodez maintenant le mot de passe :
+
+**Linux / macOS (Bash)**
+
+```bash
+kubectl get secret campus-db-credentials -o jsonpath="{.data.POSTGRES_PASSWORD}" | base64 --decode ; echo
+```
+
+**Windows (PowerShell)**
+
+```powershell
+[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String((kubectl get secret campus-db-credentials -o jsonpath="{.data.POSTGRES_PASSWORD}")))
+```
+
+<div class="admonition question" markdown>
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+
+3. Quel mot de passe obtenez-vous ?
+4. L'encodage base64 est-il un chiffrement ? Qui peut lire ce mot de passe ?
+
+</div>
+
+<details class="tip" markdown>
+<summary><strong>Indice : comment protège-t-on vraiment un Secret ?</strong></summary>
+
+Base64 n'est qu'un **encodage** : n'importe qui peut le décoder, comme vous venez de le faire. Un Secret est protégé par les **droits d'accès** (RBAC : qui a le droit de faire `get secret`, Atelier 07) et, en production, par le **chiffrement au repos** dans `etcd` ou un coffre-fort externe (HashiCorp Vault, AWS Secrets Manager via le pilote CSI Secrets Store).
+
+</details>
 
 ---
 
-## Exercice 3 : Demander du Stockage Persistant (PV et PVC)
+## Exercice 3 : Demander du stockage persistant (PV et PVC)
 
-Un pod est **éphémère** : les données écrites dans le conteneur, ou dans un volume `emptyDir` comme celui de la base de développement, disparaissent avec le pod. Pour les conserver, on branche dans le conteneur un **volume** qui stocke les données **en dehors** du pod. Kubernetes sépare l'offre de stockage et la demande :
+<div class="admonition abstract" markdown>
+<p class="admonition-title"><strong>Ce que vous allez comprendre</strong></p>
+
+Un pod est **éphémère** : les données écrites dans un volume `emptyDir` disparaissent avec lui. Pour les conserver, on branche un volume qui stocke les données **en dehors** du pod. Kubernetes sépare l'offre de stockage et la demande :
 
 | Objet | Qui le crée ? | Rôle |
 | :--- | :--- | :--- |
-| `PersistentVolume` (PV) | L'administrateur | L'**offre** : un morceau de stockage réel, pour tout le cluster (pas de namespace). Il annonce une taille, des modes d'accès et une politique de libération. |
-| `PersistentVolumeClaim` (PVC) | Le développeur (vous) | La **demande** : une taille et un mode d'accès, dans le namespace de l'application. Kubernetes la **lie** automatiquement à un PV qui convient. |
+| `PersistentVolume` (PV) | L'administrateur, ou un outil automatique | L'**offre** : un morceau de stockage réel, pour tout le cluster (pas de namespace). |
+| `PersistentVolumeClaim` (PVC) | Le développeur (vous) | La **demande** : une taille et un mode d'accès, dans le namespace de l'application. Kubernetes la **lie** à un PV qui convient. |
+| `StorageClass` | L'administrateur | Le **fournisseur** qui fabrique automatiquement un PV pour chaque PVC. |
 
 Le pod ne cite que le PVC : il ignore où se trouve le disque.
 
-> 💡 **Qui crée les PV sur notre cluster ?** Personne ne les écrit à la main : l'outil `local-path`, installé au Lab 00 (étape 5.4), joue le rôle de l'administrateur. Dès qu'un PVC en a besoin, il crée un PV dans un répertoire du disque d'un worker.
+</div>
 
-### 1. Créer le PersistentVolumeClaim
+### Étape 5 : Découvrir la StorageClass du cluster
+
+Affichez les classes de stockage disponibles :
+
+```bash
+kubectl get storageclass
+```
+
+<div class="admonition question" markdown>
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+
+1. Quelle classe est utilisée par défaut ? Quel outil (colonne `PROVISIONER`) fabrique les volumes ?
+2. Que vaut la colonne `VOLUMEBINDINGMODE` ?
+
+</div>
+
+<details class="tip" markdown>
+<summary><strong>Indice : qui crée les PV sur notre cluster ?</strong></summary>
+
+Personne ne les écrit à la main : l'outil `local-path`, installé à l'Atelier 01 (étape 16), joue le rôle de l'administrateur. Dès qu'un PVC en a besoin, il crée un PV dans un répertoire du disque d'un worker.
+
+Le mode `WaitForFirstConsumer` signifie « attendre le premier pod qui utilise le PVC » : `local-path` saura alors sur quel worker placer les données.
+
+</details>
+
+### Étape 6 : Créer le PersistentVolumeClaim
+
 Créez le fichier `pvc-postgres.yaml` :
 
 ```yaml
@@ -185,13 +314,18 @@ spec:
       storage: 1Gi
 ```
 
-Appliquez le PVC :
+<div class="admonition question" markdown>
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
 
-```bash
-kubectl apply -f pvc-postgres.yaml
-```
+1. Quelle commande crée le PVC à partir de ce fichier ?
+2. Quelles commandes affichent le PVC `pvc-postgres`, puis les PV du cluster ? Quel est le statut du PVC ? Combien de PV existent ?
+3. Pourquoi la demande reste-t-elle en attente ? (Relisez votre réponse à l'étape 5.)
+4. Quel mode d'accès demande ce PVC ? Pourquoi convient-il à une base de données ?
 
-Kubernetes lie un PVC à un PV selon trois critères : une **taille suffisante**, le **même mode d'accès**, et **un seul PVC par PV**. Les modes d'accès possibles :
+</div>
+
+<details class="tip" markdown>
+<summary><strong>Indice : les modes d'accès</strong></summary>
 
 | Mode d'accès | Signification | Cas d'usage type |
 | :--- | :--- | :--- |
@@ -199,24 +333,31 @@ Kubernetes lie un PVC à un PV selon trois critères : une **taille suffisante**
 | `ReadOnlyMany` (ROX) | Lecture seule par **plusieurs nœuds**. | Référentiel de binaires, contenu web statique. |
 | `ReadWriteMany` (RWX) | Lecture et écriture par **plusieurs nœuds**. | Partage de fichiers (NFS), uploads partagés. |
 
-### 2. Observer la demande en attente
-Affichez le PVC, puis les PV du cluster :
+Kubernetes lie un PVC à un PV selon trois critères : une **taille suffisante**, le **même mode d'accès**, et **un seul PVC par PV**.
 
-```bash
-kubectl get pvc pvc-postgres
-kubectl get pv
-```
+</details>
 
-*Le PVC est **`Pending`** et aucun PV n'existe encore (`No resources found`) : tant qu'aucun PV ne convient, la demande attend. Ici, `local-path` ne crée le PV qu'au moment où un pod utilise le PVC, car il saura alors sur quel worker placer les données. Le PV apparaîtra à l'exercice 4.*
+<div class="admonition example" markdown>
+<p class="admonition-title"><strong>Sur Minikube</strong></p>
 
-> 🛟 **Sur Minikube :** le PV est créé tout de suite et le PVC est déjà `Bound`. Le résultat final est le même.
+La classe `standard` de Minikube crée le PV tout de suite : le PVC est déjà `Bound`. Le résultat final est le même.
+
+</div>
 
 ---
 
-## Exercice 4 : Déployer PostgreSQL avec Volume et Secrets
+## Exercice 4 : Déployer PostgreSQL avec son volume et son Secret
 
-### 1. Créer le manifest de déploiement PostgreSQL
-Créez le fichier `postgres-deployment.yaml`, la version « production » de la base de développement installée à l'étape 0. Il porte le **même nom** (`campus-postgres`) et les **mêmes labels** : Kubernetes mettra donc à jour le Deployment existant au lieu d'en créer un second. Il lie le conteneur PostgreSQL officiel, le Secret et le volume persistant monté sur `/var/lib/postgresql/data` :
+<div class="admonition abstract" markdown>
+<p class="admonition-title"><strong>Ce que vous allez comprendre</strong></p>
+
+Un pod branche un PVC comme n'importe quel volume, et lit ses identifiants dans le Secret : plus aucun mot de passe ni aucune donnée ne vit dans le pod lui-même.
+
+</div>
+
+### Étape 7 : Lire le manifest PostgreSQL
+
+Créez le fichier `postgres-deployment.yaml` ci-dessous, la version « production » de la base de développement. Il porte le **même nom** (`campus-postgres`) et les **mêmes labels** : Kubernetes mettra à jour le Deployment existant au lieu d'en créer un second.
 
 ```yaml
 apiVersion: apps/v1
@@ -269,72 +410,101 @@ spec:
           claimName: pvc-postgres
 ```
 
-> 💡 **Lire le branchement du volume :**
-> * `volumes` (niveau pod) déclare **quel** stockage : ici le PVC `pvc-postgres`.
-> * `volumeMounts` (niveau conteneur) indique **où** le brancher : `/var/lib/postgresql/data`.
-> * Les deux sont reliés par le **même `name`** (`donnees`).
->
-> Comparez avec `starter/01-postgres-dev.yaml` : côté stockage, seule la source du volume change, `emptyDir: {}` devient `persistentVolumeClaim`.
+<div class="admonition question" markdown>
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
 
-> 💡 **`strategy: Recreate`** : avec un volume `ReadWriteOnce`, deux pods PostgreSQL ne doivent jamais écrire en même temps sur les mêmes fichiers. `Recreate` arrête l'ancien pod **avant** de démarrer le nouveau (au prix d'une courte coupure), là où `RollingUpdate` ferait coexister les deux.
+1. Où le conteneur lit-il son mot de passe ? Le mot de passe apparaît-il dans ce fichier ?
+2. Quelle section déclare **quel** stockage utiliser ? Quelle section indique **où** le brancher dans le conteneur ? Quel champ relie les deux ?
+3. Comparez avec `starter/01-postgres-dev.yaml` : côté stockage, quelle ligne a changé ?
 
-### 2. Appliquer le déploiement
-Appliquez le fichier, puis attendez la fin du remplacement du pod :
+</div>
 
-```bash
-kubectl apply -f postgres-deployment.yaml
-kubectl rollout status deployment/campus-postgres
-```
+<details class="tip" markdown>
+<summary><strong>Indice : lire le branchement du volume</strong></summary>
 
-*Avec la stratégie `Recreate`, l'ancien pod s'arrête **avant** que le nouveau démarre : pendant quelques secondes, il n'y a plus de base du tout. `rollout status` attend le nouveau pod (un `kubectl wait` sur le label répondrait trop tôt, en trouvant l'ancien pod encore présent).*
+* `volumes` (niveau pod) déclare **quel** stockage : ici le PVC `pvc-postgres`.
+* `volumeMounts` (niveau conteneur) indique **où** le brancher : `/var/lib/postgresql/data`.
+* Les deux sont reliés par le **même `name`** (`donnees`).
 
-Le Service `postgres` installé par le starter n'a pas besoin d'être modifié : son sélecteur `app=campus-postgres` désigne automatiquement le nouveau pod. Vérifiez-le :
+Dans le starter, la source du volume était `emptyDir: {}` ; elle devient `persistentVolumeClaim`.
 
-```bash
-kubectl get endpoints postgres
-```
+</details>
 
-Vérifiez les logs d'initialisation de PostgreSQL :
+<div class="admonition info" markdown>
+<p class="admonition-title"><strong>Pourquoi <code>strategy: Recreate</code> ?</strong></p>
 
-```bash
-kubectl logs -l app=campus-postgres --tail=20
-```
-*Vous devez voir la mention : `database system is ready to accept connections`. Si elle n'apparaît pas encore, PostgreSQL initialise sa base : relancez la commande quelques secondes plus tard.*
+Avec un volume `ReadWriteOnce`, deux pods PostgreSQL ne doivent jamais écrire en même temps sur les mêmes fichiers. `Recreate` arrête l'ancien pod **avant** de démarrer le nouveau (au prix d'une courte coupure), là où `RollingUpdate` ferait coexister les deux.
 
-> ⚠️ **Effet attendu sur le backend :** la nouvelle base démarre vide, avec le mot de passe du Secret (`CampusSecret2026!`), alors que le backend utilise encore l'ancien mot de passe `campus`. Ses nouvelles connexions échouent (`password authentication failed`) jusqu'à l'exercice 5, qui le reconfigure. Les données saisies sur la base de développement sont perdues : c'est exactement le défaut d'`emptyDir` que nous corrigeons.
+</div>
 
-### 3. Observer le volume créé automatiquement
-Le pod PostgreSQL utilise maintenant le PVC : `local-path` a créé le PV. Affichez à nouveau le PVC et les PV :
+### Étape 8 : Appliquer le déploiement
 
-```bash
-kubectl get pvc pvc-postgres
-kubectl get pv
-```
+<div class="admonition question" markdown>
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
 
-*Le PVC est passé à **`Bound`** et un PV au nom généré (`pvc-…`) est apparu. Lisez ses colonnes :*
+1. Quelle commande applique `postgres-deployment.yaml` ?
+2. Quelle commande attend la fin du remplacement du pod PostgreSQL (vue à l'Atelier 03) ?
+3. Le Service `postgres` du starter n'a pas été modifié. Quelle commande (vue à l'Atelier 04) vérifie qu'il envoie bien le trafic au nouveau pod ?
+4. Quelle commande affiche les 20 dernières lignes de logs du pod PostgreSQL (label `app=campus-postgres`) ? Quelle phrase indique que la base est prête ?
 
-| Colonne | Valeur | Signification |
+</div>
+
+<div class="admonition warning" markdown>
+<p class="admonition-title"><strong>Effet attendu sur le backend</strong></p>
+
+La nouvelle base démarre **vide**, avec le mot de passe du Secret (`CampusSecret2026!`), alors que le backend utilise encore l'ancien mot de passe `campus`. Ses nouvelles connexions échouent (`password authentication failed`) jusqu'à l'étape 10, qui le reconfigure. Les données de la base de développement sont perdues : c'est exactement le défaut d'`emptyDir` que nous corrigeons.
+
+</div>
+
+### Étape 9 : Observer le volume créé automatiquement
+
+Le pod PostgreSQL utilise maintenant le PVC : `local-path` a créé le PV. Affichez à nouveau le PVC et les PV.
+
+<div class="admonition question" markdown>
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+
+1. Quel est maintenant le statut du PVC ?
+2. Un PV est apparu : quels sont sa capacité, son mode d'accès et sa politique de libération (`RECLAIM POLICY`) ? À quel PVC est-il lié ?
+3. Sur quel nœud tourne le pod PostgreSQL ? Pourquoi ne pourra-t-il plus démarrer que sur ce nœud ?
+
+</div>
+
+<details class="tip" markdown>
+<summary><strong>Indice : lire les colonnes d'un PV</strong></summary>
+
+| Colonne | Valeur attendue | Signification |
 | :--- | :--- | :--- |
 | `CAPACITY` / `ACCESS MODES` | `1Gi` / `RWO` | La taille et le mode d'accès de votre demande. |
 | `RECLAIM POLICY` | `Delete` | Que faire du disque quand le PVC est supprimé : `Delete` l'efface, `Retain` garde les données. |
 | `STATUS` | `Bound` | Cycle de vie d'un PV : `Available` (libre) → `Bound` (lié à un PVC) → `Released` (PVC supprimé). |
 | `CLAIM` | `campus-dev/pvc-postgres` | Le PVC auquel il est lié. |
 
-> ⚠️ **Où sont les données ?** Avec `local-path`, le PV est un répertoire sur le disque **d'un worker**, comme un volume `hostPath`. Les données survivent à la suppression du pod (c'est ce que prouve le crash-test de l'exercice 5), mais pas à la perte de ce worker, et le pod PostgreSQL ne peut plus démarrer que sur lui (vérifiez avec `kubectl get pods -l app=campus-postgres -o wide`). En production, on utilise un stockage réseau ou cloud (NFS, AWS EBS…), accessible depuis n'importe quel nœud.
+Avec `local-path`, le PV est un répertoire sur le disque **d'un worker**. Les données survivent à la suppression du pod, mais pas à la perte de ce worker. En production, on utilise un stockage réseau ou cloud (NFS, AWS EBS…), accessible depuis n'importe quel nœud.
 
-<details>
-<summary>💡 <b>Indice : le PVC reste <code>Pending</code> alors que le pod PostgreSQL existe</b></summary>
+</details>
+
+<details class="tip" markdown>
+<summary><strong>Indice : le PVC reste <code>Pending</code> alors que le pod PostgreSQL existe</strong></summary>
 
 * Le pod reste lui aussi `Pending` : `kubectl describe pvc pvc-postgres` explique pourquoi dans sa section `Events`.
-* Vérifiez que l'outil `local-path` est installé : `kubectl get storageclass` doit afficher `local-path (default)`. Sinon, exécutez le script `setup-addons.sh` sur `k8s-control` (Lab 00, étape 5.4).
+* Vérifiez que `local-path` est installé : `kubectl get storageclass` doit afficher `local-path (default)`. Sinon, exécutez le script `setup-addons.sh` sur `k8s-control` (Atelier 01, étape 16).
+
 </details>
 
 ---
 
-## Exercice 5 : Connexion Backend & Crash-Test de Persistance
+## Exercice 5 : Reconnecter le backend et prouver la persistance
 
-### 1. Connecter le backend à la base de données
-Créez le fichier `deployment-backend.yaml` en partant de `starter/02-backend.yaml` (partie Deployment), pour que le backend lise ses paramètres dans le ConfigMap et le Secret, au lieu de valeurs écrites en clair. Seules les sections `env` et `envFrom` changent ; nous revenons aussi à **2 réplicas** pour préserver les ressources des workers :
+<div class="admonition abstract" markdown>
+<p class="admonition-title"><strong>Ce que vous allez comprendre</strong></p>
+
+Le backend lit désormais sa configuration dans le ConfigMap et ses identifiants dans le Secret. Puis un crash-test prouve que les données survivent à la destruction du pod.
+
+</div>
+
+### Étape 10 : Reconfigurer le backend
+
+Créez le fichier `deployment-backend.yaml` ci-dessous. Il reprend `starter/02-backend.yaml` (partie Deployment) ; seules les sections `envFrom` et `env` changent, et nous revenons à **2 réplicas** pour préserver les ressources des workers :
 
 ```yaml
 apiVersion: apps/v1
@@ -388,70 +558,70 @@ spec:
               key: POSTGRES_PASSWORD
 ```
 
-> 💡 `envFrom` injecte **toutes** les clés du ConfigMap comme variables d'environnement, alors que `env` + `secretKeyRef` choisit précisément chaque clé du Secret. Le mot de passe n'apparaît plus nulle part dans le manifest : il peut être versionné dans Git sans risque.
+<div class="admonition question" markdown>
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
 
-Appliquez le déploiement :
+1. Quelle différence faites-vous entre `envFrom` + `configMapRef` et `env` + `secretKeyRef` ?
+2. Ce fichier peut-il être versionné dans Git sans risque ? Pourquoi ?
+3. Quelles commandes appliquent ce fichier, puis attendent la fin du déploiement ?
+4. Avec la commande de vérification de l'étape 0, combien de lignes `Started CampusOpsApplication` obtenez-vous ?
 
-```bash
-kubectl apply -f deployment-backend.yaml
-kubectl rollout status deployment/campus-backend
-```
+</div>
 
-*Vérifiez dans les logs que l'API se connecte bien à la nouvelle base : `kubectl logs -l app=campus-backend --tail=5` doit afficher `Started CampusOpsApplication`.*
+### Étape 11 : Écrire des données de test dans PostgreSQL
 
-### 2. Écrire des données de test dans PostgreSQL
-Connectez-vous directement en SQL au conteneur PostgreSQL :
-
-```bash
-kubectl exec -it deployment/campus-postgres -- psql -U campus -d campus
-```
-
-Exécutez les commandes SQL suivantes :
-
-```sql
-CREATE TABLE test_candidats (
-    id SERIAL PRIMARY KEY,
-    nom VARCHAR(100),
-    filiere VARCHAR(100),
-    date_inscription TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-INSERT INTO test_candidats (nom, filiere) VALUES ('Alice Dubois', 'Cloud DevOps Kubernetes');
-INSERT INTO test_candidats (nom, filiere) VALUES ('Bob Martin', 'Architecte Microservices');
-
-SELECT * FROM test_candidats;
-\q
-```
-
-### 3. Crash-Test : Destruction brutale du Pod
-Simulons une panne matérielle ou un redémarrage impromptu du serveur en supprimant immédiatement le pod PostgreSQL :
+Créez une table et insérez deux candidats directement dans la base, avec le client `psql` du conteneur :
 
 ```bash
-kubectl delete pod -l app=campus-postgres --force --grace-period=0
+kubectl exec deployment/campus-postgres -- psql -U campus -d campus -c "CREATE TABLE test_candidats (id SERIAL PRIMARY KEY, nom VARCHAR(100)); INSERT INTO test_candidats (nom) VALUES ('Alice Dubois'), ('Bob Martin');"
 ```
 
-Observez le contrôleur Deployment recréer immédiatement un nouveau pod de remplacement :
+Relisez la table :
 
 ```bash
-kubectl get pods -l app=campus-postgres -w
+kubectl exec deployment/campus-postgres -- psql -U campus -d campus -c "SELECT * FROM test_candidats;"
 ```
 
-### 4. Vérification de la survie des données
-Dès que le nouveau pod est `1/1 Running`, reconnectez-vous en SQL pour interroger la table :
+<div class="admonition question" markdown>
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
 
-```bash
-kubectl exec -it deployment/campus-postgres -- psql -U campus -d campus -c "SELECT * FROM test_candidats;"
-```
+1. Combien de lignes contient la table `test_candidats` ?
+2. `kubectl exec deployment/campus-postgres` ne cite aucun nom de pod. Dans quel pod la commande s'exécute-t-elle ?
 
-*Résultat : Les données sont parfaitement conservées ! Le nouveau Pod a remonté le volume persistant `pvc-postgres` sans aucune perte d'information.*
+</div>
+
+### Étape 12 : Crash-test, détruire le pod PostgreSQL
+
+Simulez une panne en supprimant le pod PostgreSQL.
+
+<div class="admonition question" markdown>
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+
+1. Quelle commande supprime le pod PostgreSQL **à l'aide de son label** `app=campus-postgres` ?
+2. Quelle commande suit les pods PostgreSQL **en continu** ? Quittez-la avec `Ctrl + C` quand le nouveau pod est `1/1 Running`.
+3. Le nouveau pod porte-t-il le même nom que l'ancien ? Quel composant l'a recréé ?
+
+</div>
+
+### Étape 13 : Vérifier la survie des données
+
+Relancez la commande `SELECT` de l'étape 11.
+
+<div class="admonition question" markdown>
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+
+1. Les deux candidats sont-ils toujours présents ?
+2. Qu'est-ce qui a survécu à la destruction du pod ? Que serait-il arrivé avec le volume `emptyDir` du starter ?
+
+</div>
 
 ---
 
 ## Critères de Validation (Checklist)
 
 - [ ] Les paramètres non sensibles sont découplés dans le ConfigMap `campus-config`.
-- [ ] Les mots de passe sont protégés dans le Secret `campus-db-credentials` et décodés avec succès.
+- [ ] Les mots de passe sont protégés dans le Secret `campus-db-credentials`, et vous savez qu'un Secret est encodé en base64, pas chiffré.
 - [ ] Le PVC `pvc-postgres` est `Bound` à un PV (`kubectl get pvc,pv`) dont vous savez lire la capacité, le mode d'accès, la politique de libération et le statut.
-- [ ] Le Service `postgres` (installé par le starter) pointe vers le nouveau pod PostgreSQL persistant.
-- [ ] Le backend `campus-backend` est configuré avec la chaîne JDBC pointant vers `postgres:5432/campus`.
-- [ ] Le test de destruction du pod confirme la persistance totale des données sur le volume.
+- [ ] Le Service `postgres` (installé par le starter) pointe vers le nouveau pod PostgreSQL persistant (`kubectl get endpoints postgres`).
+- [ ] Le backend `campus-backend` lit sa configuration dans `campus-config` et ses identifiants dans `campus-db-credentials`.
+- [ ] Le crash-test confirme que les données de `test_candidats` survivent à la suppression du pod PostgreSQL.

@@ -8,7 +8,7 @@ Conformément au programme de la formation **XW335**, votre progression est éva
 | Fin du Jour 1 | [QCM Jour 1](#qcm-jour-1-architecture-installation-et-deploiements) | 10 min |
 | Fin du Jour 2 | [QCM Jour 2](#qcm-jour-2-administration-et-securite) puis **le même test de positionnement** qu'à l'entrée | 20 min |
 
-Les mises en situation pratiques (atelier de *reverse debugging* du Lab 06 et challenge final du Lab 08) complètent ces questionnaires.
+Les mises en situation pratiques (atelier de *reverse debugging* de l'Atelier 06 et challenge final de l'Atelier 08) complètent ces questionnaires.
 
 > 💡 Notez vos réponses sur une feuille ou dans un fichier : vous comparerez votre test d'entrée et votre test de sortie pour mesurer votre progression.
 

@@ -1,5 +1,5 @@
 # ==============================================================================
-# Starter du Lab 06 - Base PostgreSQL persistante (état de fin du Lab 05)
+# Starter de l'Atelier 06 - Base PostgreSQL persistante (état de fin de l'Atelier 05)
 # ------------------------------------------------------------------------------
 # PVC pvc-postgres (1Gi, RWO) + Deployment lisant ses identifiants dans le
 # Secret campus-db-credentials + Service postgres.

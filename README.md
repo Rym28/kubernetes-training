@@ -19,8 +19,8 @@ python -m mkdocs build
 
 Le portail inclut :
 * **Architecture Applicative** : Schémas Mermaid du *Campus Summer Portal* et images Docker Hub officielles (`regaieg/campus`).
-* **Guide d'Environnement** : Procédures Minikube, KillerCoda et AWS Academy Learner Lab (Terraform).
-* **8 Ateliers Pratiques (Labs 00 à 08)** : Énoncés pas-à-pas avec indices interactifs pliables et commandes multi-OS (Windows PowerShell & Linux Bash).
+* **Guide d'Environnement** : Procédures Minikube et AWS Academy Learner Lab (Terraform).
+* **8 Ateliers Pratiques (de l'Atelier 01 à l'Atelier 08)** : Énoncés pas-à-pas avec indices interactifs pliables et commandes multi-OS (Windows PowerShell & Linux Bash).
 
 ---
 

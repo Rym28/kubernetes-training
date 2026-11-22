@@ -5,8 +5,13 @@
 # ==============================================================================
 set -euo pipefail
 
-echo "==> [1/4] Initialisation de kubeadm (CIDR Pods: 192.168.0.0/16 pour Calico)"
-sudo kubeadm init --pod-network-cidr=192.168.0.0/16
+# IP publique (Elastic IP) lue dans les métadonnées EC2 (IMDSv2) : elle est ajoutée au certificat
+# de l'API Server pour que kubectl puisse la joindre depuis le poste du stagiaire.
+IMDS_TOKEN=$(curl -fsS -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 300")
+PUBLIC_IP=$(curl -fsS -H "X-aws-ec2-metadata-token: ${IMDS_TOKEN}" http://169.254.169.254/latest/meta-data/public-ipv4)
+
+echo "==> [1/4] Initialisation de kubeadm (CIDR Pods: 192.168.0.0/16 pour Calico, SAN: ${PUBLIC_IP})"
+sudo kubeadm init --pod-network-cidr=192.168.0.0/16 --apiserver-cert-extra-sans="${PUBLIC_IP}"
 
 echo "==> [2/4] Configuration des accès kubectl pour l'utilisateur ubuntu"
 mkdir -p "$HOME/.kube"

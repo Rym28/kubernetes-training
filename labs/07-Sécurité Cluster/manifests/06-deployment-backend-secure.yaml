@@ -1,5 +1,5 @@
 # ==============================================================================
-# Lab 07 - Exercice 3 : API campus-backend durcie
+# Atelier 07 - Exercice 3 : API campus-backend durcie
 # ------------------------------------------------------------------------------
 # Identique au starter 03-backend.yaml, plus :
 #   - securityContext du pod (UID/GID 10001, interdiction de root)
