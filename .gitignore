@@ -44,3 +44,19 @@ kubeconfig
 *.kubeconfig
 kubeconfig.yaml
 .env
+
+# ==============================================================
+# CONTENU RÉSERVÉ AU FORMATEUR (non diffusé aux stagiaires)
+# Les fichiers restent en local mais ne sont plus versionnés.
+# ==============================================================
+.agents/
+AGENTS.md
+CLAUDE.md
+*.pptx
+Demo/
+pgm/
+campus-app/
+scripts/
+.githooks/
+__pycache__/
+/config
