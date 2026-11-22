@@ -4,7 +4,7 @@ Conformément au programme de la formation **XW335**, votre progression est éva
 
 | Moment | Support | Durée |
 | :--- | :--- | :--- |
-| Fin du Jour 1 | [QCM Jour 1](#qcm-jour-1-architecture-installation-et-deploiements) | 10 min |
+| Fin du Jour 1 | [QCM Jour 1 en ligne](https://docs.google.com/forms/d/e/1FAIpQLSeAVS5OJ0aKm7aEgJvq8oaAFm8BH1TLIBZNwpCW_XiwN_qL0A/viewform) ([version texte](#qcm-jour-1-architecture-installation-et-deploiements)) | 10 min |
 | Fin du Jour 2 | [QCM Jour 2](#qcm-jour-2-administration-et-securite) puis le [test de positionnement](#test-de-positionnement-fin-de-formation) | 20 min |
 
 La mise en situation pratique (atelier de *reverse debugging* de l'Atelier 06) complète ces questionnaires.
@@ -102,6 +102,8 @@ Pour chaque objectif, attribuez-vous une note de **1** (je ne sais pas faire) à
 ---
 
 ## QCM Jour 1 : Architecture, Installation et Déploiements
+
+> 📝 **Répondez en ligne :** [QCM Jour 1 (Google Forms)](https://docs.google.com/forms/d/e/1FAIpQLSeAVS5OJ0aKm7aEgJvq8oaAFm8BH1TLIBZNwpCW_XiwN_qL0A/viewform). Les questions ci-dessous en sont la version texte.
 
 **1.** Sur un cluster Kubeadm, dans quel répertoire le `kubelet` lit-il les manifests des *Static Pods* du plan de contrôle ?
 
