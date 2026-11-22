@@ -85,7 +85,7 @@ aws --version
 ssh -V
 ```
 
-> 💡 **Poste verrouillé ?** Si `kubectl` ne peut pas être installé ou si le port 6443 est filtré, réalisez les ateliers 03 à 07 en **Option B** : commandes lancées dans la session SSH sur `k8s-control`, manifests dans `~/labs/` (voir l'étape 19 de l'Atelier 01).
+> 💡 **Poste verrouillé ?** Si `kubectl` ne peut pas être installé ou si le port 6443 est filtré, réalisez les ateliers 03 à 07 en **Option B** : commandes lancées dans la session SSH sur `k8s-control`, manifests dans `~/labs/` (voir l'étape 3 de l'exercice 4 de l'Atelier 01).
 
 ---
 

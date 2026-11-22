@@ -36,7 +36,7 @@ Le **Campus Summer Portal** (frontend Nginx, API Spring Boot, base PostgreSQL) s
 <div class="admonition note" markdown>
 <p class="admonition-title"><strong>Budget AWS Academy : 50 $ pour toute la formation</strong></p>
 
-Éteignez vos instances chaque soir (encadré « Maîtriser le budget » de l'étape 8).
+Éteignez vos instances chaque soir (encadré « Maîtriser le budget » de l'étape 6 de l'exercice 2).
 
 </div>
 
@@ -98,7 +98,7 @@ Résultat attendu : un seul nœud, `minikube`, à l'état `Ready`.
 
 ## Exercice 2 : Provisionner l'infrastructure AWS avec Terraform
 
-### Étape 3 : Démarrer le Learner Lab
+### Étape 1 : Démarrer le Learner Lab
 
 1. Connectez-vous à votre compte **AWS Academy**, entrez dans le cours **AWS Academy Learner Lab**, cliquez sur **Modules** dans le menu de gauche, puis sur **Launch AWS Academy Learner Lab**.
 
@@ -112,14 +112,14 @@ Résultat attendu : un seul nœud, `minikube`, à l'état `Ready`.
 
 ![Voyant vert Ready](img/img_1.png)
 
-### Étape 4 : Récupérer la clé SSH
+### Étape 2 : Récupérer la clé SSH
 
 Cliquez sur **AWS Details** :
 
 ![Panneau AWS Details](img/pem.png)
 
 1. **Download SSH Key** : enregistrez `labsuser.pem` dans `labs/01-Installation-Cluster/terraform/`.
-2. **AWS CLI → Show** : gardez cette fenêtre ouverte pour l'étape 7.
+2. **AWS CLI → Show** : gardez cette fenêtre ouverte pour l'étape 5.
 
 <div class="admonition warning" markdown>
 <p class="admonition-title"><strong>Sécurité</strong></p>
@@ -128,7 +128,7 @@ Ne committez et ne partagez jamais la clé `.pem` ni les identifiants AWS.
 
 </div>
 
-### Étape 5 : Installer Terraform et l'AWS CLI
+### Étape 3 : Installer Terraform et l'AWS CLI
 
 **Votre poste**
 
@@ -145,7 +145,7 @@ Si une commande n'est pas reconnue, installez l'outil puis **rouvrez votre termi
 | macOS | `brew tap hashicorp/tap && brew install hashicorp/tap/terraform` | `brew install awscli` |
 | Linux | [Procédure APT HashiCorp](https://developer.hashicorp.com/terraform/install#linux) | [Procédure AWS](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) |
 
-### Étape 6 : Se placer dans le dossier Terraform
+### Étape 4 : Se placer dans le dossier Terraform
 
 **Votre poste**
 
@@ -160,7 +160,7 @@ Résultat attendu :
 labsuser.pem  main.tf  outputs.tf  provider.tf  scripts  terraform.tfvars.example  variables.tf
 ```
 
-### Étape 7 : Enregistrer les identifiants AWS
+### Étape 5 : Enregistrer les identifiants AWS
 
 Terraform a besoin de vos identifiants AWS pour créer les instances.
 
@@ -217,7 +217,7 @@ Des variables d'environnement `AWS_*` sont définies dans votre terminal et prim
 
 </details>
 
-### Étape 8 : Lancer le provisionnement
+### Étape 6 : Lancer le provisionnement
 
 **Votre poste**
 
@@ -232,7 +232,7 @@ Résultat attendu : en 1 minute environ, les 3 instances sont créées et `terra
 <details class="tip" markdown>
 <summary><strong>Indice : <code>terraform apply</code> échoue</strong></summary>
 
-* `ExpiredToken` / `InvalidClientTokenId` : identifiants expirés ou incomplets (encadré « Session AWS expirée » de l'étape 7).
+* `ExpiredToken` / `InvalidClientTokenId` : identifiants expirés ou incomplets (encadré « Session AWS expirée » de l'étape 5).
 * `UnauthorizedOperation` : seules les régions `us-east-1` et `us-west-2` sont autorisées.
 * `InvalidKeyPair.NotFound` : la paire de clés doit s'appeler `vockey`.
 
@@ -269,7 +269,7 @@ terraform destroy -auto-approve
 
 ## Exercice 3 : Installer le cluster avec Kubeadm
 
-### Étape 9 : Ouvrir une session SSH sur chaque nœud
+### Étape 1 : Ouvrir une session SSH sur chaque nœud
 
 Depuis le dossier `terraform/`, restreignez les droits de la clé (une seule fois), puis connectez-vous à `k8s-control` :
 
@@ -335,7 +335,7 @@ ssh -i labsuser.pem ubuntu@<IP_PUBLIQUE_WORKER_2>
 
 Le prompt affiche `ubuntu@ip-172-31-…` ? L'installation n'est pas terminée : reconnectez-vous dans une minute.
 
-### Étape 10 : Vérifier que les nœuds sont prêts
+### Étape 2 : Vérifier que les nœuds sont prêts
 
 **Les trois nœuds — SSH**
 
@@ -346,7 +346,7 @@ kubeadm version -o short
 
 Résultat attendu : `status: done` et `v1.30.x` sur chaque nœud.
 
-### Étape 11 : Initialiser le Control Plane
+### Étape 3 : Initialiser le Control Plane
 
 Remplacez `<IP_PUBLIQUE_CONTROL>` par la valeur `control_plane_public_ip` de `terraform output` :
 
@@ -359,16 +359,16 @@ sudo kubeadm init --pod-network-cidr=192.168.0.0/16 --apiserver-cert-extra-sans=
 | Option | Rôle |
 | :--- | :--- |
 | `--pod-network-cidr` | Plage d'adresses des Pods (Calico) |
-| `--apiserver-cert-extra-sans` | Ajoute l'IP publique au certificat de l'API Server, pour que `kubectl` la joigne depuis votre poste (étape 17) |
+| `--apiserver-cert-extra-sans` | Ajoute l'IP publique au certificat de l'API Server, pour que `kubectl` la joigne depuis votre poste (étape 1 de l'exercice 4) |
 
 <div class="admonition warning" markdown>
 <p class="admonition-title"><strong>Ne copiez pas la commande <code>kubeadm join …</code> affichée par <code>kubeadm init</code></strong></p>
 
-Elle est coupée sur **deux lignes** (avec un `\` et une tabulation). Copiée-collée depuis le terminal, elle arrive cassée et provoque des erreurs du type `accepts at most 1 arg(s), received 2` ou `--discovery-token-ca-cert-hash: command not found`. À l'étape 12, vous générerez une version **sur une seule ligne**.
+Elle est coupée sur **deux lignes** (avec un `\` et une tabulation). Copiée-collée depuis le terminal, elle arrive cassée et provoque des erreurs du type `accepts at most 1 arg(s), received 2` ou `--discovery-token-ca-cert-hash: command not found`. À l'étape 4, vous générerez une version **sur une seule ligne**.
 
 </div>
 
-### Étape 12 : Raccorder les Workers
+### Étape 4 : Raccorder les Workers
 
 **1. Générer la commande `join` sur une seule ligne**
 
@@ -382,7 +382,7 @@ Résultat attendu : **une seule ligne** commençant par `kubeadm join 172.31.…
 
 **2. Exécuter la commande sur chaque worker**
 
-Dans le terminal de `k8s-worker-1`, puis dans celui de `k8s-worker-2` (connectés depuis `labs/01-Installation-Cluster/terraform`, étape 9), tapez `sudo ` puis collez la ligne copiée :
+Dans le terminal de `k8s-worker-1`, puis dans celui de `k8s-worker-2` (connectés depuis `labs/01-Installation-Cluster/terraform`, étape 1), tapez `sudo ` puis collez la ligne copiée :
 
 **k8s-worker-1 et k8s-worker-2 — SSH**
 
@@ -407,7 +407,7 @@ Résultat attendu : `This node has joined the cluster`.
 
 </details>
 
-### Étape 13 : Donner à `kubectl` l'accès au cluster
+### Étape 5 : Donner à `kubectl` l'accès au cluster
 
 `kubeadm init` a créé le fichier de connexion administrateur `/etc/kubernetes/admin.conf` (**kubeconfig**). Copiez-le là où `kubectl` le cherche :
 
@@ -422,7 +422,7 @@ kubectl get nodes
 
 Résultat attendu : les 3 nœuds (`k8s-control`, `k8s-worker-1`, `k8s-worker-2`) apparaissent en `NotReady`, car aucun plugin réseau (CNI) n'est encore installé.
 
-### Étape 14 : Installer le plugin réseau Calico (CNI)
+### Étape 6 : Installer le plugin réseau Calico (CNI)
 
 **k8s-control — SSH**
 
@@ -433,7 +433,7 @@ kubectl get nodes -w
 
 Résultat attendu : après 30 secondes à 1 minute, les 3 nœuds passent `Ready`. Quittez avec `Ctrl + C`.
 
-### Étape 15 : Valider le cluster
+### Étape 7 : Valider le cluster
 
 **k8s-control — SSH**
 
@@ -459,7 +459,7 @@ k8s-worker-2   Ready    <none>          1m    v1.30.x
 
 </details>
 
-### Étape 16 : Installer les composants additionnels de la formation
+### Étape 8 : Installer les composants additionnels de la formation
 
 Le script installe la StorageClass `local-path` (Atelier 05), Ingress NGINX (NodePort `30080`), Helm et l'alias `k` :
 
@@ -488,7 +488,7 @@ ln -sfn ~/formation/labs ~/labs
 
 ## Exercice 4 : Administrer le cluster depuis votre poste
 
-### Étape 17 : Récupérer le kubeconfig sur votre poste
+### Étape 1 : Récupérer le kubeconfig sur votre poste
 
 Le script `get-kubeconfig` copie le kubeconfig de `k8s-control` dans `terraform/kubeconfig.yaml`, y remplace l'IP privée de l'API Server par l'IP publique, puis teste la connexion. Depuis le dossier `terraform/` :
 
@@ -524,12 +524,12 @@ Ne committez et ne partagez jamais `kubeconfig.yaml`.
     sudo crictl rm -f $(sudo crictl ps -q --name kube-apiserver)
     ```
 
-* **`Permission denied (publickey)` ou délai dépassé** : vérifiez l'IP (`terraform output control_plane_public_ip`) et les droits de la clé (étape 9).
+* **`Permission denied (publickey)` ou délai dépassé** : vérifiez l'IP (`terraform output control_plane_public_ip`) et les droits de la clé (étape 1 de l'exercice 3).
 * **Windows : « l'exécution de scripts est désactivée »** : lancez d'abord `Set-ExecutionPolicy -Scope Process Bypass`.
 
 </details>
 
-### Étape 18 : Utiliser ce kubeconfig dans votre terminal
+### Étape 2 : Utiliser ce kubeconfig dans votre terminal
 
 Depuis le dossier `terraform/` :
 
@@ -554,7 +554,7 @@ Redéfinissez `KUBECONFIG` dans chaque nouveau terminal, aux ateliers suivants �
 
 </div>
 
-### Étape 19 : Choisir votre modalité de travail (Ateliers 03 à 07)
+### Étape 3 : Choisir votre modalité de travail (Ateliers 03 à 07)
 
 | | **Option A : poste local (recommandée)** | **Option B : SSH sur `k8s-control`** |
 | :--- | :--- | :--- |

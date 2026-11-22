@@ -197,7 +197,7 @@ Lisez la raison : `kubectl logs frontend-test`. Si vous voyez `host not found in
 
 </div>
 
-### Étape 4 : Observer les détails du Pod
+### Étape 1 : Observer les détails du Pod
 
 Affichez d'abord la description complète du pod `frontend-test` (questions 1 et 2), puis comparez votre fichier avec le manifest stocké par le cluster (questions 3 et 4) :
 
@@ -216,7 +216,7 @@ kubectl get pod frontend-test -o jsonpath='{.status.phase}'
 
 </div>
 
-### Étape 5 : Accéder à l'application via un port-forward
+### Étape 2 : Accéder à l'application via un port-forward
 
 Ouvrez un tunnel du port `8888` local vers le port `8080` du pod. La commande reste au premier plan tant que le tunnel est ouvert :
 
@@ -246,7 +246,7 @@ Face à un pod en erreur, le statut affiché oriente vers le bon outil : `descri
 
 </div>
 
-### Étape 6 : Provoquer une erreur
+### Étape 1 : Provoquer une erreur
 
 Lancez un pod de manière **impérative** (sans fichier) avec une version d'image qui n'existe pas, puis listez les pods :
 
@@ -276,7 +276,7 @@ Un fichier YAML se rejoue à l'identique ; une commande impérative, elle, est p
 
 </div>
 
-### Étape 7 : Supprimer les Pods
+### Étape 1 : Supprimer les Pods
 
 <div class="admonition question" markdown>
 <p class="admonition-title"><strong>À vous de répondre</strong></p>
@@ -286,7 +286,7 @@ Un fichier YAML se rejoue à l'identique ; une commande impérative, elle, est p
 
 </div>
 
-### Étape 8 : Rejouer le manifest
+### Étape 2 : Rejouer le manifest
 
 Les deux pods ont disparu.
 
@@ -308,11 +308,11 @@ Supprimez à nouveau le pod de test.
 <div class="admonition abstract" markdown>
 <p class="admonition-title"><strong>Ce que vous allez comprendre</strong></p>
 
-Écrire un manifest à la main, comme à l'étape 1, permet de comprendre sa structure mais prend du temps et favorise les fautes d'indentation. En pratique, **on ne part pas d'une page blanche** : on génère un squelette propre et valide, puis on le complète.
+Écrire un manifest à la main, comme à l'étape 1 de l'exercice 1, permet de comprendre sa structure mais prend du temps et favorise les fautes d'indentation. En pratique, **on ne part pas d'une page blanche** : on génère un squelette propre et valide, puis on le complète.
 
 </div>
 
-### Étape 9 : Générer le manifest
+### Étape 1 : Générer le manifest
 
 Générez le manifest `pod-frontend.yaml` avec `kubectl run` combiné avec `--dry-run=client -o yaml`, sans rien créer sur le cluster :
 
@@ -335,9 +335,9 @@ kubectl run campus-frontend --image=regaieg/campus:frontend-1.0.0 --port=8080 --
 
 </div>
 
-### Étape 10 : Compléter le manifest généré
+### Étape 2 : Compléter le manifest généré
 
-Ouvrez `pod-frontend.yaml` dans votre éditeur et comparez-le avec celui de l'étape 1.
+Ouvrez `pod-frontend.yaml` dans votre éditeur et comparez-le avec celui de l'étape 1 de l'exercice 1.
 
 <div class="admonition question" markdown>
 <p class="admonition-title"><strong>À vous de répondre</strong></p>
@@ -349,9 +349,9 @@ Ouvrez `pod-frontend.yaml` dans votre éditeur et comparez-le avec celui de l'é
 Puis modifiez le fichier :
 
 * supprimez la ligne `status: {}` : cette rubrique est remplie par Kubernetes, vous ne l'écrivez jamais ;
-* ajoutez dans `spec` le bloc `hostAliases` de l'étape 1 : `kubectl run` ne sait pas le générer, et sans lui Nginx ne démarre pas.
+* ajoutez dans `spec` le bloc `hostAliases` de l'étape 1 de l'exercice 1 : `kubectl run` ne sait pas le générer, et sans lui Nginx ne démarre pas.
 
-### Étape 11 : Appliquer le manifest
+### Étape 3 : Appliquer le manifest
 
 <div class="admonition question" markdown>
 <p class="admonition-title"><strong>À vous de répondre</strong></p>
@@ -371,7 +371,7 @@ Puis modifiez le fichier :
 
 </div>
 
-### Étape 12 : Exécuter une commande dans le conteneur (`kubectl exec`)
+### Étape 1 : Exécuter une commande dans le conteneur (`kubectl exec`)
 
 Testez la réponse HTTP du serveur web depuis l'intérieur du conteneur :
 
@@ -409,7 +409,7 @@ Sous les distributions légères comme Alpine Linux, `localhost` résout par dé
 
 </div>
 
-### Étape 13 : Le crash-test du Pod isolé
+### Étape 2 : Le crash-test du Pod isolé
 
 <div class="admonition question" markdown>
 <p class="admonition-title"><strong>À vous de répondre</strong></p>

@@ -19,7 +19,7 @@ Toutes les commandes de cet atelier (`kubectl create deployment`, `kubectl scale
 
 Réalisez ce lab sur ce cluster, piloté au choix :
 
-* **Option A (Recommandée - Confort DevOps Local) :** depuis votre machine locale, avec votre `kubectl` et votre `kubeconfig`. Dans **chaque nouveau terminal**, placé à la racine du dépôt, pointez d'abord `kubectl` vers le fichier `kubeconfig.yaml` récupéré à l'étape 17 de l'Atelier 01 :
+* **Option A (Recommandée - Confort DevOps Local) :** depuis votre machine locale, avec votre `kubectl` et votre `kubeconfig`. Dans **chaque nouveau terminal**, placé à la racine du dépôt, pointez d'abord `kubectl` vers le fichier `kubeconfig.yaml` récupéré à l'étape 1 de l'exercice 4 de l'Atelier 01 :
     * Windows (PowerShell) : `$env:KUBECONFIG = "$PWD\labs\01-Installation-Cluster\terraform\kubeconfig.yaml"`
     * Linux / macOS (Bash) : `export KUBECONFIG=$PWD/labs/01-Installation-Cluster/terraform/kubeconfig.yaml`
     * Vérification : `kubectl get nodes` doit afficher les 3 nœuds à l'état `Ready`.
@@ -230,7 +230,7 @@ Ouvrez `deployment-backend.yaml` dans votre éditeur.
 
 Modifiez `deployment-backend.yaml` :
 
-* renommez le conteneur en `campus-backend` (ce nom sera utilisé à l'étape 13 par `kubectl set image … campus-backend=…`) ;
+* renommez le conteneur en `campus-backend` (ce nom sera utilisé à l'étape 1 de l'exercice 4 par `kubectl set image … campus-backend=…`) ;
 * supprimez les lignes vides `strategy: {}`, `resources: {}` et `status: {}` ;
 * ajoutez sous le conteneur une section `env` avec les trois variables de connexion à PostgreSQL ci-dessous.
 
@@ -351,7 +351,7 @@ Kubernetes compare en permanence l'**état désiré** (ce que vous avez écrit) 
 
 </div>
 
-### Étape 6 : Simuler une panne
+### Étape 1 : Simuler une panne
 
 Relevez le nom de l'un des deux pods `campus-backend-xxxx-yyyy`.
 
@@ -362,7 +362,7 @@ Relevez le nom de l'un des deux pods `campus-backend-xxxx-yyyy`.
 
 </div>
 
-### Étape 7 : Observer la réconciliation
+### Étape 2 : Observer la réconciliation
 
 Juste après la suppression, listez à nouveau les pods du backend.
 
@@ -382,7 +382,7 @@ Un contrôleur Kubernetes répète sans fin trois actions : **observer** l'état
 
 </details>
 
-### Étape 8 : Monter en charge de manière impérative
+### Étape 3 : Monter en charge de manière impérative
 
 Un afflux d'étudiants est annoncé : passez à **4** réplicas, sans modifier votre fichier.
 
@@ -401,7 +401,7 @@ Cherchez dans `kubectl --help` une commande dont le nom évoque la mise à l'éc
 
 </details>
 
-### Étape 9 : Redescendre de manière déclarative
+### Étape 4 : Redescendre de manière déclarative
 
 Modifiez votre fichier `deployment-backend.yaml` pour fixer `replicas: 3`, puis appliquez-le.
 
@@ -409,7 +409,7 @@ Modifiez votre fichier `deployment-backend.yaml` pour fixer `replicas: 3`, puis 
 <p class="admonition-title"><strong>À vous de répondre</strong></p>
 
 1. Combien de pods restent ? Lequel a été supprimé ?
-2. Juste avant d'appliquer, que contenait votre fichier, et que contenait le cluster ? Pourquoi, en équipe, préfère-t-on modifier le **fichier** plutôt que d'utiliser la commande de l'étape 8 ?
+2. Juste avant d'appliquer, que contenait votre fichier, et que contenait le cluster ? Pourquoi, en équipe, préfère-t-on modifier le **fichier** plutôt que d'utiliser la commande de l'étape 3 ?
 
 </div>
 
@@ -424,7 +424,7 @@ Une nouvelle version remplace les pods **progressivement**, et deux paramètres 
 
 </div>
 
-### Étape 10 : Paramétrer la stratégie de mise à jour
+### Étape 1 : Paramétrer la stratégie de mise à jour
 
 Par défaut, Kubernetes utilise la stratégie `RollingUpdate` : il remplace les pods progressivement. Deux paramètres en règlent le rythme :
 
@@ -456,7 +456,7 @@ Avec `replicas: 3` et ces réglages :
 
 </div>
 
-### Étape 11 : Livrer une nouvelle version
+### Étape 2 : Livrer une nouvelle version
 
 Toute modification du **modèle de pod** (`spec.template` : image, variable, ressources…) déclenche un *rolling update*. Ajoutez une variable de version et documentez la raison du changement :
 
@@ -472,7 +472,7 @@ kubectl annotate deployment/campus-backend kubernetes.io/change-cause="Livraison
 
 </div>
 
-### Étape 12 : Suivre le rolling update
+### Étape 3 : Suivre le rolling update
 
 Suivez la progression en temps réel :
 
@@ -502,7 +502,7 @@ Les réglages de l'exercice 3 évitent la coupure quand une livraison échoue, e
 
 </div>
 
-### Étape 13 : Provoquer un incident
+### Étape 1 : Provoquer un incident
 
 L'équipe déploie par erreur une image qui n'existe pas, `regaieg/campus:backend-invalid-tag`. Déclenchez ce déploiement erroné :
 
@@ -518,7 +518,7 @@ L'annotation `change-cause` est recopiée telle quelle dans chaque nouvelle rév
 
 </div>
 
-### Étape 14 : Observer l'incident
+### Étape 2 : Observer l'incident
 
 Suivez les pods du backend **en continu**, puis quittez avec `Ctrl + C`.
 
@@ -528,11 +528,11 @@ Suivez les pods du backend **en continu**, puis quittez avec `Ctrl + C`.
 1. Quelle commande affiche les pods du backend en continu ?
 2. Quel statut prend le nouveau pod ? Vous l'avez déjà rencontré à l'Atelier 02 : que signifie-t-il ?
 3. Combien de pods de l'ancienne version sont encore `Running` ? Les utilisateurs subissent-ils une coupure ?
-4. Quel réglage de l'étape 10 explique ce comportement ? Que se serait-il passé avec `maxUnavailable: 1` ?
+4. Quel réglage de l'étape 1 de l'exercice 3 explique ce comportement ? Que se serait-il passé avec `maxUnavailable: 1` ?
 
 </div>
 
-### Étape 15 : Consulter l'historique des révisions
+### Étape 3 : Consulter l'historique des révisions
 
 Affichez l'historique complet, puis le détail de la révision 1 :
 
@@ -550,7 +550,7 @@ kubectl rollout history deployment/campus-backend --revision=1
 
 </div>
 
-### Étape 16 : Revenir en arrière (*Rollback*)
+### Étape 4 : Revenir en arrière (*Rollback*)
 
 Annulez la livraison fautive :
 
@@ -575,7 +575,7 @@ kubectl rollout undo deployment/campus-backend
 
 </div>
 
-### Étape 17 : Vérifier la résolution de l'incident
+### Étape 5 : Vérifier la résolution de l'incident
 
 <div class="admonition question" markdown>
 <p class="admonition-title"><strong>À vous de répondre</strong></p>

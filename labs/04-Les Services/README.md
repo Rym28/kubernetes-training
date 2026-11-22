@@ -18,13 +18,13 @@ Les commandes de cet atelier (`kubectl expose`, `kubectl get svc`, `kubectl run`
 
 Ce lab exploite le fait qu'un NodePort est ouvert sur **chaque** nœud : réalisez-le sur ce cluster, piloté au choix :
 
-* **Option A (Recommandée - Confort DevOps Local) :** depuis votre machine locale, avec votre `kubectl` et votre `kubeconfig`. Dans **chaque nouveau terminal**, placé à la racine du dépôt, pointez d'abord `kubectl` vers le fichier `kubeconfig.yaml` récupéré à l'étape 17 de l'Atelier 01 :
+* **Option A (Recommandée - Confort DevOps Local) :** depuis votre machine locale, avec votre `kubectl` et votre `kubeconfig`. Dans **chaque nouveau terminal**, placé à la racine du dépôt, pointez d'abord `kubectl` vers le fichier `kubeconfig.yaml` récupéré à l'étape 1 de l'exercice 4 de l'Atelier 01 :
     * Windows (PowerShell) : `$env:KUBECONFIG = "$PWD\labs\01-Installation-Cluster\terraform\kubeconfig.yaml"`
     * Linux / macOS (Bash) : `export KUBECONFIG=$PWD/labs/01-Installation-Cluster/terraform/kubeconfig.yaml`
     * Vérification : `kubectl get nodes` doit afficher les 3 nœuds à l'état `Ready`.
 * **Option B (PC d'entreprise verrouillé) :** en SSH sur `k8s-control` : l'outillage et les manifests sont pré-installés dans `~/labs/`.
 
-🛟 **Secours : Minikube sur votre poste** (session AWS indisponible), piloté forcément depuis votre poste comme en Option A. Tout fonctionne à l'identique, sauf l'accès navigateur des étapes 12 et 13, pour lequel un encadré dédié est fourni.
+🛟 **Secours : Minikube sur votre poste** (session AWS indisponible), piloté forcément depuis votre poste comme en Option A. Tout fonctionne à l'identique, sauf l'accès navigateur des étapes 4 et 5 de l'exercice 4, pour lequel un encadré dédié est fourni.
 
 </div>
 
@@ -167,7 +167,7 @@ Un Service offre une adresse et un nom **stables** devant un groupe de pods. Il 
 
 </div>
 
-### Étape 4 : Générer le manifest du Service
+### Étape 1 : Générer le manifest du Service
 
 Plutôt que d'écrire le Service à la main, générez-le à partir du Deployment qu'il doit servir, **sans rien créer dans le cluster**, et enregistrez-le dans `service-backend.yaml` :
 
@@ -199,7 +199,7 @@ kubectl expose deployment campus-backend --name=campus-backend --port=8080 --tar
 
 </div>
 
-### Étape 5 : Lire le manifest
+### Étape 2 : Lire le manifest
 
 Ouvrez `service-backend.yaml` dans votre éditeur.
 
@@ -226,7 +226,7 @@ Ouvrez `service-backend.yaml` dans votre éditeur.
 
 </details>
 
-### Étape 6 : Vérifier l'adresse du Service et ses Endpoints
+### Étape 3 : Vérifier l'adresse du Service et ses Endpoints
 
 Les Services s'abrègent `svc` dans `kubectl` (`kubectl get svc` équivaut à `kubectl get services`).
 
@@ -240,14 +240,14 @@ kubectl get endpoints campus-backend
 <p class="admonition-title"><strong>À vous de répondre</strong></p>
 
 1. Quelle commande affiche le Service `campus-backend` ? Notez son adresse IP virtuelle (colonne `CLUSTER-IP`).
-2. Comparez les Endpoints avec les adresses de vos pods backend (étape 1) : que constatez-vous ?
+2. Comparez les Endpoints avec les adresses de vos pods backend (étape 1 de l'exercice 1) : que constatez-vous ?
 3. L'adresse `CLUSTER-IP` du Service fait-elle partie de la liste des Endpoints ? Pourquoi ?
 
 </div>
 
-### Étape 7 : Vérifier la stabilité du Service
+### Étape 4 : Vérifier la stabilité du Service
 
-Supprimez de nouveau un pod backend, attendez que son remplaçant soit `Running`, puis relancez les deux commandes de l'étape 6.
+Supprimez de nouveau un pod backend, attendez que son remplaçant soit `Running`, puis relancez les deux commandes de l'étape 3.
 
 <div class="admonition question" markdown>
 <p class="admonition-title"><strong>À vous de répondre</strong></p>
@@ -276,7 +276,7 @@ Kubernetes donne un **nom** à chaque Service. Les applications s'appellent par 
 
 </div>
 
-### Étape 8 : Appeler le backend par son nom
+### Étape 1 : Appeler le backend par son nom
 
 Démarrez un pod de test équipé de `curl` (il est supprimé automatiquement quand vous le quittez) :
 
@@ -316,7 +316,7 @@ Tapez `exit` pour quitter le pod de test.
 
 * **Le nom est introuvable :** vérifiez que le Service existe, avec `kubectl get svc campus-backend`.
 * **Le nom est trouvé mais rien ne répond :** vérifiez ses Endpoints, avec `kubectl get endpoints campus-backend`.
-* **`Connection refused` de temps en temps :** le pod recréé à l'étape 7 n'a pas fini de démarrer (20 secondes à 2 minutes). Attendez un peu et relancez la commande.
+* **`Connection refused` de temps en temps :** le pod recréé à l'étape 4 de l'exercice 2 n'a pas fini de démarrer (20 secondes à 2 minutes). Attendez un peu et relancez la commande.
 
 </details>
 
@@ -331,7 +331,7 @@ Un Service `ClusterIP` n'est joignable que depuis le cluster. Pour ouvrir l'appl
 
 </div>
 
-### Étape 9 : Déployer le frontend
+### Étape 1 : Déployer le frontend
 
 Créez un Deployment avec les caractéristiques suivantes, en générant d'abord son manifest dans un fichier `deployment-frontend.yaml`, puis en l'appliquant :
 
@@ -356,11 +356,11 @@ Créez un Deployment avec les caractéristiques suivantes, en générant d'abord
 
 `kubectl create deployment <nom> --help` liste les options `--image`, `--replicas` et `--port`. Ajoutez `--dry-run=client -o yaml` et redirigez la sortie vers le fichier (`> fichier.yaml`, ou `| Out-File -Encoding utf8 fichier.yaml` sous Windows PowerShell 5.1).
 
-Le Nginx du frontend relaie les appels `/api/` vers l'hôte `campus-backend:8080` et vérifie ce nom au démarrage : demandez-vous ce que vous avez créé à l'étape 4.
+Le Nginx du frontend relaie les appels `/api/` vers l'hôte `campus-backend:8080` et vérifie ce nom au démarrage : demandez-vous ce que vous avez créé à l'étape 1 de l'exercice 2.
 
 </details>
 
-### Étape 10 : Créer le Service NodePort
+### Étape 2 : Créer le Service NodePort
 
 Créez un fichier `service-frontend.yaml` :
 
@@ -396,9 +396,9 @@ Le port `30080` est réservé au contrôleur Ingress NGINX du cluster.
 
 </div>
 
-### Étape 11 : Distinguer les 3 ports d'un Service NodePort
+### Étape 3 : Distinguer les 3 ports d'un Service NodePort
 
-Reprenez les repères ①, ② et ③ du manifest de l'étape 10.
+Reprenez les repères ①, ② et ③ du manifest de l'étape 2.
 
 <div class="admonition question" markdown>
 <p class="admonition-title"><strong>À vous de répondre</strong></p>
@@ -436,7 +436,7 @@ Dans le cloud (EKS, AKS, GKE), il ajoute devant les NodePorts un répartiteur de
 
 </div>
 
-### Étape 12 : Accéder à l'application depuis votre navigateur
+### Étape 4 : Accéder à l'application depuis votre navigateur
 
 Récupérez l'adresse IP publique de votre nœud worker `k8s-worker-1` (affichée par `start-session` ou dans la console AWS), puis ouvrez **`http://<IP_PUBLIQUE_WORKER>:30088`**.
 
@@ -464,11 +464,11 @@ Avec le pilote Docker sous Windows ou macOS, l'adresse du nœud Minikube n'est p
 minikube service campus-frontend-svc -n campus-dev --url
 ```
 
-La commande affiche une adresse `http://127.0.0.1:<port>` : ouvrez-la dans votre navigateur et **laissez le terminal ouvert** tant que vous l'utilisez (`Ctrl + C` pour fermer le tunnel). L'étape 13 n'a pas d'équivalent : Minikube n'a qu'un seul nœud.
+La commande affiche une adresse `http://127.0.0.1:<port>` : ouvrez-la dans votre navigateur et **laissez le terminal ouvert** tant que vous l'utilisez (`Ctrl + C` pour fermer le tunnel). L'étape 5 n'a pas d'équivalent : Minikube n'a qu'un seul nœud.
 
 </details>
 
-### Étape 13 : Constater que le NodePort est ouvert sur chaque nœud
+### Étape 5 : Constater que le NodePort est ouvert sur chaque nœud
 
 Ouvrez maintenant **`http://<IP_PUBLIQUE_k8s-worker-2>:30088`**.
 

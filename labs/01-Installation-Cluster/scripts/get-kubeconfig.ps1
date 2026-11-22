@@ -20,7 +20,7 @@ if (-not $ControlIp) {
 }
 
 if (-not (Test-Path $Key)) {
-  throw "Clé introuvable : $Key (voir l'étape 4 de l'Atelier 01)."
+  throw "Clé introuvable : $Key (voir l'étape 2 de l'exercice 2 de l'Atelier 01)."
 }
 
 Write-Host "==> [1/3] Copie du kubeconfig depuis k8s-control ($ControlIp)" -ForegroundColor Cyan

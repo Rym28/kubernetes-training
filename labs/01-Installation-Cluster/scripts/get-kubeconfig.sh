@@ -22,7 +22,7 @@ if [ -z "${CONTROL_IP}" ]; then
 fi
 
 if [ ! -f "${KEY}" ]; then
-  echo "Clé introuvable : ${KEY} (voir l'étape 4 de l'Atelier 01)." >&2
+  echo "Clé introuvable : ${KEY} (voir l'étape 2 de l'exercice 2 de l'Atelier 01)." >&2
   exit 1
 fi
 
