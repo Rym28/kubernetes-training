@@ -102,13 +102,22 @@ Résultat attendu : un seul nœud, `minikube`, à l'état `Ready`.
 
 ### Étape 3 : Démarrer le Learner Lab
 
-#### 3.1 Lancer le lab
+#### 3.1 Accéder au Learner Lab
 
-Connectez-vous à **AWS Academy**, ouvrez votre cours **Learner Lab** et cliquez sur **Start Lab**.
+1. Connectez-vous à votre compte **AWS Academy**.
+2. Entrez dans le cours **AWS Academy Learner Lab**.
+3. Dans le menu de gauche, cliquez sur **Modules**.
+4. Dans la section **AWS Academy Learner Lab**, cliquez sur **Launch AWS Academy Learner Lab**.
+
+![AWS Academy : Modules puis Launch AWS Academy Learner Lab](img/aws-academy-modules.png)
+
+#### 3.2 Lancer le lab
+
+Cliquez sur **Start Lab**.
 
 ![Ecran AWS Academy Start Lab](img/img.png)
 
-#### 3.2 Attendre le voyant vert
+#### 3.3 Attendre le voyant vert
 
 Attendez que le voyant passe au **vert** :
 
@@ -226,7 +235,7 @@ Des variables d'environnement `AWS_*` sont définies dans votre terminal et prim
 <details class="warning" markdown>
 <summary><strong>Session AWS expirée (après 4 h) ? Rafraîchissez les identifiants</strong></summary>
 
-1. Sur AWS Academy, cliquez sur **Start Lab** et attendez le voyant vert.
+1. Sur AWS Academy, ouvrez le cours **AWS Academy Learner Lab** → **Modules** → **Launch AWS Academy Learner Lab**, puis cliquez sur **Start Lab** et attendez le voyant vert.
 2. Copiez le nouveau bloc **AWS Details → AWS CLI → Show** à la place du contenu du fichier `credentials`.
 3. Vérifiez avec `aws sts get-caller-identity`, puis relancez vos instances si besoin (`start-session`).
 
