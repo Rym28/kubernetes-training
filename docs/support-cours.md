@@ -13,9 +13,13 @@ Le support de présentation reprend les apports théoriques du formateur (enviro
 
 ## Support de présentation
 
-| Support | Format | Téléchargement |
-| :--- | :---: | :---: |
-| Kubernetes — Support de cours XW335 | PowerPoint | [:material-download: Télécharger](https://github.com/Rym28/kubernetes-training/raw/main/XW335_Kubernetes_Support-F.pptx) |
+Le support de cours **Kubernetes — XW335** (135 diapositives) est consultable en lecture seule ci-dessous. Le téléchargement sera ouvert par le formateur en fin de session.
+
+<!-- Pour rendre le PDF téléchargable, décommenter la ligne suivante :
+[:material-file-pdf-box: Télécharger le support de cours (PDF)](assets/XW335_Kubernetes_Support-Cours.pdf){ .md-button .md-button--primary }
+-->
+
+<iframe src="../assets/XW335_Kubernetes_Support-Cours.pdf#toolbar=0&navpanes=0" title="Support de cours XW335" width="100%" height="720" style="border:1px solid var(--md-default-fg-color--lightest);border-radius:4px;" oncontextmenu="return false;"></iframe>
 
 ---
 
