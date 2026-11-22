@@ -319,7 +319,44 @@ ssh -i labsuser.pem ubuntu@<IP_PUBLIQUE_CONTROL>
 
 #### 9.3 Se connecter aux deux workers
 
-Ouvrez **deux autres terminaux** (ou onglets), placez-vous dans `terraform/` et connectez-vous aux workers de la même façon :
+Ouvrez **deux autres terminaux** (ou onglets) : un pour `k8s-worker-1`, un pour `k8s-worker-2`.
+
+<div class="admonition warning" markdown>
+<p class="admonition-title"><strong>Dans chaque nouveau terminal, replacez-vous d'abord dans <code>labs/01-Installation-Cluster/terraform</code></strong></p>
+
+Un nouveau terminal démarre dans votre dossier personnel, où `labsuser.pem` n'existe pas. Sans ce `cd`, `ssh` échoue avec `Identity file ... not accessible` puis `Permission denied (publickey)`.
+
+</div>
+
+**Votre poste — Windows (PowerShell)** — terminal 2 (`k8s-worker-1`) :
+
+```powershell
+cd <CHEMIN>\formation\labs\01-Installation-Cluster\terraform
+ssh -i .\labsuser.pem ubuntu@<IP_PUBLIQUE_WORKER_1>
+```
+
+Terminal 3 (`k8s-worker-2`) :
+
+```powershell
+cd <CHEMIN>\formation\labs\01-Installation-Cluster\terraform
+ssh -i .\labsuser.pem ubuntu@<IP_PUBLIQUE_WORKER_2>
+```
+
+**Votre poste — Linux / macOS (Bash)** — terminal 2 (`k8s-worker-1`) :
+
+```bash
+cd <CHEMIN>/formation/labs/01-Installation-Cluster/terraform
+ssh -i labsuser.pem ubuntu@<IP_PUBLIQUE_WORKER_1>
+```
+
+Terminal 3 (`k8s-worker-2`) :
+
+```bash
+cd <CHEMIN>/formation/labs/01-Installation-Cluster/terraform
+ssh -i labsuser.pem ubuntu@<IP_PUBLIQUE_WORKER_2>
+```
+
+`<CHEMIN>` est le dossier où vous avez cloné le dépôt à l'étape 0. Les IP sont données par `terraform output` :
 
 | Nœud | IP (`terraform output`) | Prompt attendu |
 | :--- | :--- | :--- |
@@ -357,16 +394,55 @@ sudo kubeadm init --pod-network-cidr=192.168.0.0/16 --apiserver-cert-extra-sans=
 | `--pod-network-cidr` | Plage d'adresses des Pods (Calico) |
 | `--apiserver-cert-extra-sans` | Ajoute l'IP publique au certificat de l'API Server, pour que `kubectl` la joigne depuis votre poste (étape 17) |
 
-#### 11.2 Copier la commande `kubeadm join`
+#### 11.2 Ne copiez pas encore la commande `kubeadm join`
 
 <div class="admonition warning" markdown>
-<p class="admonition-title"><strong>Copiez la commande <code>kubeadm join …</code> affichée à la fin</strong></p>
+<p class="admonition-title"><strong>Ne copiez pas la commande <code>kubeadm join …</code> affichée par <code>kubeadm init</code></strong></p>
 
-Vous en aurez besoin à l'étape 14.
+Elle est coupée sur **deux lignes** (avec un `\` et une tabulation). Copiée-collée depuis le terminal, elle arrive cassée et provoque des erreurs du type `accepts at most 1 arg(s), received 2` ou `--discovery-token-ca-cert-hash: command not found`. À l'étape 12, vous générerez une version **sur une seule ligne**.
 
 </div>
 
-### Étape 12 : Donner à `kubectl` l'accès au cluster
+### Étape 12 : Raccorder les Workers
+
+#### 12.1 Générer la commande `join` sur une seule ligne
+
+**k8s-control — SSH**
+
+```bash
+sudo kubeadm token create --print-join-command
+```
+
+Résultat attendu : **une seule ligne** commençant par `kubeadm join 172.31.…:6443 --token …`. Copiez-la entièrement.
+
+#### 12.2 Exécuter la commande sur chaque worker
+
+Dans le terminal de `k8s-worker-1`, puis dans celui de `k8s-worker-2` (connectés depuis `labs/01-Installation-Cluster/terraform`, étape 9.3), tapez `sudo ` puis collez la ligne copiée :
+
+**k8s-worker-1 et k8s-worker-2 — SSH**
+
+```bash
+sudo kubeadm join <IP_PRIVEE_CONTROL>:6443 --token <token> --discovery-token-ca-cert-hash sha256:<hash>
+```
+
+Résultat attendu : `This node has joined the cluster`.
+
+<details class="tip" markdown>
+<summary><strong>Indice : le <code>join</code> échoue au collage</strong></summary>
+
+* `accepts at most 1 arg(s)` ou `command not found` : la commande a été collée sur plusieurs lignes. Régénérez-la (14.1) et collez-la sur une seule ligne.
+* `Permission denied` / `must be run as root` : vous avez oublié `sudo`.
+* `[ERROR FileAvailable--etc-kubernetes-kubelet.conf]` ou `Port 10250 is in use` : un `join` précédent a échoué à mi-chemin. Nettoyez le worker puis relancez le `join` :
+
+  ```bash
+  sudo kubeadm reset -f
+  ```
+
+* Le token expire au bout de 24 h : relancez simplement l'étape 12.1.
+
+</details>
+
+### Étape 13 : Donner à `kubectl` l'accès au cluster
 
 `kubeadm init` a créé le fichier de connexion administrateur `/etc/kubernetes/admin.conf` (**kubeconfig**). Copiez-le là où `kubectl` le cherche :
 
@@ -379,9 +455,9 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 kubectl get nodes
 ```
 
-Résultat attendu : `k8s-control` est `NotReady`, car aucun plugin réseau (CNI) n'est encore installé.
+Résultat attendu : les 3 nœuds (`k8s-control`, `k8s-worker-1`, `k8s-worker-2`) apparaissent en `NotReady`, car aucun plugin réseau (CNI) n'est encore installé.
 
-### Étape 13 : Installer le plugin réseau Calico (CNI)
+### Étape 14 : Installer le plugin réseau Calico (CNI)
 
 **k8s-control — SSH**
 
@@ -390,28 +466,7 @@ kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.28.0
 kubectl get nodes -w
 ```
 
-Résultat attendu : après 20 à 30 secondes, `k8s-control` passe `Ready`. Quittez avec `Ctrl + C`.
-
-### Étape 14 : Raccorder les Workers
-
-Dans le terminal de `k8s-worker-1`, puis dans celui de `k8s-worker-2`, collez la commande copiée à l'étape 11.2, **précédée de `sudo`** :
-
-**k8s-worker-1 et k8s-worker-2 — SSH**
-
-```bash
-sudo kubeadm join <IP_PRIVEE_CONTROL>:6443 --token <token> --discovery-token-ca-cert-hash sha256:<hash>
-```
-
-<details class="tip" markdown>
-<summary><strong>Indice : commande <code>kubeadm join</code> perdue ou expirée (24 h)</strong></summary>
-
-Régénérez-la sur `k8s-control` :
-
-```bash
-sudo kubeadm token create --print-join-command
-```
-
-</details>
+Résultat attendu : après 30 secondes à 1 minute, les 3 nœuds passent `Ready`. Quittez avec `Ctrl + C`.
 
 ### Étape 15 : Valider le cluster
 
