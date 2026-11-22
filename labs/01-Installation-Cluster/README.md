@@ -61,6 +61,8 @@ Tous les chemins de l'atelier sont relatifs à ce dossier `formation`.
 
 Prérequis : 2 vCPU, 4 Go de RAM libres et **Docker Desktop** démarré.
 
+#### 1.1 Vérifier Docker et Minikube
+
 **Votre poste**
 
 ```bash
@@ -68,7 +70,7 @@ docker ps
 minikube version
 ```
 
-Si `minikube` n'est pas reconnu :
+#### 1.2 Installer Minikube (si `minikube` n'est pas reconnu)
 
 | Système | Commande |
 | :--- | :--- |
@@ -100,22 +102,33 @@ Résultat attendu : un seul nœud, `minikube`, à l'état `Ready`.
 
 ### Étape 3 : Démarrer le Learner Lab
 
-1. Connectez-vous à **AWS Academy**, ouvrez votre cours **Learner Lab** et cliquez sur **Start Lab**.
+#### 3.1 Lancer le lab
+
+Connectez-vous à **AWS Academy**, ouvrez votre cours **Learner Lab** et cliquez sur **Start Lab**.
 
 ![Ecran AWS Academy Start Lab](img/img.png)
 
-2. Attendez que le voyant passe au **vert** :
+#### 3.2 Attendre le voyant vert
+
+Attendez que le voyant passe au **vert** :
 
 ![Voyant vert Ready](img/img_1.png)
 
 ### Étape 4 : Récupérer la clé SSH
 
+#### 4.1 Ouvrir AWS Details
+
 Cliquez sur **AWS Details** :
 
 ![Panneau AWS Details](img/pem.png)
 
-1. **Download SSH Key** : enregistrez `labsuser.pem` dans `labs/01-Installation-Cluster/terraform/`.
-2. **AWS CLI → Show** : gardez cette fenêtre ouverte pour l'étape 7.
+#### 4.2 Télécharger la clé
+
+**Download SSH Key** : enregistrez `labsuser.pem` dans `labs/01-Installation-Cluster/terraform/`.
+
+#### 4.3 Afficher les identifiants AWS CLI
+
+**AWS CLI → Show** : gardez cette fenêtre ouverte pour l'étape 7.
 
 <div class="admonition warning" markdown>
 <p class="admonition-title"><strong>Sécurité</strong></p>
@@ -126,6 +139,8 @@ Ne committez et ne partagez jamais la clé `.pem` ni les identifiants AWS.
 
 ### Étape 5 : Installer Terraform et l'AWS CLI
 
+#### 5.1 Vérifier les outils
+
 **Votre poste**
 
 ```bash
@@ -133,7 +148,9 @@ terraform version
 aws --version
 ```
 
-Si une commande n'est pas reconnue, installez l'outil puis **rouvrez votre terminal** :
+#### 5.2 Installer l'outil manquant (si une commande n'est pas reconnue)
+
+Installez l'outil puis **rouvrez votre terminal** :
 
 | Système | Terraform | AWS CLI |
 | :--- | :--- | :--- |
@@ -160,7 +177,7 @@ labsuser.pem  main.tf  outputs.tf  provider.tf  scripts  terraform.tfvars.exampl
 
 Terraform a besoin de vos identifiants AWS pour créer les instances.
 
-**1. Fixer la région** (une seule fois) :
+#### 7.1 Fixer la région (une seule fois)
 
 **Votre poste**
 
@@ -168,7 +185,9 @@ Terraform a besoin de vos identifiants AWS pour créer les instances.
 aws configure set region us-east-1
 ```
 
-**2. Enregistrer les identifiants :** dans **AWS Details → AWS CLI → Show**, copiez **tout le bloc** (de `[default]` à la fin de `aws_session_token=...`), puis collez-le à la place de tout le contenu du fichier `credentials`, et enregistrez :
+#### 7.2 Enregistrer les identifiants
+
+Dans **AWS Details → AWS CLI → Show**, copiez **tout le bloc** (de `[default]` à la fin de `aws_session_token=...`), puis collez-le à la place de tout le contenu du fichier `credentials`, et enregistrez :
 
 | Système | Fichier |
 | :--- | :--- |
@@ -184,7 +203,7 @@ aws_session_token=...
 
 Le fichier n'existe pas ? Créez-le, nommé exactement `credentials`, **sans extension**.
 
-**3. Vérifier :**
+#### 7.3 Vérifier la connexion à AWS
 
 **Votre poste**
 
@@ -267,22 +286,38 @@ terraform destroy -auto-approve
 
 ### Étape 9 : Ouvrir une session SSH sur chaque nœud
 
-Depuis le dossier `terraform/`, restreignez les droits de la clé (une seule fois), puis connectez-vous à `k8s-control` :
+#### 9.1 Restreindre les droits de la clé (une seule fois)
+
+Depuis le dossier `terraform/` :
 
 **Votre poste — Windows (PowerShell)**
 
 ```powershell
 icacls .\labsuser.pem /inheritance:r
 icacls .\labsuser.pem /grant:r "$($env:USERNAME):(R)"
-ssh -i .\labsuser.pem ubuntu@<IP_PUBLIQUE_CONTROL>
 ```
 
 **Votre poste — Linux / macOS (Bash)**
 
 ```bash
 chmod 400 labsuser.pem
+```
+
+#### 9.2 Se connecter à `k8s-control`
+
+**Votre poste — Windows (PowerShell)**
+
+```powershell
+ssh -i .\labsuser.pem ubuntu@<IP_PUBLIQUE_CONTROL>
+```
+
+**Votre poste — Linux / macOS (Bash)**
+
+```bash
 ssh -i labsuser.pem ubuntu@<IP_PUBLIQUE_CONTROL>
 ```
+
+#### 9.3 Se connecter aux deux workers
 
 Ouvrez **deux autres terminaux** (ou onglets), placez-vous dans `terraform/` et connectez-vous aux workers de la même façon :
 
@@ -307,6 +342,8 @@ Résultat attendu : `status: done` et `v1.30.x` sur chaque nœud.
 
 ### Étape 11 : Initialiser le Control Plane
 
+#### 11.1 Lancer `kubeadm init`
+
 Remplacez `<IP_PUBLIQUE_CONTROL>` par la valeur `control_plane_public_ip` de `terraform output` :
 
 **k8s-control — SSH**
@@ -319,6 +356,8 @@ sudo kubeadm init --pod-network-cidr=192.168.0.0/16 --apiserver-cert-extra-sans=
 | :--- | :--- |
 | `--pod-network-cidr` | Plage d'adresses des Pods (Calico) |
 | `--apiserver-cert-extra-sans` | Ajoute l'IP publique au certificat de l'API Server, pour que `kubectl` la joigne depuis votre poste (étape 17) |
+
+#### 11.2 Copier la commande `kubeadm join`
 
 <div class="admonition warning" markdown>
 <p class="admonition-title"><strong>Copiez la commande <code>kubeadm join …</code> affichée à la fin</strong></p>
@@ -355,7 +394,7 @@ Résultat attendu : après 20 à 30 secondes, `k8s-control` passe `Ready`. Quitt
 
 ### Étape 14 : Raccorder les Workers
 
-Dans le terminal de `k8s-worker-1`, puis dans celui de `k8s-worker-2`, collez la commande copiée à l'étape 11, **précédée de `sudo`** :
+Dans le terminal de `k8s-worker-1`, puis dans celui de `k8s-worker-2`, collez la commande copiée à l'étape 11.2, **précédée de `sudo`** :
 
 **k8s-worker-1 et k8s-worker-2 — SSH**
 
@@ -402,6 +441,8 @@ k8s-worker-2   Ready    <none>          1m    v1.30.x
 
 ### Étape 16 : Installer les composants additionnels de la formation
 
+#### 16.1 Lancer le script d'installation
+
 Le script installe la StorageClass `local-path` (Atelier 05), Ingress NGINX (Ateliers 04 et 08), Helm et l'alias `k` :
 
 **k8s-control — SSH**
@@ -409,6 +450,13 @@ Le script installe la StorageClass `local-path` (Atelier 05), Ingress NGINX (Ate
 ```bash
 bash ~/labs/01-Installation-Cluster/scripts/setup-addons.sh
 source ~/.bashrc
+```
+
+#### 16.2 Vérifier les composants
+
+**k8s-control — SSH**
+
+```bash
 kubectl get storageclass
 kubectl get pods -n ingress-nginx
 ```
@@ -465,7 +513,7 @@ Ne committez et ne partagez jamais `kubeconfig.yaml`.
     sudo crictl rm -f $(sudo crictl ps -q --name kube-apiserver)
     ```
 
-* **`Permission denied (publickey)` ou délai dépassé** : vérifiez l'IP (`terraform output control_plane_public_ip`) et les droits de la clé (étape 9).
+* **`Permission denied (publickey)` ou délai dépassé** : vérifiez l'IP (`terraform output control_plane_public_ip`) et les droits de la clé (étape 9.1).
 * **Windows : « l'exécution de scripts est désactivée »** : lancez d'abord `Set-ExecutionPolicy -Scope Process Bypass`.
 
 </details>
