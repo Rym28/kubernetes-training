@@ -1,6 +1,6 @@
-# Support de Cours
+# Support de Cours et Ateliers pratiques
 
-Cette page rassemble les supports de la **partie cours** de la formation **XW335 — Kubernetes : orchestration et déploiement de conteneurs**. Ils complètent les ateliers pratiques et préparent l'[évaluation des acquis](evaluation.md).
+Cette page rassemble les supports de la **partie cours** de la formation **Kubernetes**. Ils complètent les ateliers pratiques et préparent l'[évaluation des acquis](evaluation.md).
 
 <div class="admonition info" markdown>
 <p class="admonition-title"><strong>Comment utiliser ces supports</strong></p>
