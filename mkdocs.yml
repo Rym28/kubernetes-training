@@ -85,6 +85,7 @@ nav:
   - Architecture & Environnement:
       - Application Fil Rouge: application.md
       - Prérequis & Environnement: setup-environnement.md
+      - Cluster AWS en une commande: cluster-aws-express.md
   - Ateliers Pratiques:
       - Vue d'Ensemble: labs/index.md
       - "Partie 1 — Déploiement du Cluster & Fondations (Jour 1)":

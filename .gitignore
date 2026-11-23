@@ -43,6 +43,7 @@ terraform.rc
 kubeconfig
 *.kubeconfig
 kubeconfig.yaml
+.known_hosts
 .env
 
 # ==============================================================
@@ -56,7 +57,7 @@ CLAUDE.md
 Demo/
 pgm/
 campus-app/
-scripts/
+/scripts/
 .githooks/
 __pycache__/
 /config

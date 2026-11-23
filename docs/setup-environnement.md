@@ -55,6 +55,8 @@ C'est l'environnement de référence de la formation : un vrai cluster **Kubeadm
 
 La procédure complète, pas à pas (Learner Lab, Terraform, SSH, Kubeadm, Calico, kubeconfig local), est décrite dans l'[Atelier 01 : Provisionnement du Cluster](labs/01-provisionnement-cluster.md).
 
+Besoin de (re)créer ce cluster rapidement (session réinitialisée, rattrapage, démonstration) ? Le script `create-cluster` enchaîne toutes ces étapes à partir de vos seuls identifiants AWS : voir [Cluster AWS en une commande](cluster-aws-express.md).
+
 > 💡 **Pourquoi pas k3s ou microk8s ?** Ces distributions « tout-en-un » masquent le plan de contrôle (Static Pods, `etcd`, certificats). Or l'Atelier 01 l'installe avec `kubeadm` et l'Atelier 07 (exercice 5) inspecte les manifests statiques d'`etcd` et de l'API Server : seul un cluster Kubeadm permet de les manipuler tels qu'ils existent en production.
 
 ---

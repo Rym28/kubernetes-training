@@ -521,7 +521,7 @@ k8s-worker-2   Ready    <none>          1m    v1.30.x
 
 #### 8.1 Lancer le script d'installation
 
-Le script installe la StorageClass `local-path` (Atelier 05), Ingress NGINX (NodePort `30080`), Helm et l'alias `k` :
+Le script installe l'outil de stockage `local-path`, Ingress NGINX (NodePort `30080`), Helm et l'alias `k` :
 
 **k8s-control — SSH**
 

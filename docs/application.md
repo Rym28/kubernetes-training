@@ -34,7 +34,7 @@ flowchart TD
             DBSvc["Service ClusterIP<br/>postgres:5432"]
             DB_Pod["Pod PostgreSQL 16"]
             PVC["PersistentVolumeClaim<br/>(1 GiB)"]
-            PV["Disque local du worker<br/>(PersistentVolume local-path)"]
+            PV["Disque local du worker<br/>(PersistentVolume pv-postgres)"]
         end
 
         subgraph ConfigSec["Configuration & Secrets"]

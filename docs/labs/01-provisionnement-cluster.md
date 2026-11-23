@@ -475,7 +475,7 @@ k8s-worker-2   Ready    <none>          1m    v1.30.x
 
 ### Étape 8 : Installer les composants additionnels de la formation
 
-Le script installe la StorageClass `local-path` (Atelier 05), Ingress NGINX (NodePort `30080`), Helm et l'alias `k` :
+Le script installe l'outil de stockage `local-path`, Ingress NGINX (NodePort `30080`), Helm et l'alias `k` :
 
 **k8s-control — SSH**
 
