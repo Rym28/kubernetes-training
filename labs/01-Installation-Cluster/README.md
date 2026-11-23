@@ -579,6 +579,7 @@ Ne committez et ne partagez jamais `kubeconfig.yaml`.
 
 * **`Permission denied (publickey)` ou délai dépassé** : vérifiez l'IP (`terraform output control_plane_public_ip`) et les droits de la clé (étape 1.1 de l'exercice 3).
 * **Windows : « l'exécution de scripts est désactivée »** : lancez d'abord `Set-ExecutionPolicy -Scope Process Bypass`.
+* **Windows : « … n'est pas signé numériquement »** (dépôt récupéré en `.zip`) : Windows marque les scripts comme téléchargés d'Internet. Débloquez-les une fois avec `Get-ChildItem -Recurse -Filter *.ps1 | Unblock-File`, ou utilisez `Set-ExecutionPolicy -Scope Process Bypass`.
 
 </details>
 
