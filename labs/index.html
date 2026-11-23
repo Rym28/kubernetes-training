@@ -823,6 +823,8 @@
       
         
       
+        
+      
     
     
     
@@ -886,6 +888,34 @@
     
   
     Atelier 05 : Configuration & Stockage Persistant (PV / PVC / PostgreSQL)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="07-securite-quotas-isolement-reseau/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 07 : Sécurité, Quotas & Isolement Réseau (NetworkPolicy)
   
 
     
@@ -1143,9 +1173,14 @@
 <td style="text-align: left;"><strong>Configuration &amp; Stockage Persistant (PV / PVC / PostgreSQL)</strong></td>
 <td style="text-align: left;"><code>ConfigMap</code> (literal/file), <code>Secret</code> encodé base64, <code>PersistentVolume</code> et <code>PersistentVolumeClaim</code>, PostgreSQL et crash-test de persistance SQL.</td>
 </tr>
+<tr>
+<td style="text-align: center;"><strong><a href="07-securite-quotas-isolement-reseau/">Atelier 07</a></strong></td>
+<td style="text-align: left;"><strong>Sécurité, Quotas &amp; Isolement Réseau (NetworkPolicy)</strong></td>
+<td style="text-align: left;">LimitRange et ResourceQuota, NetworkPolicies <em>Default Deny</em> et flux autorisés, <code>securityContext</code> non-root, ServiceAccount et RBAC (<code>kubectl auth can-i</code>), protection de l'API Server et d'etcd. Réalisé <strong>avant</strong> l'Atelier 06.</td>
+</tr>
 </tbody>
 </table>
-<p>Les ateliers 06 et 07 seront publiés au Jour 2.</p>
+<p>L'atelier 06 (Administration) sera publié au Jour 2 : il se réalise après l'Atelier 07.</p>
 <hr />
 <h2 id="prerequis-techniques">Prérequis Techniques<a class="headerlink" href="#prerequis-techniques" title="Permanent link">&para;</a></h2>
 <p>Consultez le <a href="../setup-environnement/">Guide d'installation de l'environnement</a> avant de démarrer le premier atelier.</p>
