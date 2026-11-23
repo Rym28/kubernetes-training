@@ -55,7 +55,7 @@ Les commandes de ces ateliers sont écrites en syntaxe **Bash**. Trois pièges a
 
 **Recommandation :** sous Windows, utilisez **Git Bash** (installé avec Git for Windows) ou **WSL**, ou bien PowerShell 7 (`winget install Microsoft.PowerShell`), qui écrit en UTF-8.
 
-**Piège propre à Git Bash :** il convertit en chemin Windows tout argument qui commence par `/`. Ainsi `kubectl run … -- md5sum /dev/urandom` (Atelier 06) transmet au conteneur un chemin transformé (`md5sum: can't open '/Device/Null'`), et la commande échoue. Les labs encapsulent donc ces commandes dans `sh -c "…"`. Si vous tapez vous-même une commande de ce type, désactivez la conversion pour cette seule commande :
+**Piège propre à Git Bash :** il convertit en chemin Windows tout argument qui commence par `/`. Ainsi `kubectl exec … -- cat /etc/hosts` (exercice 4) transmet au conteneur un chemin transformé (`cat: can't open 'C:/Program Files/Git/etc/hosts'`), et la commande échoue. Les labs encapsulent donc ces commandes dans `sh -c "…"`. Si vous tapez vous-même une commande de ce type, désactivez la conversion pour cette seule commande :
 
 ```bash
 MSYS_NO_PATHCONV=1 kubectl run test --image=busybox:1.36 --restart=Never -- ls /etc

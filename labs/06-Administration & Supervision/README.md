@@ -333,13 +333,16 @@ NPD publie ses conditions quelques secondes après son démarrage : relancez la 
 
 ### Étape 2 : Simuler une erreur du noyau sur `k8s-worker-1`
 
-`manifests/inject-kernel-err.yaml` lance un pod **privilégié** (accès complet au nœud, réservé à cette simulation) qui écrit une fausse erreur dans le journal du noyau. NPD classe cette erreur en `KernelDeadlock` :
+`manifests/inject-kernel-err.yaml` lance un pod **privilégié** (accès complet au nœud, réservé à cette simulation) qui écrit une fausse erreur dans le journal du noyau. NPD classe cette erreur en `KernelDeadlock`. `kubectl wait` attend que le pod ait terminé son écriture (statut `Succeeded`) avant de lire les événements :
 
 ```bash
 kubectl apply -f manifests/inject-kernel-err.yaml
+kubectl wait --for=jsonpath='{.status.phase}'=Succeeded pod/inject-kernel-err --timeout=60s
 kubectl get events -A --field-selector reason=KernelDeadlock
 kubectl delete pod inject-kernel-err
 ```
+
+*Si `get events` ne renvoie rien, attendez quelques secondes et relancez-la : NPD lit le journal du noyau en continu.*
 
 <div class="admonition question" markdown>
 <p class="admonition-title"><strong>À vous de répondre</strong></p>
