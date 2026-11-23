@@ -1,8 +1,8 @@
 # ==============================================================================
-# Starter de l'Atelier 06 - API campus-backend et son Service
+# Starter de l'Atelier 06 - API campus-backend et son Service (état de fin de l'Atelier 07)
 # ------------------------------------------------------------------------------
 # ConfigMap + Secret (Atelier 05), sondes startup / readiness / liveness,
-# securityContext non-root et ressources explicites.
+# securityContext non-root et ressources explicites (Atelier 07).
 # ==============================================================================
 apiVersion: apps/v1
 kind: Deployment

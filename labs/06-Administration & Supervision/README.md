@@ -61,7 +61,7 @@ Le Campus Summer Portal est en production. L'administrateur doit trouver la caus
 
 ## Étape 0 : Préparer l'environnement
 
-Le dossier `starter/` du lab installe l'application complète, avec un backend déjà durci (conteneur non-root, ressources déclarées) :
+Le dossier `starter/` du lab installe l'application complète, dans l'état de fin de l'Atelier 07 (réalisé avant celui-ci) :
 
 | Fichier | Contenu |
 | :--- | :--- |
@@ -78,7 +78,7 @@ Créez le namespace `campus-dev` s'il n'existe pas encore, sélectionnez-le, pui
 kubectl create namespace campus-dev --dry-run=client -o yaml | kubectl apply -f -   # sans effet s'il existe déjà
 kubectl config set-context --current --namespace=campus-dev
 kubectl create secret generic campus-db-credentials --from-literal=POSTGRES_DB=campus --from-literal=POSTGRES_USER=campus --from-literal='POSTGRES_PASSWORD=CampusSecret2026!' --dry-run=client -o yaml | kubectl apply -f -
-kubectl delete networkpolicy,resourcequota,limitrange --all   # retire d'éventuelles contraintes réseau et de ressources : elles bloqueraient les incidents simulés
+kubectl delete networkpolicy,resourcequota,limitrange --all   # contraintes de l'Atelier 07 : elles bloqueraient les incidents simulés
 kubectl apply -f "labs/06-Administration & Supervision/starter/"
 kubectl rollout status deployment/campus-postgres --timeout=180s
 kubectl rollout status deployment/campus-backend --timeout=300s
@@ -98,7 +98,7 @@ kubectl delete pv pv-postgres --ignore-not-found   # le PV n'appartient à aucun
 
 </details>
 
-`kubectl delete` affiche `No resources found` s'il n'y a rien à retirer : c'est attendu. Le backend a des sondes de santé : `rollout status` rend la main quand Spring Boot a fini de démarrer (20 secondes à 2 minutes ; immédiatement si le backend tournait déjà).
+`kubectl delete` affiche `No resources found` si vous n'avez pas fait l'Atelier 07 : c'est attendu. Le backend a des sondes de santé : `rollout status` rend la main quand Spring Boot a fini de démarrer (20 secondes à 2 minutes ; immédiatement si vous sortez de l'Atelier 07).
 
 Placez-vous ensuite dans le dossier du lab, qui contient les fichiers `manifests/`, `npd/` et `monitoring/` utilisés plus loin : `cd "labs/06-Administration & Supervision"` (Option A) ou `cd ~/"labs/06-Administration & Supervision"` (Option B).
 
@@ -355,7 +355,7 @@ kubectl delete pod inject-kernel-err
 <div class="admonition warning" markdown>
 <p class="admonition-title"><strong>Pod privilégié</strong></p>
 
-Un pod privilégié a tous les pouvoirs sur le nœud : il n'est utilisé ici que pour la simulation. Les conteneurs de l'application, eux, sont durcis (`securityContext` : pas de root, pas d'élévation de privilèges).
+Un pod privilégié a tous les pouvoirs sur le nœud : il n'est utilisé ici que pour la simulation. Les conteneurs de l'application, eux, ont été durcis à l'Atelier 07 (`securityContext` : pas de root, pas d'élévation de privilèges).
 
 </div>
 
