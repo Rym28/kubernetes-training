@@ -255,7 +255,21 @@ Résultat attendu : en 1 minute environ, les 3 instances sont créées et `terra
 bash ../scripts/stop-session.sh
 ```
 
-**Le matin**, relancez-les avec `start-session`. Les **workers changent d'IP publique** : utilisez les adresses affichées par `start-session`. `k8s-control` garde la sienne (Elastic IP).
+**Le matin**, relancez-les, toujours depuis le dossier `terraform/` :
+
+**Votre poste — Windows (PowerShell)**
+
+```powershell
+..\scripts\start-session.ps1
+```
+
+**Votre poste — Linux / macOS (Bash)**
+
+```bash
+bash ../scripts/start-session.sh
+```
+
+Résultat attendu : un tableau liste les 3 instances avec leurs IP privées et publiques, suivi de la commande SSH vers `k8s-control`. Les **workers changent d'IP publique** : utilisez les adresses de ce tableau. `k8s-control` garde la sienne (Elastic IP).
 
 **En fin de formation**, supprimez tout :
 
@@ -526,6 +540,7 @@ Ne committez et ne partagez jamais `kubeconfig.yaml`.
 
 * **`Permission denied (publickey)` ou délai dépassé** : vérifiez l'IP (`terraform output control_plane_public_ip`) et les droits de la clé (étape 1 de l'exercice 3).
 * **Windows : « l'exécution de scripts est désactivée »** : lancez d'abord `Set-ExecutionPolicy -Scope Process Bypass`.
+* **Windows : « … n'est pas signé numériquement »** (dépôt récupéré en `.zip`) : Windows marque les scripts comme téléchargés d'Internet. Débloquez-les une fois avec `Get-ChildItem -Recurse -Filter *.ps1 | Unblock-File`, ou utilisez `Set-ExecutionPolicy -Scope Process Bypass`.
 
 </details>
 
