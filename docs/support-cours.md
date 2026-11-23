@@ -57,5 +57,5 @@ Le cours suit les 5 chapitres du programme officiel. Le tableau indique les atel
 | Atelier 03 : Déploiements — Résilience & Rollback | [:material-file-pdf-box: PDF](https://github.com/Rym28/kubernetes-training/raw/main/pdf/ateliers/Atelier-03-Les-Deploiements-Scheduling.pdf) |
 | Atelier 04 : Réseau, Services & Découverte DNS | [:material-file-pdf-box: PDF](https://github.com/Rym28/kubernetes-training/raw/main/pdf/ateliers/Atelier-04-Les-Services.pdf) |
 | Atelier 05 : Configuration & Stockage Persistant | [:material-file-pdf-box: PDF](https://github.com/Rym28/kubernetes-training/raw/main/pdf/ateliers/Atelier-05-Les-Volumes.pdf) |
-| Atelier 07 : Sécurité, Quotas & Isolement Réseau | [:material-file-pdf-box: PDF](https://github.com/Rym28/kubernetes-training/raw/main/pdf/ateliers/Atelier-07-Securite-Cluster.pdf) |
 | Atelier 06 : Exploitation, Observabilité & Reverse Debugging | [:material-file-pdf-box: PDF](https://github.com/Rym28/kubernetes-training/raw/main/pdf/ateliers/Atelier-06-Administration-Supervision.pdf) |
+| Atelier 07 : Sécurité, Quotas & Isolement Réseau | [:material-file-pdf-box: PDF](https://github.com/Rym28/kubernetes-training/raw/main/pdf/ateliers/Atelier-07-Securite-Cluster.pdf) |

@@ -41,7 +41,7 @@ Ce lab est **indépendant des autres** : son étape 0 crée `campus-dev` s'il n'
 ## Contexte Métier
 En environnement partagé ou de production réglementée (secteur bancaire, assurance, santé), laisser un conteneur consommer toute la mémoire d'un nœud ou permettre à n'importe quel conteneur compromis d'atteindre le port 5432 de PostgreSQL constitue une faille critique. Cet atelier verrouille les ressources, cloisonne le réseau, durcit les conteneurs et contrôle les droits d'accès à l'API.
 
-Tous les manifests de l'atelier sont **fournis** dans le dossier `labs/07-Sécurité Cluster/manifests/` : vous les lisez, les appliquez et observez leurs effets. Cet atelier se réalise **avant l'Atelier 06** : l'application que vous y superviserez sera donc déjà durcie.
+Tous les manifests de l'atelier sont **fournis** dans le dossier `labs/07-Sécurité Cluster/manifests/` : vous les lisez, les appliquez et observez leurs effets.
 
 <div class="admonition tip" markdown>
 <p class="admonition-title"><strong>Mode d'emploi</strong></p>
@@ -567,13 +567,6 @@ Les nouveaux Secrets sont alors chiffrés avant d'être écrits dans etcd ; les 
 | Contrôle des accès réseau | `NetworkPolicy` *Default Deny* + flux autorisés (Ex. 2) |
 | Durcissement des conteneurs | `securityContext` non-root (Ex. 3) |
 | Restriction des accès à `etcd` | Isolement réseau, TLS mutuel, droits `root`, chiffrement au repos (Ex. 5) |
-
-</div>
-
-<div class="admonition note" markdown>
-<p class="admonition-title"><strong>Et pour l'Atelier 06 ?</strong></p>
-
-Laissez tout en place : le backend durci est conservé, et l'étape 0 de l'Atelier 06 retire les NetworkPolicies, le ResourceQuota et le LimitRange, qui gêneraient ses incidents simulés.
 
 </div>
 

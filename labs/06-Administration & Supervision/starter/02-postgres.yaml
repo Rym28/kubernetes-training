@@ -1,5 +1,5 @@
 # ==============================================================================
-# Starter de l'Atelier 06 - Base PostgreSQL persistante (état de fin de l'Atelier 07)
+# Starter de l'Atelier 06 - Base PostgreSQL persistante
 # ------------------------------------------------------------------------------
 # PV pv-postgres (1Gi, RWO, répertoire de k8s-worker-1) + PVC pvc-postgres
 # + Deployment lisant ses identifiants dans le

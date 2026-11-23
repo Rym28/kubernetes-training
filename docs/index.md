@@ -72,21 +72,21 @@ flowchart LR
     
     [:octicons-arrow-right-24: Accéder à l'Atelier 05](labs/05-configuration-stockage-persistant.md)
 
--   :material-shield-lock: __Atelier 07 : Sécurité, Quotas & Isolement Réseau (NetworkPolicy)__
-    
-    ---
-    
-    LimitRange et ResourceQuota, NetworkPolicies Zéro-Trust, conteneurs non-root, RBAC et ServiceAccounts, protection de l'API Server et d'etcd. Réalisé avant l'Atelier 06.
-    
-    [:octicons-arrow-right-24: Accéder à l'Atelier 07](labs/07-securite-quotas-isolement-reseau.md)
-
 -   :material-monitor-dashboard: __Atelier 06 : Exploitation, Observabilité & Reverse Debugging__
     
     ---
     
-    Logs et événements, `kubectl exec`, dépannage de 3 incidents, Node Problem Detector, Metrics Server, Prometheus, Fluent Bit, Loki et Grafana. Réalisé après l'Atelier 07.
+    Logs et événements, `kubectl exec`, dépannage de 3 incidents, Node Problem Detector, Metrics Server, Prometheus, Fluent Bit, Loki et Grafana.
     
     [:octicons-arrow-right-24: Accéder à l'Atelier 06](labs/06-exploitation-observabilite-debugging.md)
+
+-   :material-shield-lock: __Atelier 07 : Sécurité, Quotas & Isolement Réseau (NetworkPolicy)__
+    
+    ---
+    
+    LimitRange et ResourceQuota, NetworkPolicies Zéro-Trust, conteneurs non-root, RBAC et ServiceAccounts, protection de l'API Server et d'etcd.
+    
+    [:octicons-arrow-right-24: Accéder à l'Atelier 07](labs/07-securite-quotas-isolement-reseau.md)
 
 </div>
 

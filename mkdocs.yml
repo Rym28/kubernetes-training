@@ -89,7 +89,7 @@ nav:
           - "Atelier 04 : Réseau, Services & Découverte DNS": labs/04-reseau-services-dns.md
       - "Partie 2 — Persistance, Exploitation & Sécurité (Jour 2)":
           - "Atelier 05 : Configuration & Stockage Persistant (PV / PVC / PostgreSQL)": labs/05-configuration-stockage-persistant.md
-          - "Atelier 07 : Sécurité, Quotas & Isolement Réseau (NetworkPolicy)": labs/07-securite-quotas-isolement-reseau.md
           - "Atelier 06 : Exploitation, Observabilité & Reverse Debugging": labs/06-exploitation-observabilite-debugging.md
+          - "Atelier 07 : Sécurité, Quotas & Isolement Réseau (NetworkPolicy)": labs/07-securite-quotas-isolement-reseau.md
   - Support de Cours: support-cours.md
   - Évaluation des Acquis: evaluation.md
