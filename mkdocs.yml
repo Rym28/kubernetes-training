@@ -74,10 +74,6 @@ markdown_extensions:
   - toc:
       permalink: true
 
-# Atelier 06 masqué aux stagiaires pour le moment (retirer ces lignes pour le publier)
-exclude_docs: |
-  labs/06-*.md
-
 nav:
   - Accueil: index.md
   - Architecture & Environnement:
@@ -94,5 +90,6 @@ nav:
       - "Partie 2 — Persistance, Exploitation & Sécurité (Jour 2)":
           - "Atelier 05 : Configuration & Stockage Persistant (PV / PVC / PostgreSQL)": labs/05-configuration-stockage-persistant.md
           - "Atelier 07 : Sécurité, Quotas & Isolement Réseau (NetworkPolicy)": labs/07-securite-quotas-isolement-reseau.md
+          - "Atelier 06 : Exploitation, Observabilité & Reverse Debugging": labs/06-exploitation-observabilite-debugging.md
   - Support de Cours: support-cours.md
   - Évaluation des Acquis: evaluation.md

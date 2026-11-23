@@ -1,0 +1,17 @@
+# Atelier 06 - Incident B : un conteneur limité à 50 Mi de mémoire tente d'en allouer 150 Mo.
+# Le noyau Linux le tue (OOMKilled) à chaque tentative.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: oom-victim
+spec:
+  containers:
+  - name: mem-eater
+    image: polinux/stress:1.0.4
+    resources:
+      requests:
+        memory: "32Mi"
+      limits:
+        memory: "50Mi"
+    command: ["stress"]
+    args: ["--vm", "1", "--vm-bytes", "150M", "--vm-hang", "1"]

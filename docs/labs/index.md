@@ -40,8 +40,9 @@ Dans chaque atelier, vous trouverez des blocs d'indices progressifs pliables :
 | :---: | :--- | :--- |
 | **[Atelier 05](05-configuration-stockage-persistant.md)** | **Configuration & Stockage Persistant (PV / PVC / PostgreSQL)** | `ConfigMap` (literal/file), `Secret` encodé base64, `PersistentVolume` et `PersistentVolumeClaim`, PostgreSQL et crash-test de persistance SQL. |
 | **[Atelier 07](07-securite-quotas-isolement-reseau.md)** | **Sécurité, Quotas & Isolement Réseau (NetworkPolicy)** | LimitRange et ResourceQuota, NetworkPolicies *Default Deny* et flux autorisés, `securityContext` non-root, ServiceAccount et RBAC (`kubectl auth can-i`), protection de l'API Server et d'etcd. Réalisé **avant** l'Atelier 06. |
+| **[Atelier 06](06-exploitation-observabilite-debugging.md)** | **Exploitation, Observabilité & Reverse Debugging** | `kubectl logs` et événements, `kubectl exec`, méthode de dépannage sur 3 incidents (`CrashLoopBackOff`, `OOMKilled`, Service sans réponse), Node Problem Detector et `cordon`, Metrics Server, Prometheus, Fluent Bit, Loki et Grafana, StackDriver. Réalisé **après** l'Atelier 07. |
 
-L'atelier 06 (Administration) sera publié au Jour 2 : il se réalise après l'Atelier 07.
+Ordre de réalisation au Jour 2 : 05, puis 07 (Sécurité), puis 06 (Administration).
 
 ---
 

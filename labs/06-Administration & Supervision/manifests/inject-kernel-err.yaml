@@ -1,0 +1,17 @@
+# Atelier 06 - Simulation d'une panne du noyau sur k8s-worker-1.
+# Un pod PRIVILÉGIÉ (accès complet au nœud, réservé à cette simulation) écrit dans
+# le journal du noyau (/dev/kmsg) le message d'erreur surveillé par Node Problem Detector.
+# Sur Minikube, remplacez k8s-worker-1 par minikube.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: inject-kernel-err
+spec:
+  nodeName: k8s-worker-1        # place le pod directement sur ce nœud, sans passer par le scheduler
+  restartPolicy: Never
+  containers:
+  - name: inject
+    image: busybox:1.36
+    securityContext:
+      privileged: true
+    command: ["sh", "-c", "echo '<3>kernel: BUG: unable to handle kernel NULL pointer dereference at 0000000000000000' > /dev/kmsg"]

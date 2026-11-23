@@ -80,6 +80,14 @@ flowchart LR
     
     [:octicons-arrow-right-24: Accéder à l'Atelier 07](labs/07-securite-quotas-isolement-reseau.md)
 
+-   :material-monitor-dashboard: __Atelier 06 : Exploitation, Observabilité & Reverse Debugging__
+    
+    ---
+    
+    Logs et événements, `kubectl exec`, dépannage de 3 incidents, Node Problem Detector, Metrics Server, Prometheus, Fluent Bit, Loki et Grafana. Réalisé après l'Atelier 07.
+    
+    [:octicons-arrow-right-24: Accéder à l'Atelier 06](labs/06-exploitation-observabilite-debugging.md)
+
 </div>
 
 ---
