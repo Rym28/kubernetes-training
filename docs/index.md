@@ -64,6 +64,14 @@ flowchart LR
     
     [:octicons-arrow-right-24: Accéder à l'Atelier 04](labs/04-reseau-services-dns.md)
 
+-   :material-database: __Atelier 05 : Configuration & Stockage Persistant (PV / PVC / PostgreSQL)__
+    
+    ---
+    
+    ConfigMaps (`--from-literal` / `--from-file`), Secrets base64, PersistentVolume et PersistentVolumeClaim, PostgreSQL et crash-test de persistance.
+    
+    [:octicons-arrow-right-24: Accéder à l'Atelier 05](labs/05-configuration-stockage-persistant.md)
+
 </div>
 
 ---

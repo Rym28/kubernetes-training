@@ -67,13 +67,10 @@ supports/
 *Support-Cours*.pdf
 
 # Ateliers du Jour 2 : gardés en local, publiés au Jour 2
-# (retirer ces lignes puis `git add` pour les publier)
-labs/05-*/
+# (retirer ces lignes puis `git add` pour les publier ; Atelier 05 publié)
 labs/06-*/
 labs/07-*/
-docs/labs/05-*.md
 docs/labs/06-*.md
 docs/labs/07-*.md
-pdf/ateliers/Atelier-05-*.pdf
 pdf/ateliers/Atelier-06-*.pdf
 pdf/ateliers/Atelier-07-*.pdf

@@ -43,7 +43,11 @@ Bravo ! En cliquant sur cette ampoule, vous découvrez des explications méthodo
 
 ### Partie 2 : Persistance, Exploitation & Sécurité de Production (Jour 2)
 
-Les ateliers 05 à 07 seront publiés au Jour 2.
+| Atelier | Titre de l'atelier | Concepts Clés Traités |
+| :---: | :--- | :--- |
+| **[Atelier 05](./05-Les%20Volumes/README.md)** | **Configuration & Stockage Persistant** | `ConfigMap` (literal/file), `Secret` encodé base64, `PersistentVolume` et `PersistentVolumeClaim`, PostgreSQL et crash-test de persistance SQL. |
+
+Les ateliers 06 et 07 seront publiés au Jour 2.
 
 ---
 

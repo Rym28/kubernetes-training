@@ -36,7 +36,11 @@ Dans chaque atelier, vous trouverez des blocs d'indices progressifs pliables :
 
 ### Partie 2 — Persistance, Exploitation & Sécurité (Jour 2)
 
-Les ateliers 05 à 07 seront publiés au Jour 2.
+| Atelier | Titre de l'atelier | Concepts Clés Traités |
+| :---: | :--- | :--- |
+| **[Atelier 05](05-configuration-stockage-persistant.md)** | **Configuration & Stockage Persistant (PV / PVC / PostgreSQL)** | `ConfigMap` (literal/file), `Secret` encodé base64, `PersistentVolume` et `PersistentVolumeClaim`, PostgreSQL et crash-test de persistance SQL. |
+
+Les ateliers 06 et 07 seront publiés au Jour 2.
 
 ---
 

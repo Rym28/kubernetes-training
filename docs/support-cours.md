@@ -42,7 +42,7 @@ Le cours suit les 5 chapitres du programme officiel. Le tableau indique les atel
 | :---: | :--- | :--- | :--- |
 | 1 | **Introduction** | Origine du projet, fonctionnalités, containers supportés, plates-formes utilisant Kubernetes, composants, définitions (pods, labels, controllers, services) | [Atelier 02](labs/02-pods-trois-briques.md), [Atelier 03](labs/03-deploiements-resilience-rollback.md), [Atelier 04](labs/04-reseau-services-dns.md) |
 | 2 | **Architecture** | Master : etcd (stockage des configurations), API Server ; Nœuds : hébergement des containers, Kubelet | Démonstration formateur |
-| 3 | **Installation et configuration** | Solutions d'installation ; kubectl, minikube, kubeadm ; mémoire, stockage, CPU, affectation de pods à des nœuds ; configuration d'applications et exécution | [Atelier 01](labs/01-provisionnement-cluster.md), [Atelier 02](labs/02-pods-trois-briques.md) |
+| 3 | **Installation et configuration** | Solutions d'installation ; kubectl, minikube, kubeadm ; mémoire, stockage, CPU, affectation de pods à des nœuds ; configuration d'applications et exécution | [Atelier 01](labs/01-provisionnement-cluster.md), [Atelier 02](labs/02-pods-trois-briques.md), [Atelier 05](labs/05-configuration-stockage-persistant.md) |
 | 4 | **Administration** | Supervision, logs, debugging ; `kubectl exec` ; Node Problem Detector ; StackDriver | Jour 2 |
 | 5 | **Sécurité** | Points à sécuriser ; accès à l'API ; limitation des ressources ; contrôle des accès réseau ; restrictions des accès à etcd | Jour 2 |
 
@@ -56,3 +56,4 @@ Le cours suit les 5 chapitres du programme officiel. Le tableau indique les atel
 | Atelier 02 : Les Pods | [:material-file-pdf-box: PDF](https://github.com/Rym28/kubernetes-training/raw/main/pdf/ateliers/Atelier-02-Les-Pods.pdf) |
 | Atelier 03 : Déploiements — Résilience & Rollback | [:material-file-pdf-box: PDF](https://github.com/Rym28/kubernetes-training/raw/main/pdf/ateliers/Atelier-03-Les-Deploiements-Scheduling.pdf) |
 | Atelier 04 : Réseau, Services & Découverte DNS | [:material-file-pdf-box: PDF](https://github.com/Rym28/kubernetes-training/raw/main/pdf/ateliers/Atelier-04-Les-Services.pdf) |
+| Atelier 05 : Configuration & Stockage Persistant | [:material-file-pdf-box: PDF](https://github.com/Rym28/kubernetes-training/raw/main/pdf/ateliers/Atelier-05-Les-Volumes.pdf) |

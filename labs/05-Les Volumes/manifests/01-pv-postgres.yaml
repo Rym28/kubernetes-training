@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-postgres
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""                    # PV créé à la main : aucune fabrication automatique
+  hostPath:
+    path: /mnt/donnees/campus-postgres    # répertoire sur le disque du nœud
+    type: DirectoryOrCreate
+  nodeAffinity:                           # le disque n'existe que sur ce nœud
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - k8s-worker-1                  # cluster AWS
+          - minikube                      # secours Minikube
