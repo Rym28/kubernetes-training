@@ -1,0 +1,2021 @@
+
+<!doctype html>
+<html lang="fr" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Ateliers pratiques d'orchestration et déploiement de conteneurs avec Kubernetes.">
+      
+      
+        <meta name="author" content="Rym Regaieg">
+      
+      
+        <link rel="canonical" href="https://rym28.github.io/kubernetes-training/labs/02-pods-trois-briques/">
+      
+      
+        <link rel="prev" href="../01-provisionnement-cluster/">
+      
+      
+        <link rel="next" href="../03-deploiements-resilience-rollback/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.2">
+    
+    
+      
+        <title>Atelier 02 : Les Pods : les Trois Briques du Campus Summer Portal - Kubernetes & Orchestration — Ateliers Pratiques</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#atelier-02-les-pods-les-trois-briques-du-campus-summer-portal" class="md-skip">
+          Aller au contenu
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="En-tête">
+    <a href="../.." title="Kubernetes &amp; Orchestration — Ateliers Pratiques" class="md-header__button md-logo" aria-label="Kubernetes & Orchestration — Ateliers Pratiques" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Kubernetes & Orchestration — Ateliers Pratiques
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Atelier 02 : Les Pods : les Trois Briques du Campus Summer Portal
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple"  aria-label="Passer au mode sombre"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Passer au mode sombre" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="cyan"  aria-label="Passer au mode clair"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Passer au mode clair" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Rechercher" placeholder="Rechercher" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Recherche">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Effacer" aria-label="Effacer" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initialisation de la recherche
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Rym28/kubernetes-training" title="Aller au dépôt" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Rym28/kubernetes-training
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Onglets" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Accueil
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../application/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Architecture & Environnement
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Ateliers Pratiques
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../support-cours/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Support de Cours
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../evaluation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Évaluation des Acquis
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Kubernetes &amp; Orchestration — Ateliers Pratiques" class="md-nav__button md-logo" aria-label="Kubernetes & Orchestration — Ateliers Pratiques" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Kubernetes & Orchestration — Ateliers Pratiques
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Rym28/kubernetes-training" title="Aller au dépôt" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Rym28/kubernetes-training
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Accueil
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture & Environnement
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture & Environnement
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../application/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Application Fil Rouge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../setup-environnement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prérequis & Environnement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cluster-aws-express/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cluster AWS en une commande
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ateliers Pratiques
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Ateliers Pratiques
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Partie 1 — Déploiement du Cluster & Fondations (Jour 1)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Partie 1 — Déploiement du Cluster & Fondations (Jour 1)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-provisionnement-cluster/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 01 : Provisionnement du Cluster
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 02 : Les Pods : les Trois Briques du Campus Summer Portal
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 02 : Les Pods : les Trois Briques du Campus Summer Portal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table des matières">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table des matières
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#objectifs-pedagogiques" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Objectifs Pédagogiques :
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contexte-metier" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contexte Métier
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-1-ecrire-et-creer-un-pod" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 1 : Écrire et créer un Pod
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 1 : Écrire et créer un Pod">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-ecrire-la-specification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 : Écrire la spécification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-creer-le-pod" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 : Créer le Pod
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-3-suivre-son-demarrage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 3 : Suivre son démarrage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-2-inspecter-le-pod-et-acceder-a-lapplication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 2 : Inspecter le Pod et accéder à l'application
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 2 : Inspecter le Pod et accéder à l&#39;application">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-observer-les-details-du-pod" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 : Observer les détails du Pod
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-acceder-a-lapplication-via-un-port-forward" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 : Accéder à l'application via un port-forward
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-3-diagnostiquer-une-erreur-classique" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 3 : Diagnostiquer une erreur classique
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 3 : Diagnostiquer une erreur classique">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-provoquer-une-erreur" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 : Provoquer une erreur
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-4-supprimer-et-rejouer-un-manifest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 4 : Supprimer et rejouer un manifest
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 4 : Supprimer et rejouer un manifest">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-supprimer-les-pods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 : Supprimer les Pods
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-rejouer-le-manifest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 : Rejouer le manifest
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-5-generer-un-manifest-avec-dry-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 5 : Générer un manifest avec --dry-run
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 5 : Générer un manifest avec --dry-run">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-generer-le-manifest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 : Générer le manifest
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-completer-le-manifest-genere" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 : Compléter le manifest généré
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-3-appliquer-le-manifest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 3 : Appliquer le manifest
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-6-entrer-dans-le-conteneur-et-tester-la-resilience" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 6 : Entrer dans le conteneur et tester la résilience
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 6 : Entrer dans le conteneur et tester la résilience">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-executer-une-commande-dans-le-conteneur-kubectl-exec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 : Exécuter une commande dans le conteneur (kubectl exec)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-le-crash-test-du-pod-isole" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 : Le crash-test du Pod isolé
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#criteres-de-validation-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Critères de Validation (Checklist)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-deploiements-resilience-rollback/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 03 : Déploiements — Résilience & Rollback
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-reseau-services-dns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 04 : Réseau, Services & Découverte DNS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Partie 2 — Persistance, Exploitation & Sécurité (Jour 2)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Partie 2 — Persistance, Exploitation & Sécurité (Jour 2)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-configuration-stockage-persistant/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 05 : Configuration & Stockage Persistant (PV / PVC / PostgreSQL)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../support-cours/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Support de Cours
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Évaluation des Acquis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table des matières">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table des matières
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#objectifs-pedagogiques" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Objectifs Pédagogiques :
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contexte-metier" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contexte Métier
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-1-ecrire-et-creer-un-pod" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 1 : Écrire et créer un Pod
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 1 : Écrire et créer un Pod">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-ecrire-la-specification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 : Écrire la spécification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-creer-le-pod" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 : Créer le Pod
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-3-suivre-son-demarrage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 3 : Suivre son démarrage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-2-inspecter-le-pod-et-acceder-a-lapplication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 2 : Inspecter le Pod et accéder à l'application
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 2 : Inspecter le Pod et accéder à l&#39;application">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-observer-les-details-du-pod" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 : Observer les détails du Pod
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-acceder-a-lapplication-via-un-port-forward" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 : Accéder à l'application via un port-forward
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-3-diagnostiquer-une-erreur-classique" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 3 : Diagnostiquer une erreur classique
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 3 : Diagnostiquer une erreur classique">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-provoquer-une-erreur" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 : Provoquer une erreur
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-4-supprimer-et-rejouer-un-manifest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 4 : Supprimer et rejouer un manifest
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 4 : Supprimer et rejouer un manifest">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-supprimer-les-pods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 : Supprimer les Pods
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-rejouer-le-manifest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 : Rejouer le manifest
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-5-generer-un-manifest-avec-dry-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 5 : Générer un manifest avec --dry-run
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 5 : Générer un manifest avec --dry-run">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-generer-le-manifest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 : Générer le manifest
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-completer-le-manifest-genere" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 : Compléter le manifest généré
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-3-appliquer-le-manifest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 3 : Appliquer le manifest
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-6-entrer-dans-le-conteneur-et-tester-la-resilience" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 6 : Entrer dans le conteneur et tester la résilience
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 6 : Entrer dans le conteneur et tester la résilience">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-executer-une-commande-dans-le-conteneur-kubectl-exec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 : Exécuter une commande dans le conteneur (kubectl exec)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-le-crash-test-du-pod-isole" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 : Le crash-test du Pod isolé
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#criteres-de-validation-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Critères de Validation (Checklist)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="atelier-02-les-pods-les-trois-briques-du-campus-summer-portal">Atelier 02 : Les Pods : les Trois Briques du Campus Summer Portal<a class="headerlink" href="#atelier-02-les-pods-les-trois-briques-du-campus-summer-portal" title="Permanent link">&para;</a></h1>
+<h3 id="objectifs-pedagogiques">Objectifs Pédagogiques :<a class="headerlink" href="#objectifs-pedagogiques" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Écrire le manifest YAML d'un <strong>Pod</strong> (<code>apiVersion</code>, <code>kind</code>, <code>metadata</code>, <code>spec</code>) et le créer avec <code>kubectl apply</code>.</li>
+<li>Suivre le cycle de vie d'un Pod avec <code>kubectl get</code>, <code>describe</code> et <code>logs</code>.</li>
+<li>Accéder à l'application d'un Pod avec <code>kubectl port-forward</code>.</li>
+<li>Diagnostiquer un statut anormal (<code>ImagePullBackOff</code>, <code>CrashLoopBackOff</code>) et choisir entre <code>describe</code> et <code>logs</code>.</li>
+<li>Générer un manifest déclaratif avec <code>--dry-run=client -o yaml</code>.</li>
+<li>Inspecter l'intérieur du conteneur avec <code>kubectl exec</code>.</li>
+<li>Constater les limites de résilience d'un Pod isolé (<em>bare pod</em>).</li>
+</ul>
+<div class="admonition info">
+<p class="admonition-title"><strong>Compatibilité OS</strong></p>
+<p>Les commandes <code>kubectl</code> (<code>kubectl apply</code>, <code>kubectl get</code>, <code>kubectl describe</code>, <code>kubectl exec</code>, <code>kubectl port-forward</code>) sont <strong>rigoureusement identiques</strong> sous <strong>Windows (PowerShell)</strong>, <strong>Linux (Ubuntu)</strong> et <strong>macOS (Terminal)</strong>. Quand une commande diffère, des onglets vous proposent les deux variantes.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title"><strong>Environnement : Minikube sur votre poste</strong></p>
+<p>Cet atelier se déroule entièrement sur votre cluster <strong>Minikube</strong> local. Vous éditez vos YAML dans votre IDE et lancez les commandes depuis votre terminal. Vérifiez que Minikube tourne et que <code>kubectl</code> pointe dessus :</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>minikube<span class="w"> </span>status<span class="w">                     </span><span class="c1"># host, kubelet et apiserver : Running</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>kubectl<span class="w"> </span>config<span class="w"> </span>use-context<span class="w"> </span>minikube
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>kubectl<span class="w"> </span>get<span class="w"> </span>nodes<span class="w">                   </span><span class="c1"># un nœud « minikube » à l'état Ready</span>
+</span></code></pre></div>
+<p><em>Si Minikube est arrêté, démarrez-le avec <code>minikube start</code>.</em></p>
+</div>
+<div class="admonition note">
+<p class="admonition-title"><strong>Namespace de travail : <code>campus-dev</code></strong></p>
+<p>Avant de commencer, créez-le et définissez-le comme namespace courant (les commandes sont sans effet s'il existe déjà) :</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>kubectl<span class="w"> </span>create<span class="w"> </span>namespace<span class="w"> </span>campus-dev<span class="w"> </span>--dry-run<span class="o">=</span>client<span class="w"> </span>-o<span class="w"> </span>yaml<span class="w"> </span><span class="p">|</span><span class="w"> </span>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>-
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>kubectl<span class="w"> </span>config<span class="w"> </span>set-context<span class="w"> </span>--current<span class="w"> </span>--namespace<span class="o">=</span>campus-dev
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>kubectl<span class="w"> </span>config<span class="w"> </span>view<span class="w"> </span>--minify<span class="w"> </span>-o<span class="w"> </span><span class="nv">jsonpath</span><span class="o">=</span><span class="s1">'{..namespace}'</span><span class="w">   </span><span class="c1"># doit afficher campus-dev</span>
+</span></code></pre></div>
+</div>
+<details class="tip">
+<summary><strong>Sous Windows, quel terminal utiliser ?</strong></summary>
+<p>Les commandes de ces ateliers sont écrites en syntaxe <strong>Bash</strong>. Trois pièges attendent Windows PowerShell 5.1 (le PowerShell installé par défaut) :</p>
+<ul>
+<li>La redirection <code>&gt; fichier.yaml</code> écrit en <strong>UTF-16</strong> : <code>kubectl apply</code> échoue ensuite à lire le fichier. Utilisez <code>| Out-File -Encoding utf8 fichier.yaml</code>.</li>
+<li>Les commandes sur plusieurs lignes terminées par <code>\</code> et les blocs <code>&lt;&lt; 'EOF'</code> ne sont pas compris par PowerShell.</li>
+<li>Les guillemets et les <code>$(...)</code> ne s'interprètent pas de la même façon.</li>
+</ul>
+<p><strong>Recommandation :</strong> sous Windows, utilisez <strong>Git Bash</strong> (installé avec Git for Windows) ou <strong>WSL</strong>, ou bien PowerShell 7 (<code>winget install Microsoft.PowerShell</code>), qui écrit en UTF-8.</p>
+<p><strong>Piège propre à Git Bash :</strong> il convertit en chemin Windows tout argument qui commence par <code>/</code>. Ainsi <code>kubectl run … -- md5sum /dev/urandom</code> (Atelier 06) transmet au conteneur un chemin transformé (<code>md5sum: can't open '/Device/Null'</code>), et la commande échoue. Les labs encapsulent donc ces commandes dans <code>sh -c "…"</code>. Si vous tapez vous-même une commande de ce type, désactivez la conversion pour cette seule commande :</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nv">MSYS_NO_PATHCONV</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>kubectl<span class="w"> </span>run<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--image<span class="o">=</span>busybox:1.36<span class="w"> </span>--restart<span class="o">=</span>Never<span class="w"> </span>--<span class="w"> </span>ls<span class="w"> </span>/etc
+</span></code></pre></div>
+<p>Ne l'activez pas globalement : Git Bash ne convertirait plus non plus une variable comme <code>KUBECONFIG=/c/Users/...</code>, et <code>kubectl</code> ne trouverait plus votre cluster.</p>
+</details>
+<hr />
+<h2 id="contexte-metier">Contexte Métier<a class="headerlink" href="#contexte-metier" title="Permanent link">&para;</a></h2>
+<p>Le portail Horizon Stages doit démarrer par la mise en ligne d'une première version de son interface web statique. En tant qu'administrateur, vous devez déployer ce premier conteneur dans un Pod, y accéder, inspecter son fonctionnement interne et constater les limites d'un Pod isolé.</p>
+<ul>
+<li>Image Docker du frontend : <code>regaieg/campus:frontend-1.0.0</code></li>
+<li>Port exposé par le conteneur : <code>8080</code> (Nginx unprivileged)</li>
+</ul>
+<div class="admonition tip">
+<p class="admonition-title"><strong>Mode d'emploi</strong></p>
+<ul>
+<li>Les encadrés rouges <strong>« À vous de répondre »</strong> contiennent les questions. Pour les commandes déjà vues en cours, on vous demande la commande au lieu de vous la donner : cherchez avec <code>kubectl --help</code>, <code>kubectl &lt;commande&gt; --help</code> ou <code>kubectl explain</code>.</li>
+<li>Les commandes nouvelles sont données.</li>
+<li>Les encadrés <strong>« Indice »</strong> sont repliés : cliquez dessus seulement si vous bloquez.</li>
+<li>Le formateur corrige en fin d'atelier.</li>
+</ul>
+</div>
+<hr />
+<h2 id="exercice-1-ecrire-et-creer-un-pod">Exercice 1 : Écrire et créer un Pod<a class="headerlink" href="#exercice-1-ecrire-et-creer-un-pod" title="Permanent link">&para;</a></h2>
+<div class="admonition abstract">
+<p class="admonition-title"><strong>Ce que vous allez comprendre</strong></p>
+<p>Avant de construire le pod définitif du frontend, l'équipe veut un <strong>pod de test</strong> pour vérifier que l'image <code>regaieg/campus:frontend-1.0.0</code> démarre bien sur le cluster. Vous allez écrire son manifest <strong>à la main</strong>, pour bien identifier les rubriques communes à tous les objets Kubernetes.</p>
+</div>
+<h3 id="etape-1-ecrire-la-specification">Étape 1 : Écrire la spécification<a class="headerlink" href="#etape-1-ecrire-la-specification" title="Permanent link">&para;</a></h3>
+<p>Créez un fichier <code>pod-frontend-test.yaml</code> qui décrit un Pod avec les propriétés suivantes :</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Propriété</th>
+<th style="text-align: left;">Valeur</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Nom du Pod</td>
+<td style="text-align: left;"><code>frontend-test</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">Labels</td>
+<td style="text-align: left;"><code>app: frontend-test</code> et <code>tier: frontend</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">Nom du conteneur</td>
+<td style="text-align: left;"><code>frontend</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">Image du conteneur</td>
+<td style="text-align: left;"><code>regaieg/campus:frontend-1.0.0</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">Port exposé par le conteneur</td>
+<td style="text-align: left;"><code>8080</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">Alias d'hôte (<code>hostAliases</code>)</td>
+<td style="text-align: left;">le nom <code>campus-backend</code> associé à l'adresse <code>192.0.2.1</code></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="admonition-title"><strong>Pourquoi <code>hostAliases</code> ?</strong></p>
+<p>Le Nginx du frontend relaie les appels <code>/api/</code> vers l'hôte <code>campus-backend:8080</code> et vérifie ce nom <strong>dès son démarrage</strong> : s'il est introuvable, il s'arrête (<code>host not found in upstream "campus-backend"</code>) et le pod part en <code>CrashLoopBackOff</code>. Or le backend n'existe pas encore.</p>
+<p><code>hostAliases</code> ajoute une ligne au fichier <code>/etc/hosts</code> du conteneur : le nom existe, Nginx démarre. L'adresse <code>192.0.2.1</code> est réservée à la documentation et ne répond jamais. Cette astuce ne sert qu'à ce lab de test : plus tard, un vrai <strong>Service</strong> Kubernetes portera ce nom.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title"><strong>À savoir</strong></p>
+<p>Ne précisez pas de namespace : le pod sera créé dans votre namespace courant <code>campus-dev</code> (défini en début d'atelier). Indentez <strong>uniquement avec des espaces</strong>, jamais avec des tabulations.</p>
+</div>
+<details class="tip">
+<summary><strong>Indice : squelette à compléter</strong></summary>
+<p>Remplacez chaque <code>....</code> par la valeur demandée :</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Pod</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nt">metadata</span><span class="p">:</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">...............</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="nt">labels</span><span class="p">:</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span><span class="nt">app</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">...............</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">    </span><span class="nt">tier</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">...............</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="nt">spec</span><span class="p">:</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">  </span><span class="nt">hostAliases</span><span class="p">:</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">ip</span><span class="p">:</span><span class="w"> </span><span class="s">"..........."</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">    </span><span class="nt">hostnames</span><span class="p">:</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">...............</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="w">  </span><span class="nt">containers</span><span class="p">:</span>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">...............</span>
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">...............</span>
+</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
+</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">containerPort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">....</span>
+</span></code></pre></div>
+<p>Tout objet Kubernetes suit le même plan :</p>
+<ul>
+<li><code>apiVersion</code> + <code>kind</code> : le type d'objet (<code>v1</code> et <code>Pod</code>).</li>
+<li><code>metadata</code> : son identité (<code>name</code>, <code>labels</code>).</li>
+<li><code>spec</code> : l'état désiré. Pour un Pod, <code>containers</code> est une <strong>liste de dictionnaires</strong> : chaque conteneur commence par un tiret <code>-</code> et contient <code>name</code>, <code>image</code>, <code>ports</code>. <code>hostAliases</code> se place dans <code>spec</code>, au même niveau que <code>containers</code>.</li>
+<li><code>status</code> : l'état réel. Il est ajouté par Kubernetes : <strong>vous ne l'écrivez jamais</strong>.</li>
+</ul>
+<p>Pour connaître les champs disponibles : <code>kubectl explain pod.spec.containers</code>. Dans VS Code, l'extension <em>YAML</em> (Red Hat) propose l'autocomplétion et souligne les erreurs d'indentation.</p>
+</details>
+<h3 id="etape-2-creer-le-pod">Étape 2 : Créer le Pod<a class="headerlink" href="#etape-2-creer-le-pod" title="Permanent link">&para;</a></h3>
+<div class="admonition question">
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+<ol>
+<li>Quelle commande crée le pod à partir de votre fichier, de manière <strong>déclarative</strong> ?</li>
+</ol>
+</div>
+<h3 id="etape-3-suivre-son-demarrage">Étape 3 : Suivre son démarrage<a class="headerlink" href="#etape-3-suivre-son-demarrage" title="Permanent link">&para;</a></h3>
+<div class="admonition question">
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+<ol>
+<li>Quelle commande liste les pods <strong>en continu</strong>, pour voir chaque changement d'état en direct ? Quittez-la avec <code>Ctrl + C</code>.</li>
+<li>Par quels statuts le pod passe-t-il avant <code>Running</code> ? Que fait le kubelet pendant ce temps ?</li>
+<li>Quelle option de <code>kubectl get pods</code> ajoute les colonnes <code>NODE</code> et <code>IP</code> ? Sur quel nœud tourne votre pod, et quelle est son adresse IP ?</li>
+</ol>
+</div>
+<details class="tip">
+<summary><strong>Indice : le pod passe en <code>CrashLoopBackOff</code></strong></summary>
+<p>Lisez la raison : <code>kubectl logs frontend-test</code>. Si vous voyez <code>host not found in upstream "campus-backend"</code>, le bloc <code>hostAliases</code> manque ou est mal indenté (il doit être dans <code>spec</code>, au même niveau que <code>containers</code>). Un pod ne se modifie pas après sa création : corrigez le fichier, supprimez le pod, puis recréez-le.</p>
+</details>
+<hr />
+<h2 id="exercice-2-inspecter-le-pod-et-acceder-a-lapplication">Exercice 2 : Inspecter le Pod et accéder à l'application<a class="headerlink" href="#exercice-2-inspecter-le-pod-et-acceder-a-lapplication" title="Permanent link">&para;</a></h2>
+<div class="admonition abstract">
+<p class="admonition-title"><strong>Ce que vous allez comprendre</strong></p>
+<p><code>describe</code> raconte ce que Kubernetes a fait du pod (placement, image, événements) ; les <strong>logs</strong> racontent ce que fait l'application à l'intérieur.</p>
+</div>
+<h3 id="etape-1-observer-les-details-du-pod">Étape 1 : Observer les détails du Pod<a class="headerlink" href="#etape-1-observer-les-details-du-pod" title="Permanent link">&para;</a></h3>
+<p>Affichez d'abord la description complète du pod <code>frontend-test</code> (questions 1 et 2), puis comparez votre fichier avec le manifest stocké par le cluster (questions 3 et 4) :</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pod<span class="w"> </span>frontend-test<span class="w"> </span>-o<span class="w"> </span>yaml
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pod<span class="w"> </span>frontend-test<span class="w"> </span>-o<span class="w"> </span><span class="nv">jsonpath</span><span class="o">=</span><span class="s1">'{.status.phase}'</span>
+</span></code></pre></div>
+<div class="admonition question">
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+<ol>
+<li>Quelle commande affiche la description complète du pod <code>frontend-test</code> ? Retrouvez-y l'<strong>image</strong> du conteneur <code>frontend</code>, le <strong>nœud</strong> qui l'héberge et l'<strong>adresse IP</strong> du pod.</li>
+<li>Dans la section <code>Events</code>, en bas de la sortie, quelles étapes du démarrage apparaissent, et dans quel ordre ? Quel composant a produit chacune d'elles ?</li>
+<li>La sortie de <code>kubectl get pod frontend-test -o yaml</code> est bien plus longue que votre fichier. Citez deux champs ajoutés dans <code>metadata</code> et deux valeurs par défaut ajoutées dans <code>spec</code>.</li>
+<li>Quelle rubrique n'existait pas dans votre fichier ? Qui la remplit, et quelle différence y a-t-il entre <code>spec</code> et cette rubrique ?</li>
+</ol>
+</div>
+<h3 id="etape-2-acceder-a-lapplication-via-un-port-forward">Étape 2 : Accéder à l'application via un port-forward<a class="headerlink" href="#etape-2-acceder-a-lapplication-via-un-port-forward" title="Permanent link">&para;</a></h3>
+<p>Ouvrez un tunnel du port <code>8888</code> local vers le port <code>8080</code> du pod. La commande reste au premier plan tant que le tunnel est ouvert :</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>kubectl<span class="w"> </span>port-forward<span class="w"> </span>pod/frontend-test<span class="w"> </span><span class="m">8888</span>:8080
+</span></code></pre></div>
+<p>Ouvrez <code>http://localhost:8888</code> dans votre navigateur, puis arrêtez le tunnel avec <code>Ctrl + C</code>.</p>
+<div class="admonition question">
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+<ol>
+<li>Quelle partie de la page s'affiche correctement ? Quelle partie reste vide puis affiche une erreur, et pourquoi ? (Relisez l'encadré sur <code>hostAliases</code>.)</li>
+<li>Quelle commande affiche les <strong>5 dernières lignes</strong> des logs du pod ?</li>
+<li>Retrouvez-y vos requêtes et l'erreur de Nginx. Quelle différence faites-vous entre ce que montre <code>describe</code> et ce que montrent les logs ?</li>
+</ol>
+</div>
+<hr />
+<h2 id="exercice-3-diagnostiquer-une-erreur-classique">Exercice 3 : Diagnostiquer une erreur classique<a class="headerlink" href="#exercice-3-diagnostiquer-une-erreur-classique" title="Permanent link">&para;</a></h2>
+<div class="admonition abstract">
+<p class="admonition-title"><strong>Ce que vous allez comprendre</strong></p>
+<p>Face à un pod en erreur, le statut affiché oriente vers le bon outil : <code>describe</code> ou <code>logs</code>.</p>
+</div>
+<h3 id="etape-1-provoquer-une-erreur">Étape 1 : Provoquer une erreur<a class="headerlink" href="#etape-1-provoquer-une-erreur" title="Permanent link">&para;</a></h3>
+<p>Lancez un pod de manière <strong>impérative</strong> (sans fichier) avec une version d'image qui n'existe pas, puis listez les pods :</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>kubectl<span class="w"> </span>run<span class="w"> </span>frontend-typo<span class="w"> </span>--image<span class="o">=</span>regaieg/campus:frontend-9.9.9
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pods
+</span></code></pre></div>
+<div class="admonition question">
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+<ol>
+<li>Par quels statuts passe <code>frontend-typo</code> ?</li>
+<li>Trouvez la cause exacte de l'erreur. Quelle commande utilisez-vous, et dans quelle section de sa sortie lisez-vous la cause ?</li>
+<li>Pourquoi <code>kubectl logs frontend-typo</code> ne vous aiderait-il pas ici ?</li>
+<li>D'une manière générale : face à un pod en <code>ImagePullBackOff</code> ou en <code>Pending</code> qui dure, quelle commande utilisez-vous ? Et face à un pod en <code>CrashLoopBackOff</code> ?</li>
+</ol>
+</div>
+<hr />
+<h2 id="exercice-4-supprimer-et-rejouer-un-manifest">Exercice 4 : Supprimer et rejouer un manifest<a class="headerlink" href="#exercice-4-supprimer-et-rejouer-un-manifest" title="Permanent link">&para;</a></h2>
+<div class="admonition abstract">
+<p class="admonition-title"><strong>Ce que vous allez comprendre</strong></p>
+<p>Un fichier YAML se rejoue à l'identique ; une commande impérative, elle, est perdue une fois tapée.</p>
+</div>
+<h3 id="etape-1-supprimer-les-pods">Étape 1 : Supprimer les Pods<a class="headerlink" href="#etape-1-supprimer-les-pods" title="Permanent link">&para;</a></h3>
+<div class="admonition question">
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+<ol>
+<li>Supprimez <code>frontend-test</code> <strong>à l'aide de son fichier</strong>, et <code>frontend-typo</code> <strong>à l'aide de son nom</strong>. Quelles commandes utilisez-vous ?</li>
+<li>Quelle commande vérifie qu'il ne reste aucun pod ?</li>
+</ol>
+</div>
+<h3 id="etape-2-rejouer-le-manifest">Étape 2 : Rejouer le manifest<a class="headerlink" href="#etape-2-rejouer-le-manifest" title="Permanent link">&para;</a></h3>
+<p>Les deux pods ont disparu.</p>
+<div class="admonition question">
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+<ol>
+<li>Recréez <code>frontend-test</code> sans réécrire quoi que ce soit. Le pod est-il identique au premier ?</li>
+<li>Que vous faudrait-il pour recréer <code>frontend-typo</code> ?</li>
+<li>Laquelle des deux approches, impérative ou déclarative, peut-on versionner dans Git et rejouer à l'identique ?</li>
+</ol>
+</div>
+<p>Supprimez à nouveau le pod de test.</p>
+<hr />
+<h2 id="exercice-5-generer-un-manifest-avec-dry-run">Exercice 5 : Générer un manifest avec <code>--dry-run</code><a class="headerlink" href="#exercice-5-generer-un-manifest-avec-dry-run" title="Permanent link">&para;</a></h2>
+<div class="admonition abstract">
+<p class="admonition-title"><strong>Ce que vous allez comprendre</strong></p>
+<p>Écrire un manifest à la main, comme à l'étape 1 de l'exercice 1, permet de comprendre sa structure mais prend du temps et favorise les fautes d'indentation. En pratique, <strong>on ne part pas d'une page blanche</strong> : on génère un squelette propre et valide, puis on le complète.</p>
+</div>
+<h3 id="etape-1-generer-le-manifest">Étape 1 : Générer le manifest<a class="headerlink" href="#etape-1-generer-le-manifest" title="Permanent link">&para;</a></h3>
+<p>Générez le manifest <code>pod-frontend.yaml</code> avec <code>kubectl run</code> combiné avec <code>--dry-run=client -o yaml</code>, sans rien créer sur le cluster :</p>
+<p><strong>Linux / macOS (Bash)</strong></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>kubectl<span class="w"> </span>run<span class="w"> </span>campus-frontend<span class="w"> </span>--image<span class="o">=</span>regaieg/campus:frontend-1.0.0<span class="w"> </span>--port<span class="o">=</span><span class="m">8080</span><span class="w"> </span>--dry-run<span class="o">=</span>client<span class="w"> </span>-o<span class="w"> </span>yaml<span class="w"> </span>&gt;<span class="w"> </span>pod-frontend.yaml
+</span></code></pre></div>
+<p><strong>Windows (PowerShell)</strong></p>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">kubectl</span> <span class="n">run</span> <span class="n">campus-frontend</span> <span class="p">-</span><span class="n">-image</span><span class="p">=</span><span class="n">regaieg</span><span class="p">/</span><span class="n">campus</span><span class="p">:</span><span class="n">frontend</span><span class="p">-</span><span class="n">1</span><span class="p">.</span><span class="n">0</span><span class="p">.</span><span class="n">0</span> <span class="p">-</span><span class="n">-port</span><span class="p">=</span><span class="n">8080</span> <span class="p">-</span><span class="n">-dry-run</span><span class="p">=</span><span class="n">client</span> <span class="n">-o</span> <span class="n">yaml</span> <span class="p">|</span> <span class="nb">Out-File</span> <span class="n">-Encoding</span> <span class="n">utf8</span> <span class="n">pod-frontend</span><span class="p">.</span><span class="n">yaml</span>
+</span></code></pre></div>
+<div class="admonition question">
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+<ol>
+<li>Comment vérifiez-vous qu'aucun pod n'a été créé sur le cluster ?</li>
+</ol>
+</div>
+<h3 id="etape-2-completer-le-manifest-genere">Étape 2 : Compléter le manifest généré<a class="headerlink" href="#etape-2-completer-le-manifest-genere" title="Permanent link">&para;</a></h3>
+<p>Ouvrez <code>pod-frontend.yaml</code> dans votre éditeur et comparez-le avec celui de l'étape 1 de l'exercice 1.</p>
+<div class="admonition question">
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+<ol>
+<li>Quel label <code>kubectl</code> a-t-il généré à la place de vos labels ? Quels champs supplémentaires a-t-il ajoutés ?</li>
+</ol>
+</div>
+<p>Puis modifiez le fichier :</p>
+<ul>
+<li>supprimez la ligne <code>status: {}</code> : cette rubrique est remplie par Kubernetes, vous ne l'écrivez jamais ;</li>
+<li>ajoutez dans <code>spec</code> le bloc <code>hostAliases</code> de l'étape 1 de l'exercice 1 : <code>kubectl run</code> ne sait pas le générer, et sans lui Nginx ne démarre pas.</li>
+</ul>
+<h3 id="etape-3-appliquer-le-manifest">Étape 3 : Appliquer le manifest<a class="headerlink" href="#etape-3-appliquer-le-manifest" title="Permanent link">&para;</a></h3>
+<div class="admonition question">
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+<ol>
+<li>Quelle commande crée le pod <code>campus-frontend</code> à partir de <code>pod-frontend.yaml</code> ? Vérifiez qu'il est <code>Running</code>.</li>
+</ol>
+</div>
+<hr />
+<h2 id="exercice-6-entrer-dans-le-conteneur-et-tester-la-resilience">Exercice 6 : Entrer dans le conteneur et tester la résilience<a class="headerlink" href="#exercice-6-entrer-dans-le-conteneur-et-tester-la-resilience" title="Permanent link">&para;</a></h2>
+<div class="admonition abstract">
+<p class="admonition-title"><strong>Ce que vous allez comprendre</strong></p>
+<p><code>kubectl exec</code> lance une commande à l'intérieur du conteneur. Et un pod créé seul n'est protégé par personne.</p>
+</div>
+<h3 id="etape-1-executer-une-commande-dans-le-conteneur-kubectl-exec">Étape 1 : Exécuter une commande dans le conteneur (<code>kubectl exec</code>)<a class="headerlink" href="#etape-1-executer-une-commande-dans-le-conteneur-kubectl-exec" title="Permanent link">&para;</a></h3>
+<p>Testez la réponse HTTP du serveur web depuis l'intérieur du conteneur :</p>
+<p><strong>Linux / macOS</strong></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>campus-frontend<span class="w"> </span>--<span class="w"> </span>wget<span class="w"> </span>-qO-<span class="w"> </span>http://127.0.0.1:8080<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-n<span class="w"> </span><span class="m">15</span>
+</span></code></pre></div>
+<p><strong>Windows (PowerShell)</strong></p>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">kubectl</span> <span class="n">exec</span> <span class="n">campus-frontend</span> <span class="p">--</span> <span class="nb">wget </span><span class="n">-qO</span><span class="p">-</span> <span class="n">http</span><span class="p">://</span><span class="n">127</span><span class="p">.</span><span class="n">0</span><span class="p">.</span><span class="n">0</span><span class="p">.</span><span class="n">1</span><span class="p">:</span><span class="n">8080</span> <span class="p">|</span> <span class="nb">Select-Object</span> <span class="n">-First</span> <span class="n">15</span>
+</span></code></pre></div>
+<p>Affichez aussi le fichier <code>/etc/hosts</code> du conteneur :</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>campus-frontend<span class="w"> </span>--<span class="w"> </span>sh<span class="w"> </span>-c<span class="w"> </span><span class="s2">"cat /etc/hosts"</span>
+</span></code></pre></div>
+<p><em>La commande est encapsulée dans <code>sh -c "…"</code> pour que Git Bash ne transforme pas <code>/etc/hosts</code> en chemin Windows (voir l'indice sur le terminal Windows en début d'atelier).</em></p>
+<div class="admonition info">
+<p class="admonition-title"><strong>Pourquoi <code>127.0.0.1</code> plutôt que <code>localhost</code> ?</strong></p>
+<p>Sous les distributions légères comme Alpine Linux, <code>localhost</code> résout par défaut sur IPv6 (<code>::1</code>), alors que le serveur Nginx écoute sur le socket IPv4 <code>0.0.0.0:8080</code>.</p>
+</div>
+<div class="admonition question">
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+<ol>
+<li>Quelle ligne de <code>/etc/hosts</code> a été ajoutée par <code>hostAliases</code> ? Pourquoi Nginx en a-t-il besoin pour démarrer ?</li>
+</ol>
+</div>
+<h3 id="etape-2-le-crash-test-du-pod-isole">Étape 2 : Le crash-test du Pod isolé<a class="headerlink" href="#etape-2-le-crash-test-du-pod-isole" title="Permanent link">&para;</a></h3>
+<div class="admonition question">
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+<ol>
+<li>Quelle commande supprime le pod <code>campus-frontend</code> ? Listez ensuite les pods.</li>
+<li>Le pod est-il réapparu tout seul ? Pourquoi ?</li>
+</ol>
+</div>
+<div class="admonition success">
+<p class="admonition-title"><strong>Et ensuite ?</strong></p>
+<p>Pour qu'un pod supprimé soit recréé automatiquement, il faut le confier à un contrôleur : c'est le rôle des <strong>Deployments</strong>, étudiés à l'Atelier 03.</p>
+</div>
+<hr />
+<h2 id="criteres-de-validation-checklist">Critères de Validation (Checklist)<a class="headerlink" href="#criteres-de-validation-checklist" title="Permanent link">&para;</a></h2>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Votre namespace courant est <code>campus-dev</code> et tous vos objets y sont créés (aucun objet applicatif dans <code>default</code>).</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Vous savez écrire le manifest d'un Pod et retrouver son image, son nœud et son IP avec <code>kubectl describe pod</code>.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Vous avez affiché le frontend via <code>kubectl port-forward</code> et savez choisir entre <code>describe</code> (placement, image) et <code>logs</code> (application) face à un statut anormal.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Vous maîtrisez la génération rapide de manifest avec <code>--dry-run=client -o yaml</code>.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Vous savez exécuter une commande à l'intérieur du conteneur avec <code>kubectl exec</code> et expliquer le rôle de <code>hostAliases</code> dans ce lab.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Vous avez constaté par vous-même l'absence de haute disponibilité d'un pod nu.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Retour en haut de la page
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2026 Rym Regaieg
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "navigation.indexes", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copi\u00e9 dans le presse-papier", "clipboard.copy": "Copier dans le presse-papier", "search.result.more.one": "1 de plus sur cette page", "search.result.more.other": "# de plus sur cette page", "search.result.none": "Aucun document trouv\u00e9", "search.result.one": "1 document trouv\u00e9", "search.result.other": "# documents trouv\u00e9s", "search.result.placeholder": "Taper pour d\u00e9marrer la recherche", "search.result.term.missing": "Non trouv\u00e9", "select.version": "S\u00e9lectionner la version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+        <script src="../../javascripts/slides.js"></script>
+      
+    
+  </body>
+</html>
