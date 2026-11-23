@@ -46,8 +46,9 @@ Bravo ! En cliquant sur cette ampoule, vous découvrez des explications méthodo
 | Atelier | Titre de l'atelier | Concepts Clés Traités |
 | :---: | :--- | :--- |
 | **[Atelier 05](./05-Les%20Volumes/README.md)** | **Configuration & Stockage Persistant** | `ConfigMap` (literal/file), `Secret` encodé base64, `PersistentVolume` et `PersistentVolumeClaim`, PostgreSQL et crash-test de persistance SQL. |
+| **[Atelier 07](./07-S%C3%A9curit%C3%A9%20Cluster/README.md)** | **Sécurité, Quotas & Isolement Réseau** | LimitRange et ResourceQuota, NetworkPolicies *Default Deny* et flux autorisés, `securityContext` non-root, ServiceAccount et RBAC (`kubectl auth can-i`), protection de l'API Server et d'etcd. Réalisé **avant** l'Atelier 06. |
 
-Les ateliers 06 et 07 seront publiés au Jour 2.
+L'atelier 06 (Administration) sera publié au Jour 2 : il se réalise après l'Atelier 07.
 
 ---
 

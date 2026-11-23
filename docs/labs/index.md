@@ -39,8 +39,9 @@ Dans chaque atelier, vous trouverez des blocs d'indices progressifs pliables :
 | Atelier | Titre de l'atelier | Concepts Clés Traités |
 | :---: | :--- | :--- |
 | **[Atelier 05](05-configuration-stockage-persistant.md)** | **Configuration & Stockage Persistant (PV / PVC / PostgreSQL)** | `ConfigMap` (literal/file), `Secret` encodé base64, `PersistentVolume` et `PersistentVolumeClaim`, PostgreSQL et crash-test de persistance SQL. |
+| **[Atelier 07](07-securite-quotas-isolement-reseau.md)** | **Sécurité, Quotas & Isolement Réseau (NetworkPolicy)** | LimitRange et ResourceQuota, NetworkPolicies *Default Deny* et flux autorisés, `securityContext` non-root, ServiceAccount et RBAC (`kubectl auth can-i`), protection de l'API Server et d'etcd. Réalisé **avant** l'Atelier 06. |
 
-Les ateliers 06 et 07 seront publiés au Jour 2.
+L'atelier 06 (Administration) sera publié au Jour 2 : il se réalise après l'Atelier 07.
 
 ---
 

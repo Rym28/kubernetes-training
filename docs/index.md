@@ -16,8 +16,8 @@ flowchart LR
     C --> D["04 · Services & DNS"]
 
     D --> E["05 · Configuration & Stockage Persistant"]
-    E --> F["06 · Exploitation & Reverse Debugging"]
-    F --> G["07 · Sécurité, Quotas & Isolement Réseau"]
+    E --> G["07 · Sécurité, Quotas & Isolement Réseau"]
+    G --> F["06 · Exploitation & Reverse Debugging"]
 ```
 
 ### Caractéristiques Techniques des Travaux Pratiques
@@ -71,6 +71,14 @@ flowchart LR
     ConfigMaps (`--from-literal` / `--from-file`), Secrets base64, PersistentVolume et PersistentVolumeClaim, PostgreSQL et crash-test de persistance.
     
     [:octicons-arrow-right-24: Accéder à l'Atelier 05](labs/05-configuration-stockage-persistant.md)
+
+-   :material-shield-lock: __Atelier 07 : Sécurité, Quotas & Isolement Réseau (NetworkPolicy)__
+    
+    ---
+    
+    LimitRange et ResourceQuota, NetworkPolicies Zéro-Trust, conteneurs non-root, RBAC et ServiceAccounts, protection de l'API Server et d'etcd. Réalisé avant l'Atelier 06.
+    
+    [:octicons-arrow-right-24: Accéder à l'Atelier 07](labs/07-securite-quotas-isolement-reseau.md)
 
 </div>
 

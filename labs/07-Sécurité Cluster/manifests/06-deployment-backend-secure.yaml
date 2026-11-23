@@ -1,0 +1,93 @@
+# ==============================================================================
+# Atelier 07 - Exercice 3 : API campus-backend durcie
+# ------------------------------------------------------------------------------
+# Identique au starter 03-backend.yaml, plus :
+#   - securityContext du pod (UID/GID 10001, interdiction de root)
+#   - securityContext du conteneur (pas d'élévation de privilèges, capacités retirées)
+#   - ressources explicites (sinon le LimitRange imposerait ses valeurs par défaut)
+# ==============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: campus-backend
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: campus-backend
+  template:
+    metadata:
+      labels:
+        app: campus-backend
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+                  app: campus-backend
+      securityContext:                 # ① niveau POD
+        runAsNonRoot: true             #    refuse de démarrer un conteneur en root
+        runAsUser: 10001               #    UID du processus
+        runAsGroup: 10001              #    GID du processus
+        fsGroup: 10001                 #    groupe propriétaire des volumes montés
+      containers:
+      - name: campus-backend
+        image: regaieg/campus:backend-1.0.0
+        ports:
+        - containerPort: 8080
+        securityContext:               # ② niveau CONTENEUR
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false   # Spring Boot écrit dans /tmp (voir l'énoncé)
+          capabilities:
+            drop:
+            - ALL
+        resources:                     # ③ ressources explicites
+          requests:
+            cpu: 150m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        startupProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8080
+          periodSeconds: 5
+          failureThreshold: 36
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          periodSeconds: 5
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8080
+          periodSeconds: 10
+          failureThreshold: 3
+        envFrom:
+        - configMapRef:
+            name: campus-config
+        env:
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:postgresql://postgres:5432/campus"
+        - name: SPRING_DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: campus-db-credentials
+              key: POSTGRES_USER
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: campus-db-credentials
+              key: POSTGRES_PASSWORD
