@@ -407,7 +407,6 @@ curl.exe -sk --max-time 5 https://<IP_PUBLIQUE_k8s-control>:2379/version ; echo 
 
 1. L'API Server répond-il à `/version` sans authentification ? Et à la liste des Secrets ? Sous quelle identité votre requête a-t-elle été traitée ?
 2. etcd répond-il ? Que signifie le code retour `28` de `curl` ?
-3. Dans `labs/01-Installation-Cluster/terraform/main.tf` (`../01-Installation-Cluster/terraform/main.tf` depuis le dossier du lab), repérez les blocs `ingress` du Security Group : quels ports sont ouverts à Internet (`0.0.0.0/0`) ? Comment le port `2379` est-il protégé ?
 
 </div>
 
@@ -446,4 +445,4 @@ Laissez tout en place : l'étape 0 de l'Atelier 06 retire les NetworkPolicies, l
 - [ ] La politique `default-deny-ingress` est active et seuls les trois flux légitimes sont ouverts (`kubectl get networkpolicy` en liste 4).
 - [ ] `rogue-pod` n'atteint plus PostgreSQL, et le portail fonctionne toujours de bout en bout.
 - [ ] Vous savez auditer des droits avec `kubectl auth can-i` et déléguer un accès en lecture seule (ServiceAccount + Role + RoleBinding).
-- [ ] Vous savez expliquer pourquoi etcd n'est pas joignable depuis Internet (port `2379` fermé dans le Security Group).
+- [ ] etcd ne répond pas depuis votre poste (`curl` sur le port `2379` : code retour `28`).
