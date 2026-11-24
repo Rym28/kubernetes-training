@@ -84,7 +84,7 @@ flowchart LR
     
     ---
     
-    LimitRange et ResourceQuota, NetworkPolicies Zéro-Trust, conteneurs non-root, RBAC et ServiceAccounts, protection de l'API Server et d'etcd.
+    LimitRange et ResourceQuota, NetworkPolicies Zéro-Trust, RBAC et ServiceAccounts, exposition réseau de l'API Server et d'etcd.
     
     [:octicons-arrow-right-24: Accéder à l'Atelier 07](labs/07-securite-quotas-isolement-reseau.md)
 

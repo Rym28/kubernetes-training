@@ -3,14 +3,13 @@
 ### Objectifs Pédagogiques :
 * Protéger le cluster contre la surconsommation et l'effet « Noisy Neighbor » avec le couple **ResourceQuota** et **LimitRange**.
 * Cloisonner le trafic réseau selon le modèle **Zéro-Trust** avec les **NetworkPolicies** : politique *Default Deny*, puis ouverture explicite des seuls flux légitimes (navigateur → frontend → backend → PostgreSQL).
-* Durcir les conteneurs avec les **SecurityContext** (interdiction du compte root, pas d'élévation de privilèges).
 * Auditer les privilèges et déléguer des accès avec les **ServiceAccounts** et le modèle **RBAC** (`kubectl auth can-i`).
-* Identifier les verrous qui protègent l'**API Server** et **etcd** (exposition réseau, TLS mutuel, droits sur les clés, chiffrement des Secrets au repos).
+* Vérifier que l'**API Server** est protégé par l'authentification et qu'**etcd** n'est pas joignable depuis Internet.
 
 <div class="admonition info" markdown>
 <p class="admonition-title"><strong>Compatibilité OS</strong></p>
 
-Les commandes de cet atelier (`kubectl apply`, `kubectl describe resourcequota`, `kubectl auth can-i`, `kubectl exec`) sont **rigoureusement identiques** sous **Windows (PowerShell)**, **Linux (Ubuntu)** et **macOS (Terminal)**. Quand une commande diffère, les deux variantes sont fournies.
+Les commandes de cet atelier (`kubectl apply`, `kubectl describe resourcequota`, `kubectl auth can-i`) sont **rigoureusement identiques** sous **Windows (PowerShell)**, **Linux (Ubuntu)** et **macOS (Terminal)**. Quand une commande diffère, les deux variantes sont fournies.
 
 </div>
 
@@ -25,7 +24,7 @@ Les NetworkPolicies exigent un plugin réseau qui les applique (Calico, install�
     * Vérification : `kubectl get nodes` doit afficher les 3 nœuds à l'état `Ready`.
 * **Option B (PC d'entreprise verrouillé) :** en SSH sur `k8s-control` : l'outillage et les manifests sont pré-installés dans `~/labs/`.
 
-🛟 **Secours : Minikube sur votre poste** (session AWS indisponible). Les exercices 1, 3 et 4 fonctionnent à l'identique. L'exercice 2 exige un Minikube démarré avec Calico (`minikube start --cni=calico`) : sans lui, les NetworkPolicies sont acceptées mais **n'ont aucun effet**. L'exercice 5 n'a pas d'équivalent sur Minikube.
+🛟 **Secours : Minikube sur votre poste** (session AWS indisponible). Les exercices 1 et 3 fonctionnent à l'identique. L'exercice 2 exige un Minikube démarré avec Calico (`minikube start --cni=calico`) : sans lui, les NetworkPolicies sont acceptées mais **n'ont aucun effet**. L'exercice 4 n'a pas d'équivalent sur Minikube.
 
 </div>
 
@@ -39,14 +38,14 @@ Ce lab est **indépendant des autres** : son étape 0 crée `campus-dev` s'il n'
 ---
 
 ## Contexte Métier
-En environnement partagé ou de production réglementée (secteur bancaire, assurance, santé), laisser un conteneur consommer toute la mémoire d'un nœud ou permettre à n'importe quel conteneur compromis d'atteindre le port 5432 de PostgreSQL constitue une faille critique. Cet atelier verrouille les ressources, cloisonne le réseau, durcit les conteneurs et contrôle les droits d'accès à l'API.
+En environnement partagé ou de production réglementée (secteur bancaire, assurance, santé), laisser un conteneur consommer toute la mémoire d'un nœud ou permettre à n'importe quel conteneur compromis d'atteindre le port 5432 de PostgreSQL constitue une faille critique. Cet atelier verrouille les ressources, cloisonne le réseau et contrôle les droits d'accès à l'API.
 
-Tous les manifests de l'atelier sont **fournis** dans le dossier `labs/07-Sécurité Cluster/manifests/` : vous les lisez, les appliquez et observez leurs effets. Cet atelier se réalise **avant l'Atelier 06** : l'application que vous y superviserez sera donc déjà durcie.
+Tous les manifests de l'atelier sont **fournis** dans le dossier `labs/07-Sécurité Cluster/manifests/` : vous les lisez, les appliquez et observez leurs effets.
 
 <div class="admonition tip" markdown>
 <p class="admonition-title"><strong>Mode d'emploi</strong></p>
 
-* Les encadrés rouges **« À vous de répondre »** contiennent les questions. Les commandes sont données, sauf `kubectl exec` (exercice 3), déjà vue à l'Atelier 02 : retrouvez-la avec `kubectl exec --help`.
+* Les encadrés rouges **« À vous de répondre »** contiennent les questions. Toutes les commandes sont données.
 * Répondez aux questions **pendant les attentes** (démarrage du backend, création des pods de test).
 * Les encadrés **« Indice »** sont repliés : cliquez dessus seulement si vous bloquez.
 
@@ -62,7 +61,7 @@ Le dossier `starter/` du lab installe l'application complète dans l'état de fi
 | :--- | :--- |
 | `01-config.yaml` | Le ConfigMap `campus-config` (paramètres non sensibles de l'API). |
 | `02-postgres.yaml` | Le PV `pv-postgres`, le PVC `pvc-postgres`, la base PostgreSQL persistante et son Service `postgres`. |
-| `03-backend.yaml` | L'API `campus-backend` (2 réplicas, ConfigMap, Secret et sondes de santé, **sans** `securityContext` ni ressources : ce lab les ajoute) et son Service `campus-backend`. |
+| `03-backend.yaml` | L'API `campus-backend` (2 réplicas, ConfigMap, Secret et sondes de santé, **sans** ressources : le LimitRange de l'exercice 1 les fournira) et son Service `campus-backend`. |
 | `04-frontend.yaml` | Le frontend et son Service NodePort `campus-frontend-svc` (port `30088`). |
 
 Les identifiants de la base ne sont **pas** versionnés dans le starter : vous créez le Secret `campus-db-credentials` par une commande, comme à l'Atelier 05.
@@ -296,7 +295,7 @@ curl.exe -s http://<IP_PUBLIQUE_WORKER>:30088/actuator/health
 
 1. Que répond `pg_isready` pour `rogue-pod` ? Et pour `test-auth` ? Pourquoi cette différence ?
 2. Le portail fonctionne-t-il de nouveau ? Que contient la réponse de `/actuator/health` ?
-3. `test-auth` a obtenu l'accès simplement en **se déclarant** backend. Quelle faiblesse cela révèle-t-il ? Quel mécanisme (exercice 4) permet de la limiter ?
+3. `test-auth` a obtenu l'accès simplement en **se déclarant** backend. Quelle faiblesse cela révèle-t-il ? Quel mécanisme (exercice 3) permet de la limiter ?
 
 </div>
 
@@ -311,78 +310,7 @@ curl.exe -s http://<IP_PUBLIQUE_WORKER>:30088/actuator/health
 
 ---
 
-## Exercice 3 : Durcir les conteneurs avec un SecurityContext
-
-<div class="admonition abstract" markdown>
-<p class="admonition-title"><strong>Ce que vous allez comprendre</strong></p>
-
-Selon le guide de durcissement Kubernetes de la NSA et de la CISA, un conteneur de production ne doit jamais tourner en `root` (UID 0) ni pouvoir élever ses privilèges. Le `securityContext` l'impose, sans modifier l'image.
-
-</div>
-
-### Étape 1 : Constater l'identité actuelle du backend
-
-<div class="admonition question" markdown>
-<p class="admonition-title"><strong>À vous de répondre</strong></p>
-
-1. Quelle commande exécute `id` à l'intérieur d'un conteneur du Deployment `campus-backend` ?
-2. Sous quel utilisateur (UID) tourne le processus ? Quel risque cela représente-t-il si l'application est compromise ?
-
-</div>
-
-<details class="tip" markdown>
-<summary><strong>Indice : exécuter une commande dans un conteneur</strong></summary>
-
-Vous avez utilisé `kubectl exec` à l'Atelier 02. Il accepte un nom de pod ou `deployment/<nom>` (il choisit alors l'un de ses pods). La commande à exécuter se place après `--`.
-
-</details>
-
-### Étape 2 : Appliquer le Deployment durci
-
-`manifests/06-deployment-backend-secure.yaml` est le backend du starter, complété de trois blocs repérés ①, ② et ③ dans les commentaires. Appliquez-le, puis suivez la mise à jour :
-
-```bash
-kubectl apply -f manifests/06-deployment-backend-secure.yaml
-kubectl rollout status deployment/campus-backend --timeout=300s
-```
-
-Le *rolling update* dure 1 à 3 minutes : **ouvrez le fichier et répondez aux questions pendant ce temps**.
-
-<div class="admonition question" markdown>
-<p class="admonition-title"><strong>À vous de répondre</strong></p>
-
-1. Que garantissent `runAsNonRoot: true` et `runAsUser: 10001` (bloc ①) ?
-2. Que garantissent `allowPrivilegeEscalation: false` et `capabilities.drop: [ALL]` (bloc ②) ?
-3. Pourquoi le bloc ③ déclare-t-il des ressources explicites, alors que le LimitRange en fournit par défaut ?
-
-</div>
-
-<details class="tip" markdown>
-<summary><strong>Indice : et <code>readOnlyRootFilesystem: false</code> ?</strong></summary>
-
-Un système de fichiers racine en lecture seule est le niveau de durcissement suivant. Spring Boot écrit des fichiers temporaires dans `/tmp` : il faudrait alors monter un volume `emptyDir` sur `/tmp`. À mettre en œuvre en production.
-
-</details>
-
-### Étape 3 : Vérifier le durcissement
-
-Relancez la commande `kubectl exec` de l'étape 1, puis affichez de nouveau la consommation du quota :
-
-```bash
-kubectl describe resourcequota campus-compute-quota
-```
-
-<div class="admonition question" markdown>
-<p class="admonition-title"><strong>À vous de répondre</strong></p>
-
-1. Sous quel UID tourne maintenant le processus ? Le message `cannot find name for user ID 10001` est-il un problème ?
-2. Dans le ResourceQuota, comment ont évolué les valeurs `Used` de `requests.cpu` et `requests.memory` ? D'où viennent-elles ?
-
-</div>
-
----
-
-## Exercice 4 : Contrôler l'accès à l'API avec RBAC
+## Exercice 3 : Contrôler l'accès à l'API avec RBAC
 
 <div class="admonition abstract" markdown>
 <p class="admonition-title"><strong>Ce que vous allez comprendre</strong></p>
@@ -439,16 +367,16 @@ kubectl auth can-i list pods -n kube-system --as=system:serviceaccount:campus-de
 
 ---
 
-## Exercice 5 : Protéger l'API Server et etcd
+## Exercice 4 : Protéger l'API Server et etcd
 
 <div class="admonition abstract" markdown>
 <p class="admonition-title"><strong>Ce que vous allez comprendre</strong></p>
 
-`etcd` contient **tout** l'état du cluster, Secrets compris. Quiconque le lit directement contourne le RBAC. Sa protection repose sur 4 verrous : le **réseau**, le **TLS mutuel**, les **droits sur les fichiers de clés** et le **chiffrement des données au repos**.
+`etcd` contient **tout** l'état du cluster, Secrets compris. Quiconque le lit directement contourne le RBAC. Sa première protection est le **réseau** : etcd ne doit jamais être joignable depuis Internet ; seul l'API Server, protégé par l'authentification, y accède.
 
 </div>
 
-### Étape 1 : Tester l'exposition réseau depuis votre poste
+### Tester l'exposition réseau depuis votre poste
 
 Récupérez l'adresse de l'API Server inscrite dans votre kubeconfig, puis interrogez depuis **votre poste** l'API Server (port 6443) et etcd (port 2379) :
 
@@ -490,90 +418,22 @@ C'est un compromis de formation, pour que chacun utilise `kubectl` depuis son po
 
 </details>
 
-### Étape 2 : Démonstration formateur : TLS mutuel, clés et chiffrement
-
-Le formateur réalise cette démonstration sur `k8s-control`. Suivez-la, puis répondez aux questions.
-
-<details class="example" markdown>
-<summary><strong>Commandes de la démonstration (formateur, en SSH sur <code>k8s-control</code>)</strong></summary>
-
-**a. TLS mutuel : etcd exige un certificat client**
-
-```bash
-sudo grep -E 'client-cert-auth|trusted-ca-file' /etc/kubernetes/manifests/etcd.yaml
-curl -sk https://127.0.0.1:2379/version ; echo "Code retour : $?"
-sudo grep -E 'etcd-(servers|cafile|certfile|keyfile)' /etc/kubernetes/manifests/kube-apiserver.yaml
-```
-
-*Sans certificat client, la négociation TLS échoue. Le seul client légitime d'etcd est l'API Server.*
-
-**b. Droits sur les clés**
-
-```bash
-sudo ls -l /etc/kubernetes/pki/etcd/
-```
-
-*Les fichiers `.key` sont en mode `600` et appartiennent à `root`.*
-
-**c. Un Secret lu directement dans etcd**
-
-L'outil `etcdctl` n'est pas installé sur le nœud : on utilise celui du pod statique `etcd-k8s-control`, qui voit les clés du dossier `/etc/kubernetes/pki/etcd/` :
-
-```bash
-kubectl create secret generic test-etcd -n campus-dev --from-literal=motdepasse=SuperSecret2026
-kubectl -n kube-system exec etcd-k8s-control -- etcdctl --endpoints=https://127.0.0.1:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key get /registry/secrets/campus-dev/test-etcd | grep -a -o "motdepasse.*SuperSecret2026"
-kubectl delete secret test-etcd -n campus-dev
-```
-
-*La valeur apparaît en clair (`motdepasseSuperSecret2026`) : par défaut, kubeadm ne chiffre pas les Secrets au repos.*
-
-**d. La parade : chiffrer les Secrets au repos**
-
-On fournit à l'API Server un fichier `EncryptionConfiguration` (option `--encryption-provider-config`) :
-
-```yaml
-apiVersion: apiserver.config.k8s.io/v1
-kind: EncryptionConfiguration
-resources:
-- resources: ["secrets"]
-  providers:
-  - aescbc:
-      keys:
-      - name: cle-2026
-        secret: <clé de 32 octets encodée en base64>
-  - identity: {}
-```
-
-Les nouveaux Secrets sont alors chiffrés avant d'être écrits dans etcd ; les anciens doivent être réécrits (`kubectl get secrets -A -o json | kubectl replace -f -`). En production, on préfère un fournisseur **KMS** (AWS KMS, Google Cloud KMS, Azure Key Vault). Cette manipulation redémarre l'API Server : elle n'est pas réalisée par les stagiaires.
-
-</details>
-
-<div class="admonition question" markdown>
-<p class="admonition-title"><strong>À vous de répondre</strong></p>
-
-1. Pourquoi un client sans certificat ne peut-il pas dialoguer avec etcd ? Quel est le seul client légitime ?
-2. Pour lire etcd, il faut les clés du dossier `/etc/kubernetes/pki/etcd/`. Qui peut les lire sur le nœud (partie b) ? Un accès SSH non privilégié suffit-il ? Et quel droit Kubernetes faut-il pour exécuter `etcdctl` dans le pod etcd ?
-3. Le Secret apparaît en clair dans etcd. Pourquoi l'encodage base64 vu à l'Atelier 05 n'est-il **pas** un chiffrement ? Quelle est la parade ?
-
-</div>
-
 <div class="admonition info" markdown>
 <p class="admonition-title"><strong>Synthèse : les points à sécuriser</strong></p>
 
 | Point à sécuriser | Mesure vue dans cet atelier |
 | :--- | :--- |
-| Accès à l'API Kubernetes | RBAC + ServiceAccounts dédiés (Ex. 4), exposition réseau du port 6443 (Ex. 5) |
+| Accès à l'API Kubernetes | RBAC + ServiceAccounts dédiés (Ex. 3), exposition réseau du port 6443 (Ex. 4) |
 | Limitation des ressources | `LimitRange` + `ResourceQuota` (Ex. 1) |
 | Contrôle des accès réseau | `NetworkPolicy` *Default Deny* + flux autorisés (Ex. 2) |
-| Durcissement des conteneurs | `securityContext` non-root (Ex. 3) |
-| Restriction des accès à `etcd` | Isolement réseau, TLS mutuel, droits `root`, chiffrement au repos (Ex. 5) |
+| Restriction des accès à `etcd` | Isolement réseau : port 2379 fermé depuis Internet (Ex. 4) |
 
 </div>
 
 <div class="admonition note" markdown>
 <p class="admonition-title"><strong>Et pour l'Atelier 06 ?</strong></p>
 
-Laissez tout en place : le backend durci est conservé, et l'étape 0 de l'Atelier 06 retire les NetworkPolicies, le ResourceQuota et le LimitRange, qui gêneraient ses incidents simulés.
+Laissez tout en place : l'étape 0 de l'Atelier 06 retire les NetworkPolicies, le ResourceQuota et le LimitRange, qui gêneraient ses incidents simulés.
 
 </div>
 
@@ -585,6 +445,5 @@ Laissez tout en place : le backend durci est conservé, et l'étape 0 de l'Ateli
 - [ ] Le pod `pod-trop-gros` a été refusé par l'API Server (`exceeded quota`).
 - [ ] La politique `default-deny-ingress` est active et seuls les trois flux légitimes sont ouverts (`kubectl get networkpolicy` en liste 4).
 - [ ] `rogue-pod` n'atteint plus PostgreSQL, et le portail fonctionne toujours de bout en bout.
-- [ ] Le backend tourne sous l'UID `10001` (`kubectl exec deployment/campus-backend -- id`).
 - [ ] Vous savez auditer des droits avec `kubectl auth can-i` et déléguer un accès en lecture seule (ServiceAccount + Role + RoleBinding).
-- [ ] Vous savez expliquer pourquoi etcd n'est pas joignable depuis Internet, pourquoi il exige un certificat client, et comment chiffrer les Secrets au repos.
+- [ ] Vous savez expliquer pourquoi etcd n'est pas joignable depuis Internet (port `2379` fermé dans le Security Group).

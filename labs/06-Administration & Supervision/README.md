@@ -98,7 +98,7 @@ kubectl delete pv pv-postgres --ignore-not-found   # le PV n'appartient à aucun
 
 </details>
 
-`kubectl delete` affiche `No resources found` si vous n'avez pas fait l'Atelier 07 : c'est attendu. Le backend a des sondes de santé : `rollout status` rend la main quand Spring Boot a fini de démarrer (20 secondes à 2 minutes ; immédiatement si vous sortez de l'Atelier 07).
+`kubectl delete` affiche `No resources found` si vous n'avez pas fait l'Atelier 07 : c'est attendu. Le backend a des sondes de santé : `rollout status` rend la main quand Spring Boot a fini de démarrer (20 secondes à 2 minutes).
 
 Placez-vous ensuite dans le dossier du lab, qui contient les fichiers `manifests/`, `npd/` et `monitoring/` utilisés plus loin : `cd "labs/06-Administration & Supervision"` (Option A) ou `cd ~/"labs/06-Administration & Supervision"` (Option B).
 
@@ -355,7 +355,7 @@ kubectl delete pod inject-kernel-err
 <div class="admonition warning" markdown>
 <p class="admonition-title"><strong>Pod privilégié</strong></p>
 
-Un pod privilégié a tous les pouvoirs sur le nœud : il n'est utilisé ici que pour la simulation. Les conteneurs de l'application, eux, ont été durcis à l'Atelier 07 (`securityContext` : pas de root, pas d'élévation de privilèges).
+Un pod privilégié a tous les pouvoirs sur le nœud : il n'est utilisé ici que pour la simulation. Les conteneurs de l'application, eux, tournent sans privilèges : le starter du backend déclare un `securityContext` (pas de root, pas d'élévation de privilèges).
 
 </div>
 
