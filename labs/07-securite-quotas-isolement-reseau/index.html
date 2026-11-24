@@ -1865,7 +1865,6 @@
 <ol>
 <li>L'API Server répond-il à <code>/version</code> sans authentification ? Et à la liste des Secrets ? Sous quelle identité votre requête a-t-elle été traitée ?</li>
 <li>etcd répond-il ? Que signifie le code retour <code>28</code> de <code>curl</code> ?</li>
-<li>Dans <code>labs/01-Installation-Cluster/terraform/main.tf</code> (<code>../01-Installation-Cluster/terraform/main.tf</code> depuis le dossier du lab), repérez les blocs <code>ingress</code> du Security Group : quels ports sont ouverts à Internet (<code>0.0.0.0/0</code>) ? Comment le port <code>2379</code> est-il protégé ?</li>
 </ol>
 </div>
 <details class="tip">
@@ -1913,7 +1912,7 @@
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> La politique <code>default-deny-ingress</code> est active et seuls les trois flux légitimes sont ouverts (<code>kubectl get networkpolicy</code> en liste 4).</li>
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <code>rogue-pod</code> n'atteint plus PostgreSQL, et le portail fonctionne toujours de bout en bout.</li>
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Vous savez auditer des droits avec <code>kubectl auth can-i</code> et déléguer un accès en lecture seule (ServiceAccount + Role + RoleBinding).</li>
-<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Vous savez expliquer pourquoi etcd n'est pas joignable depuis Internet (port <code>2379</code> fermé dans le Security Group).</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> etcd ne répond pas depuis votre poste (<code>curl</code> sur le port <code>2379</code> : code retour <code>28</code>).</li>
 </ul>
 
 
