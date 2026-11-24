@@ -2214,19 +2214,30 @@
 </ul>
 </details>
 <h3 id="etape-2-utiliser-ce-kubeconfig-dans-votre-terminal">Étape 2 : Utiliser ce kubeconfig dans votre terminal<a class="headerlink" href="#etape-2-utiliser-ce-kubeconfig-dans-votre-terminal" title="Permanent link">&para;</a></h3>
-<p>Depuis le dossier <code>terraform/</code> :</p>
+<p>Le chemin dépend du dossier courant. Placez-vous d'abord dans <code>labs/01-Installation-Cluster/terraform/</code> :</p>
 <p><strong>Votre poste — Windows (PowerShell)</strong></p>
-<div class="language-powershell highlight"><pre><span></span><code><span id="__span-35-1"><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a><span class="nv">$env:KUBECONFIG</span> <span class="p">=</span> <span class="s2">"$PWD\kubeconfig.yaml"</span>
-</span><span id="__span-35-2"><a id="__codelineno-35-2" name="__codelineno-35-2" href="#__codelineno-35-2"></a><span class="n">kubectl</span> <span class="n">get</span> <span class="n">nodes</span>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-35-1"><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a><span class="nb">cd </span><span class="p">&lt;</span><span class="n">racine-du-depot</span><span class="p">&gt;\</span><span class="n">labs</span><span class="p">\</span><span class="n">01-Installation-Cluster</span><span class="p">\</span><span class="n">terraform</span>
+</span><span id="__span-35-2"><a id="__codelineno-35-2" name="__codelineno-35-2" href="#__codelineno-35-2"></a><span class="nv">$env:KUBECONFIG</span> <span class="p">=</span> <span class="p">(</span><span class="nb">Resolve-Path</span> <span class="p">.\</span><span class="n">kubeconfig</span><span class="p">.</span><span class="n">yaml</span><span class="p">).</span><span class="n">Path</span>
+</span><span id="__span-35-3"><a id="__codelineno-35-3" name="__codelineno-35-3" href="#__codelineno-35-3"></a><span class="n">kubectl</span> <span class="n">get</span> <span class="n">nodes</span>
 </span></code></pre></div>
+<p><code>Resolve-Path</code> stocke le chemin absolu et s'arrête en erreur si <code>kubeconfig.yaml</code> n'est pas dans le dossier courant.</p>
 <p><strong>Votre poste — Linux / macOS (Bash)</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-36-1"><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">KUBECONFIG</span><span class="o">=</span><span class="nv">$PWD</span>/kubeconfig.yaml
-</span><span id="__span-36-2"><a id="__codelineno-36-2" name="__codelineno-36-2" href="#__codelineno-36-2"></a>kubectl<span class="w"> </span>get<span class="w"> </span>nodes
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-36-1"><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a><span class="nb">cd</span><span class="w"> </span>&lt;racine-du-depot&gt;/labs/01-Installation-Cluster/terraform
+</span><span id="__span-36-2"><a id="__codelineno-36-2" name="__codelineno-36-2" href="#__codelineno-36-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">KUBECONFIG</span><span class="o">=</span><span class="nv">$PWD</span>/kubeconfig.yaml
+</span><span id="__span-36-3"><a id="__codelineno-36-3" name="__codelineno-36-3" href="#__codelineno-36-3"></a>kubectl<span class="w"> </span>get<span class="w"> </span>nodes
 </span></code></pre></div>
 <div class="admonition warning">
 <p class="admonition-title"><strong>Une variable par terminal</strong></p>
 <p>Redéfinissez <code>KUBECONFIG</code> dans chaque nouveau terminal, aux ateliers suivants également.</p>
 </div>
+<details class="tip">
+<summary><strong>Indice : <code>kubectl</code> tente de joindre <code>localhost:8080</code></strong></summary>
+<p>Le message <code>dial tcp [::1]:8080: ... actively refused it</code> (ou <code>connection refused</code>) ne vient pas du cluster : <code>kubectl</code> n'a trouvé aucun kubeconfig utilisable et se rabat sur <code>localhost:8080</code>. <code>KUBECONFIG</code> pointe vers un fichier inexistant, en général parce que la commande a été lancée depuis un autre dossier que celui prévu (<code>$PWD</code> vaut le dossier courant).</p>
+<p>Vérifiez, puis redéfinissez la variable depuis le bon dossier :</p>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-37-1"><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a><span class="nv">$env:KUBECONFIG</span>                  <span class="c"># chemin utilisé</span>
+</span><span id="__span-37-2"><a id="__codelineno-37-2" name="__codelineno-37-2" href="#__codelineno-37-2"></a><span class="nb">Test-Path</span> <span class="nv">$env:KUBECONFIG</span>        <span class="c"># doit afficher True</span>
+</span></code></pre></div>
+</details>
 <h3 id="etape-3-choisir-votre-modalite-de-travail-ateliers-03-a-07">Étape 3 : Choisir votre modalité de travail (Ateliers 03 à 07)<a class="headerlink" href="#etape-3-choisir-votre-modalite-de-travail-ateliers-03-a-07" title="Permanent link">&para;</a></h3>
 <table>
 <thead>

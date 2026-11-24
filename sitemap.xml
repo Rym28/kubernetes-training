@@ -2,58 +2,58 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://rym28.github.io/kubernetes-training/</loc>
-         <lastmod>2026-11-23</lastmod>
+         <lastmod>2026-11-24</lastmod>
     </url>
     <url>
          <loc>https://rym28.github.io/kubernetes-training/application/</loc>
-         <lastmod>2026-11-23</lastmod>
+         <lastmod>2026-11-24</lastmod>
     </url>
     <url>
          <loc>https://rym28.github.io/kubernetes-training/cluster-aws-express/</loc>
-         <lastmod>2026-11-23</lastmod>
+         <lastmod>2026-11-24</lastmod>
     </url>
     <url>
          <loc>https://rym28.github.io/kubernetes-training/evaluation/</loc>
-         <lastmod>2026-11-23</lastmod>
+         <lastmod>2026-11-24</lastmod>
     </url>
     <url>
          <loc>https://rym28.github.io/kubernetes-training/setup-environnement/</loc>
-         <lastmod>2026-11-23</lastmod>
+         <lastmod>2026-11-24</lastmod>
     </url>
     <url>
          <loc>https://rym28.github.io/kubernetes-training/support-cours/</loc>
-         <lastmod>2026-11-23</lastmod>
+         <lastmod>2026-11-24</lastmod>
     </url>
     <url>
          <loc>https://rym28.github.io/kubernetes-training/labs/</loc>
-         <lastmod>2026-11-23</lastmod>
+         <lastmod>2026-11-24</lastmod>
     </url>
     <url>
          <loc>https://rym28.github.io/kubernetes-training/labs/01-provisionnement-cluster/</loc>
-         <lastmod>2026-11-23</lastmod>
+         <lastmod>2026-11-24</lastmod>
     </url>
     <url>
          <loc>https://rym28.github.io/kubernetes-training/labs/02-pods-trois-briques/</loc>
-         <lastmod>2026-11-23</lastmod>
+         <lastmod>2026-11-24</lastmod>
     </url>
     <url>
          <loc>https://rym28.github.io/kubernetes-training/labs/03-deploiements-resilience-rollback/</loc>
-         <lastmod>2026-11-23</lastmod>
+         <lastmod>2026-11-24</lastmod>
     </url>
     <url>
          <loc>https://rym28.github.io/kubernetes-training/labs/04-reseau-services-dns/</loc>
-         <lastmod>2026-11-23</lastmod>
+         <lastmod>2026-11-24</lastmod>
     </url>
     <url>
          <loc>https://rym28.github.io/kubernetes-training/labs/05-configuration-stockage-persistant/</loc>
-         <lastmod>2026-11-23</lastmod>
+         <lastmod>2026-11-24</lastmod>
     </url>
     <url>
          <loc>https://rym28.github.io/kubernetes-training/labs/06-exploitation-observabilite-debugging/</loc>
-         <lastmod>2026-11-23</lastmod>
+         <lastmod>2026-11-24</lastmod>
     </url>
     <url>
          <loc>https://rym28.github.io/kubernetes-training/labs/07-securite-quotas-isolement-reseau/</loc>
-         <lastmod>2026-11-23</lastmod>
+         <lastmod>2026-11-24</lastmod>
     </url>
 </urlset>
