@@ -2013,18 +2013,49 @@
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>terraform<span class="w"> </span>destroy<span class="w"> </span>-auto-approve
 </span></code></pre></div>
 </details>
+<details class="note">
+<summary><strong>Reprendre après l'arrêt du Learner Lab, sans rien réinstaller</strong></summary>
+<p>Fin de session (minuteur de 4 h écoulé ou <strong>End Lab</strong>) : vos instances, leurs disques, l'Elastic IP de <code>k8s-control</code> et donc tout le cluster sont conservés. Ne relancez <strong>ni</strong> <code>terraform apply</code>, <strong>ni</strong> <code>create-cluster</code>, <strong>ni</strong> les scripts d'installation : trois gestes suffisent.</p>
+<p><strong>1. Rouvrir la session AWS</strong></p>
+<p>Sur AWS Academy, cliquez sur <strong>Start Lab</strong>, attendez le voyant vert, puis recopiez le nouveau bloc <strong>AWS Details → AWS CLI → Show</strong> dans le fichier <code>credentials</code> (étape 5). Ces identifiants ne servent qu'à la commande <code>aws</code> : <code>kubectl</code>, lui, s'authentifie avec le certificat contenu dans <code>kubeconfig.yaml</code>.</p>
+<p><strong>2. Démarrer les instances si elles sont arrêtées</strong></p>
+<p>Depuis le dossier <code>terraform/</code> :</p>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="p">..\</span><span class="n">scripts</span><span class="p">\</span><span class="nb">start-session</span><span class="p">.</span><span class="n">ps1</span>          <span class="c"># Windows (PowerShell)</span>
+</span></code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>bash<span class="w"> </span>../scripts/start-session.sh<span class="w">      </span><span class="c1"># Linux / macOS (Bash)</span>
+</span></code></pre></div>
+<p>Le script démarre uniquement les instances arrêtées. Si elles tournent déjà, il affiche « Aucune instance arrêtée trouvée » puis le tableau des 3 instances : c'est normal, passez à la suite.</p>
+<p><strong>3. Reconnecter <code>kubectl</code></strong></p>
+<p>Toujours depuis <code>terraform/</code> :</p>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="nv">$env:KUBECONFIG</span> <span class="p">=</span> <span class="p">(</span><span class="nb">Resolve-Path</span> <span class="p">.\</span><span class="n">kubeconfig</span><span class="p">.</span><span class="n">yaml</span><span class="p">).</span><span class="n">Path</span>      <span class="c"># Windows (PowerShell)</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">kubectl</span> <span class="n">get</span> <span class="n">nodes</span>
+</span></code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">KUBECONFIG</span><span class="o">=</span><span class="nv">$PWD</span>/kubeconfig.yaml<span class="w">                       </span><span class="c1"># Linux / macOS (Bash)</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>kubectl<span class="w"> </span>get<span class="w"> </span>nodes
+</span></code></pre></div>
+<p>Résultat attendu : les 3 nœuds <code>Ready</code>, avec vos Deployments, Services et volumes des ateliers précédents toujours en place (<code>kubectl get all -A</code>). Juste après un démarrage, comptez 1 à 2 minutes avant que les nœuds repassent <code>Ready</code>.</p>
+<details class="tip">
+<summary><strong>Indice : <code>kubectl</code> ne répond pas après la reprise</strong></summary>
+<ul>
+<li><strong><code>localhost:8080</code> refusé</strong> : <code>KUBECONFIG</code> n'est pas défini dans ce terminal, ou pointe vers un fichier absent. Refaites l'étape 3 depuis <code>terraform/</code>.</li>
+<li><strong>Délai dépassé (<code>i/o timeout</code>)</strong> : les instances ne tournent pas encore, ou la session AWS n'est pas démarrée. Refaites les étapes 1 et 2.</li>
+<li><strong>Nœuds <code>NotReady</code></strong> pendant plus de 5 minutes : connectez-vous en SSH sur <code>k8s-control</code> (commande affichée par <code>start-session</code>) et lancez <code>kubectl get pods -n kube-system</code>.</li>
+<li><strong><code>kubeconfig.yaml</code> perdu ou erreur <code>x509</code></strong> : régénérez-le sans toucher au cluster avec <code>..\scripts\get-kubeconfig.ps1</code> (Windows) ou <code>bash ../scripts/get-kubeconfig.sh</code> (Linux / macOS).</li>
+</ul>
+</details>
+</details>
 <hr />
 <h2 id="exercice-3-installer-le-cluster-avec-kubeadm">Exercice 3 : Installer le cluster avec Kubeadm<a class="headerlink" href="#exercice-3-installer-le-cluster-avec-kubeadm" title="Permanent link">&para;</a></h2>
 <h3 id="etape-1-ouvrir-une-session-ssh-sur-chaque-nud">Étape 1 : Ouvrir une session SSH sur chaque nœud<a class="headerlink" href="#etape-1-ouvrir-une-session-ssh-sur-chaque-nud" title="Permanent link">&para;</a></h3>
 <p>Depuis le dossier <code>terraform/</code>, restreignez les droits de la clé (une seule fois), puis connectez-vous à <code>k8s-control</code> :</p>
 <p><strong>Votre poste — Windows (PowerShell)</strong></p>
-<div class="language-powershell highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="n">icacls</span> <span class="p">.\</span><span class="n">labsuser</span><span class="p">.</span><span class="n">pem</span> <span class="p">/</span><span class="n">inheritance</span><span class="p">:</span><span class="nb">r</span>
-</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="n">icacls</span> <span class="p">.\</span><span class="n">labsuser</span><span class="p">.</span><span class="n">pem</span> <span class="p">/</span><span class="n">grant</span><span class="p">:</span><span class="nb">r </span><span class="s2">"</span><span class="p">$(</span><span class="nv">$env:USERNAME</span><span class="p">)</span><span class="s2">:(R)"</span>
-</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="n">ssh</span> <span class="n">-i</span> <span class="p">.\</span><span class="n">labsuser</span><span class="p">.</span><span class="n">pem</span> <span class="n">ubuntu</span><span class="p">@&lt;</span><span class="n">IP_PUBLIQUE_CONTROL</span><span class="p">&gt;</span>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="n">icacls</span> <span class="p">.\</span><span class="n">labsuser</span><span class="p">.</span><span class="n">pem</span> <span class="p">/</span><span class="n">inheritance</span><span class="p">:</span><span class="nb">r</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="n">icacls</span> <span class="p">.\</span><span class="n">labsuser</span><span class="p">.</span><span class="n">pem</span> <span class="p">/</span><span class="n">grant</span><span class="p">:</span><span class="nb">r </span><span class="s2">"</span><span class="p">$(</span><span class="nv">$env:USERNAME</span><span class="p">)</span><span class="s2">:(R)"</span>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="n">ssh</span> <span class="n">-i</span> <span class="p">.\</span><span class="n">labsuser</span><span class="p">.</span><span class="n">pem</span> <span class="n">ubuntu</span><span class="p">@&lt;</span><span class="n">IP_PUBLIQUE_CONTROL</span><span class="p">&gt;</span>
 </span></code></pre></div>
 <p><strong>Votre poste — Linux / macOS (Bash)</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>chmod<span class="w"> </span><span class="m">400</span><span class="w"> </span>labsuser.pem
-</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>ssh<span class="w"> </span>-i<span class="w"> </span>labsuser.pem<span class="w"> </span>ubuntu@&lt;IP_PUBLIQUE_CONTROL&gt;
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>chmod<span class="w"> </span><span class="m">400</span><span class="w"> </span>labsuser.pem
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>ssh<span class="w"> </span>-i<span class="w"> </span>labsuser.pem<span class="w"> </span>ubuntu@&lt;IP_PUBLIQUE_CONTROL&gt;
 </span></code></pre></div>
 <p>Ouvrez <strong>deux autres terminaux</strong> (ou onglets) : un pour <code>k8s-worker-1</code>, un pour <code>k8s-worker-2</code>.</p>
 <div class="admonition warning">
@@ -2032,20 +2063,20 @@
 <p>Un nouveau terminal démarre dans votre dossier personnel, où <code>labsuser.pem</code> n'existe pas. Sans ce <code>cd</code>, <code>ssh</code> échoue avec <code>Identity file ... not accessible</code> puis <code>Permission denied (publickey)</code>.</p>
 </div>
 <p><strong>Votre poste — Windows (PowerShell)</strong> — terminal 2 (<code>k8s-worker-1</code>) :</p>
-<div class="language-powershell highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="nb">cd </span><span class="p">&lt;</span><span class="n">CHEMIN</span><span class="p">&gt;\</span><span class="n">formation</span><span class="p">\</span><span class="n">labs</span><span class="p">\</span><span class="n">01-Installation-Cluster</span><span class="p">\</span><span class="n">terraform</span>
-</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">ssh</span> <span class="n">-i</span> <span class="p">.\</span><span class="n">labsuser</span><span class="p">.</span><span class="n">pem</span> <span class="n">ubuntu</span><span class="p">@&lt;</span><span class="n">IP_PUBLIQUE_WORKER_1</span><span class="p">&gt;</span>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="nb">cd </span><span class="p">&lt;</span><span class="n">CHEMIN</span><span class="p">&gt;\</span><span class="n">formation</span><span class="p">\</span><span class="n">labs</span><span class="p">\</span><span class="n">01-Installation-Cluster</span><span class="p">\</span><span class="n">terraform</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="n">ssh</span> <span class="n">-i</span> <span class="p">.\</span><span class="n">labsuser</span><span class="p">.</span><span class="n">pem</span> <span class="n">ubuntu</span><span class="p">@&lt;</span><span class="n">IP_PUBLIQUE_WORKER_1</span><span class="p">&gt;</span>
 </span></code></pre></div>
 <p>Terminal 3 (<code>k8s-worker-2</code>) :</p>
-<div class="language-powershell highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="nb">cd </span><span class="p">&lt;</span><span class="n">CHEMIN</span><span class="p">&gt;\</span><span class="n">formation</span><span class="p">\</span><span class="n">labs</span><span class="p">\</span><span class="n">01-Installation-Cluster</span><span class="p">\</span><span class="n">terraform</span>
-</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="n">ssh</span> <span class="n">-i</span> <span class="p">.\</span><span class="n">labsuser</span><span class="p">.</span><span class="n">pem</span> <span class="n">ubuntu</span><span class="p">@&lt;</span><span class="n">IP_PUBLIQUE_WORKER_2</span><span class="p">&gt;</span>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="nb">cd </span><span class="p">&lt;</span><span class="n">CHEMIN</span><span class="p">&gt;\</span><span class="n">formation</span><span class="p">\</span><span class="n">labs</span><span class="p">\</span><span class="n">01-Installation-Cluster</span><span class="p">\</span><span class="n">terraform</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="n">ssh</span> <span class="n">-i</span> <span class="p">.\</span><span class="n">labsuser</span><span class="p">.</span><span class="n">pem</span> <span class="n">ubuntu</span><span class="p">@&lt;</span><span class="n">IP_PUBLIQUE_WORKER_2</span><span class="p">&gt;</span>
 </span></code></pre></div>
 <p><strong>Votre poste — Linux / macOS (Bash)</strong> — terminal 2 (<code>k8s-worker-1</code>) :</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="nb">cd</span><span class="w"> </span>&lt;CHEMIN&gt;/formation/labs/01-Installation-Cluster/terraform
-</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>ssh<span class="w"> </span>-i<span class="w"> </span>labsuser.pem<span class="w"> </span>ubuntu@&lt;IP_PUBLIQUE_WORKER_1&gt;
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="nb">cd</span><span class="w"> </span>&lt;CHEMIN&gt;/formation/labs/01-Installation-Cluster/terraform
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>ssh<span class="w"> </span>-i<span class="w"> </span>labsuser.pem<span class="w"> </span>ubuntu@&lt;IP_PUBLIQUE_WORKER_1&gt;
 </span></code></pre></div>
 <p>Terminal 3 (<code>k8s-worker-2</code>) :</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="nb">cd</span><span class="w"> </span>&lt;CHEMIN&gt;/formation/labs/01-Installation-Cluster/terraform
-</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>ssh<span class="w"> </span>-i<span class="w"> </span>labsuser.pem<span class="w"> </span>ubuntu@&lt;IP_PUBLIQUE_WORKER_2&gt;
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="nb">cd</span><span class="w"> </span>&lt;CHEMIN&gt;/formation/labs/01-Installation-Cluster/terraform
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>ssh<span class="w"> </span>-i<span class="w"> </span>labsuser.pem<span class="w"> </span>ubuntu@&lt;IP_PUBLIQUE_WORKER_2&gt;
 </span></code></pre></div>
 <p><code>&lt;CHEMIN&gt;</code> est le dossier où vous avez cloné le dépôt à l'étape 0. Les IP sont données par <code>terraform output</code> :</p>
 <table>
@@ -2077,14 +2108,14 @@
 <p>Le prompt affiche <code>ubuntu@ip-172-31-…</code> ? L'installation n'est pas terminée : reconnectez-vous dans une minute.</p>
 <h3 id="etape-2-verifier-que-les-nuds-sont-prets">Étape 2 : Vérifier que les nœuds sont prêts<a class="headerlink" href="#etape-2-verifier-que-les-nuds-sont-prets" title="Permanent link">&para;</a></h3>
 <p><strong>Les trois nœuds — SSH</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>cloud-init<span class="w"> </span>status<span class="w"> </span>--wait
-</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>kubeadm<span class="w"> </span>version<span class="w"> </span>-o<span class="w"> </span>short
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>cloud-init<span class="w"> </span>status<span class="w"> </span>--wait
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>kubeadm<span class="w"> </span>version<span class="w"> </span>-o<span class="w"> </span>short
 </span></code></pre></div>
 <p>Résultat attendu : <code>status: done</code> et <code>v1.30.x</code> sur chaque nœud.</p>
 <h3 id="etape-3-initialiser-le-control-plane">Étape 3 : Initialiser le Control Plane<a class="headerlink" href="#etape-3-initialiser-le-control-plane" title="Permanent link">&para;</a></h3>
 <p>Remplacez <code>&lt;IP_PUBLIQUE_CONTROL&gt;</code> par la valeur <code>control_plane_public_ip</code> de <code>terraform output</code> :</p>
 <p><strong>k8s-control — SSH</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>sudo<span class="w"> </span>kubeadm<span class="w"> </span>init<span class="w"> </span>--pod-network-cidr<span class="o">=</span><span class="m">192</span>.168.0.0/16<span class="w"> </span>--apiserver-cert-extra-sans<span class="o">=</span>&lt;IP_PUBLIQUE_CONTROL&gt;
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>sudo<span class="w"> </span>kubeadm<span class="w"> </span>init<span class="w"> </span>--pod-network-cidr<span class="o">=</span><span class="m">192</span>.168.0.0/16<span class="w"> </span>--apiserver-cert-extra-sans<span class="o">=</span>&lt;IP_PUBLIQUE_CONTROL&gt;
 </span></code></pre></div>
 <table>
 <thead>
@@ -2111,13 +2142,13 @@
 <h3 id="etape-4-raccorder-les-workers">Étape 4 : Raccorder les Workers<a class="headerlink" href="#etape-4-raccorder-les-workers" title="Permanent link">&para;</a></h3>
 <p><strong>1. Générer la commande <code>join</code> sur une seule ligne</strong></p>
 <p><strong>k8s-control — SSH</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>sudo<span class="w"> </span>kubeadm<span class="w"> </span>token<span class="w"> </span>create<span class="w"> </span>--print-join-command
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>sudo<span class="w"> </span>kubeadm<span class="w"> </span>token<span class="w"> </span>create<span class="w"> </span>--print-join-command
 </span></code></pre></div>
 <p>Résultat attendu : <strong>une seule ligne</strong> commençant par <code>kubeadm join 172.31.…:6443 --token …</code>. Copiez-la entièrement.</p>
 <p><strong>2. Exécuter la commande sur chaque worker</strong></p>
 <p>Dans le terminal de <code>k8s-worker-1</code>, puis dans celui de <code>k8s-worker-2</code> (connectés depuis <code>labs/01-Installation-Cluster/terraform</code>, étape 1), tapez <code>sudo</code> puis collez la ligne copiée :</p>
 <p><strong>k8s-worker-1 et k8s-worker-2 — SSH</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>sudo<span class="w"> </span>kubeadm<span class="w"> </span>join<span class="w"> </span>&lt;IP_PRIVEE_CONTROL&gt;:6443<span class="w"> </span>--token<span class="w"> </span>&lt;token&gt;<span class="w"> </span>--discovery-token-ca-cert-hash<span class="w"> </span>sha256:&lt;hash&gt;
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>sudo<span class="w"> </span>kubeadm<span class="w"> </span>join<span class="w"> </span>&lt;IP_PRIVEE_CONTROL&gt;:6443<span class="w"> </span>--token<span class="w"> </span>&lt;token&gt;<span class="w"> </span>--discovery-token-ca-cert-hash<span class="w"> </span>sha256:&lt;hash&gt;
 </span></code></pre></div>
 <p>Résultat attendu : <code>This node has joined the cluster</code>.</p>
 <details class="tip">
@@ -2127,7 +2158,7 @@
 <li><code>Permission denied</code> / <code>must be run as root</code> : vous avez oublié <code>sudo</code>.</li>
 <li><code>[ERROR FileAvailable--etc-kubernetes-kubelet.conf]</code> ou <code>Port 10250 is in use</code> : un <code>join</code> précédent a échoué à mi-chemin. Nettoyez le worker puis relancez le <code>join</code> :</li>
 </ul>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>sudo<span class="w"> </span>kubeadm<span class="w"> </span>reset<span class="w"> </span>-f
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>sudo<span class="w"> </span>kubeadm<span class="w"> </span>reset<span class="w"> </span>-f
 </span></code></pre></div>
 <ul>
 <li>Le token expire au bout de 24 h : relancez simplement le point 1.</li>
@@ -2136,28 +2167,28 @@
 <h3 id="etape-5-donner-a-kubectl-lacces-au-cluster">Étape 5 : Donner à <code>kubectl</code> l'accès au cluster<a class="headerlink" href="#etape-5-donner-a-kubectl-lacces-au-cluster" title="Permanent link">&para;</a></h3>
 <p><code>kubeadm init</code> a créé le fichier de connexion administrateur <code>/etc/kubernetes/admin.conf</code> (<strong>kubeconfig</strong>). Copiez-le là où <code>kubectl</code> le cherche :</p>
 <p><strong>k8s-control — SSH</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span><span class="nv">$HOME</span>/.kube
-</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>sudo<span class="w"> </span>cp<span class="w"> </span>-i<span class="w"> </span>/etc/kubernetes/admin.conf<span class="w"> </span><span class="nv">$HOME</span>/.kube/config
-</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a>sudo<span class="w"> </span>chown<span class="w"> </span><span class="k">$(</span>id<span class="w"> </span>-u<span class="k">)</span>:<span class="k">$(</span>id<span class="w"> </span>-g<span class="k">)</span><span class="w"> </span><span class="nv">$HOME</span>/.kube/config
-</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a>kubectl<span class="w"> </span>get<span class="w"> </span>nodes
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span><span class="nv">$HOME</span>/.kube
+</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a>sudo<span class="w"> </span>cp<span class="w"> </span>-i<span class="w"> </span>/etc/kubernetes/admin.conf<span class="w"> </span><span class="nv">$HOME</span>/.kube/config
+</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a>sudo<span class="w"> </span>chown<span class="w"> </span><span class="k">$(</span>id<span class="w"> </span>-u<span class="k">)</span>:<span class="k">$(</span>id<span class="w"> </span>-g<span class="k">)</span><span class="w"> </span><span class="nv">$HOME</span>/.kube/config
+</span><span id="__span-30-4"><a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a>kubectl<span class="w"> </span>get<span class="w"> </span>nodes
 </span></code></pre></div>
 <p>Résultat attendu : les 3 nœuds (<code>k8s-control</code>, <code>k8s-worker-1</code>, <code>k8s-worker-2</code>) apparaissent en <code>NotReady</code>, car aucun plugin réseau (CNI) n'est encore installé.</p>
 <h3 id="etape-6-installer-le-plugin-reseau-calico-cni">Étape 6 : Installer le plugin réseau Calico (CNI)<a class="headerlink" href="#etape-6-installer-le-plugin-reseau-calico-cni" title="Permanent link">&para;</a></h3>
 <p><strong>k8s-control — SSH</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>kubectl<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/calico.yaml
-</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>kubectl<span class="w"> </span>get<span class="w"> </span>nodes<span class="w"> </span>-w
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a>kubectl<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/calico.yaml
+</span><span id="__span-31-2"><a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a>kubectl<span class="w"> </span>get<span class="w"> </span>nodes<span class="w"> </span>-w
 </span></code></pre></div>
 <p>Résultat attendu : après 30 secondes à 1 minute, les 3 nœuds passent <code>Ready</code>. Quittez avec <code>Ctrl + C</code>.</p>
 <h3 id="etape-7-valider-le-cluster">Étape 7 : Valider le cluster<a class="headerlink" href="#etape-7-valider-le-cluster" title="Permanent link">&para;</a></h3>
 <p><strong>k8s-control — SSH</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>nodes<span class="w"> </span>-o<span class="w"> </span>wide
-</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>kube-system
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>nodes<span class="w"> </span>-o<span class="w"> </span>wide
+</span><span id="__span-32-2"><a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>kube-system
 </span></code></pre></div>
 <p>Résultat attendu : les 3 nœuds sont <code>Ready</code> (en 1 minute environ), et les pods <code>calico-node</code> et <code>coredns</code> sont <code>Running</code>.</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>NAME           STATUS   ROLES           AGE   VERSION
-</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a>k8s-control    Ready    control-plane   3m    v1.30.x
-</span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a>k8s-worker-1   Ready    &lt;none&gt;          1m    v1.30.x
-</span><span id="__span-29-4"><a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a>k8s-worker-2   Ready    &lt;none&gt;          1m    v1.30.x
+<div class="language-text highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a>NAME           STATUS   ROLES           AGE   VERSION
+</span><span id="__span-33-2"><a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a>k8s-control    Ready    control-plane   3m    v1.30.x
+</span><span id="__span-33-3"><a id="__codelineno-33-3" name="__codelineno-33-3" href="#__codelineno-33-3"></a>k8s-worker-1   Ready    &lt;none&gt;          1m    v1.30.x
+</span><span id="__span-33-4"><a id="__codelineno-33-4" name="__codelineno-33-4" href="#__codelineno-33-4"></a>k8s-worker-2   Ready    &lt;none&gt;          1m    v1.30.x
 </span></code></pre></div>
 <details class="tip">
 <summary><strong>Indice : un worker reste <code>NotReady</code></strong></summary>
@@ -2169,16 +2200,16 @@
 <h3 id="etape-8-installer-les-composants-additionnels-de-la-formation">Étape 8 : Installer les composants additionnels de la formation<a class="headerlink" href="#etape-8-installer-les-composants-additionnels-de-la-formation" title="Permanent link">&para;</a></h3>
 <p>Le script installe l'outil de stockage <code>local-path</code>, Ingress NGINX (NodePort <code>30080</code>), Helm et l'alias <code>k</code> :</p>
 <p><strong>k8s-control — SSH</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>bash<span class="w"> </span>~/labs/01-Installation-Cluster/scripts/setup-addons.sh
-</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a><span class="nb">source</span><span class="w"> </span>~/.bashrc
-</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a>kubectl<span class="w"> </span>get<span class="w"> </span>storageclass
-</span><span id="__span-30-4"><a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>ingress-nginx
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a>bash<span class="w"> </span>~/labs/01-Installation-Cluster/scripts/setup-addons.sh
+</span><span id="__span-34-2"><a id="__codelineno-34-2" name="__codelineno-34-2" href="#__codelineno-34-2"></a><span class="nb">source</span><span class="w"> </span>~/.bashrc
+</span><span id="__span-34-3"><a id="__codelineno-34-3" name="__codelineno-34-3" href="#__codelineno-34-3"></a>kubectl<span class="w"> </span>get<span class="w"> </span>storageclass
+</span><span id="__span-34-4"><a id="__codelineno-34-4" name="__codelineno-34-4" href="#__codelineno-34-4"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>ingress-nginx
 </span></code></pre></div>
 <p>Résultat attendu : <code>local-path (default)</code> et le contrôleur Ingress <code>Running</code>.</p>
 <details class="tip">
 <summary><strong>Indice : le dossier <code>~/labs</code> n'existe pas</strong></summary>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a>git<span class="w"> </span>clone<span class="w"> </span>--depth<span class="w"> </span><span class="m">1</span><span class="w"> </span>https://github.com/Rym28/kubernetes-training.git<span class="w"> </span>~/formation
-</span><span id="__span-31-2"><a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a>ln<span class="w"> </span>-sfn<span class="w"> </span>~/formation/labs<span class="w"> </span>~/labs
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-35-1"><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a>git<span class="w"> </span>clone<span class="w"> </span>--depth<span class="w"> </span><span class="m">1</span><span class="w"> </span>https://github.com/Rym28/kubernetes-training.git<span class="w"> </span>~/formation
+</span><span id="__span-35-2"><a id="__codelineno-35-2" name="__codelineno-35-2" href="#__codelineno-35-2"></a>ln<span class="w"> </span>-sfn<span class="w"> </span>~/formation/labs<span class="w"> </span>~/labs
 </span></code></pre></div>
 </details>
 <hr />
@@ -2186,10 +2217,10 @@
 <h3 id="etape-1-recuperer-le-kubeconfig-sur-votre-poste">Étape 1 : Récupérer le kubeconfig sur votre poste<a class="headerlink" href="#etape-1-recuperer-le-kubeconfig-sur-votre-poste" title="Permanent link">&para;</a></h3>
 <p>Le script <code>get-kubeconfig</code> copie le kubeconfig de <code>k8s-control</code> dans <code>terraform/kubeconfig.yaml</code>, y remplace l'IP privée de l'API Server par l'IP publique, puis teste la connexion. Depuis le dossier <code>terraform/</code> :</p>
 <p><strong>Votre poste — Windows (PowerShell)</strong></p>
-<div class="language-powershell highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a><span class="p">..\</span><span class="n">scripts</span><span class="p">\</span><span class="nb">get-kubeconfig</span><span class="p">.</span><span class="n">ps1</span>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-36-1"><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a><span class="p">..\</span><span class="n">scripts</span><span class="p">\</span><span class="nb">get-kubeconfig</span><span class="p">.</span><span class="n">ps1</span>
 </span></code></pre></div>
 <p><strong>Votre poste — Linux / macOS (Bash)</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a>bash<span class="w"> </span>../scripts/get-kubeconfig.sh
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-37-1"><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a>bash<span class="w"> </span>../scripts/get-kubeconfig.sh
 </span></code></pre></div>
 <p>Résultat attendu : le script affiche les 3 nœuds <code>Ready</code>.</p>
 <div class="admonition warning">
@@ -2201,9 +2232,9 @@
 <ul>
 <li>
 <p><strong><code>x509: certificate is valid for …, not &lt;IP_PUBLIQUE&gt;</code></strong> : le cluster a été initialisé sans <code>--apiserver-cert-extra-sans</code>. Sur <code>k8s-control</code>, régénérez le certificat de l'API Server, puis relancez le script :</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a>sudo<span class="w"> </span>mv<span class="w"> </span>/etc/kubernetes/pki/apiserver.<span class="o">{</span>crt,key<span class="o">}</span><span class="w"> </span>~/
-</span><span id="__span-34-2"><a id="__codelineno-34-2" name="__codelineno-34-2" href="#__codelineno-34-2"></a>sudo<span class="w"> </span>kubeadm<span class="w"> </span>init<span class="w"> </span>phase<span class="w"> </span>certs<span class="w"> </span>apiserver<span class="w"> </span>--apiserver-cert-extra-sans<span class="o">=</span>&lt;IP_PUBLIQUE_CONTROL&gt;
-</span><span id="__span-34-3"><a id="__codelineno-34-3" name="__codelineno-34-3" href="#__codelineno-34-3"></a>sudo<span class="w"> </span>crictl<span class="w"> </span>rm<span class="w"> </span>-f<span class="w"> </span><span class="k">$(</span>sudo<span class="w"> </span>crictl<span class="w"> </span>ps<span class="w"> </span>-q<span class="w"> </span>--name<span class="w"> </span>kube-apiserver<span class="k">)</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-38-1"><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a>sudo<span class="w"> </span>mv<span class="w"> </span>/etc/kubernetes/pki/apiserver.<span class="o">{</span>crt,key<span class="o">}</span><span class="w"> </span>~/
+</span><span id="__span-38-2"><a id="__codelineno-38-2" name="__codelineno-38-2" href="#__codelineno-38-2"></a>sudo<span class="w"> </span>kubeadm<span class="w"> </span>init<span class="w"> </span>phase<span class="w"> </span>certs<span class="w"> </span>apiserver<span class="w"> </span>--apiserver-cert-extra-sans<span class="o">=</span>&lt;IP_PUBLIQUE_CONTROL&gt;
+</span><span id="__span-38-3"><a id="__codelineno-38-3" name="__codelineno-38-3" href="#__codelineno-38-3"></a>sudo<span class="w"> </span>crictl<span class="w"> </span>rm<span class="w"> </span>-f<span class="w"> </span><span class="k">$(</span>sudo<span class="w"> </span>crictl<span class="w"> </span>ps<span class="w"> </span>-q<span class="w"> </span>--name<span class="w"> </span>kube-apiserver<span class="k">)</span>
 </span></code></pre></div>
 </li>
 <li>
@@ -2216,15 +2247,15 @@
 <h3 id="etape-2-utiliser-ce-kubeconfig-dans-votre-terminal">Étape 2 : Utiliser ce kubeconfig dans votre terminal<a class="headerlink" href="#etape-2-utiliser-ce-kubeconfig-dans-votre-terminal" title="Permanent link">&para;</a></h3>
 <p>Le chemin dépend du dossier courant. Placez-vous d'abord dans <code>labs/01-Installation-Cluster/terraform/</code> :</p>
 <p><strong>Votre poste — Windows (PowerShell)</strong></p>
-<div class="language-powershell highlight"><pre><span></span><code><span id="__span-35-1"><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a><span class="nb">cd </span><span class="p">&lt;</span><span class="n">racine-du-depot</span><span class="p">&gt;\</span><span class="n">labs</span><span class="p">\</span><span class="n">01-Installation-Cluster</span><span class="p">\</span><span class="n">terraform</span>
-</span><span id="__span-35-2"><a id="__codelineno-35-2" name="__codelineno-35-2" href="#__codelineno-35-2"></a><span class="nv">$env:KUBECONFIG</span> <span class="p">=</span> <span class="p">(</span><span class="nb">Resolve-Path</span> <span class="p">.\</span><span class="n">kubeconfig</span><span class="p">.</span><span class="n">yaml</span><span class="p">).</span><span class="n">Path</span>
-</span><span id="__span-35-3"><a id="__codelineno-35-3" name="__codelineno-35-3" href="#__codelineno-35-3"></a><span class="n">kubectl</span> <span class="n">get</span> <span class="n">nodes</span>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-39-1"><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a><span class="nb">cd </span><span class="p">&lt;</span><span class="n">racine-du-depot</span><span class="p">&gt;\</span><span class="n">labs</span><span class="p">\</span><span class="n">01-Installation-Cluster</span><span class="p">\</span><span class="n">terraform</span>
+</span><span id="__span-39-2"><a id="__codelineno-39-2" name="__codelineno-39-2" href="#__codelineno-39-2"></a><span class="nv">$env:KUBECONFIG</span> <span class="p">=</span> <span class="p">(</span><span class="nb">Resolve-Path</span> <span class="p">.\</span><span class="n">kubeconfig</span><span class="p">.</span><span class="n">yaml</span><span class="p">).</span><span class="n">Path</span>
+</span><span id="__span-39-3"><a id="__codelineno-39-3" name="__codelineno-39-3" href="#__codelineno-39-3"></a><span class="n">kubectl</span> <span class="n">get</span> <span class="n">nodes</span>
 </span></code></pre></div>
 <p><code>Resolve-Path</code> stocke le chemin absolu et s'arrête en erreur si <code>kubeconfig.yaml</code> n'est pas dans le dossier courant.</p>
 <p><strong>Votre poste — Linux / macOS (Bash)</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-36-1"><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a><span class="nb">cd</span><span class="w"> </span>&lt;racine-du-depot&gt;/labs/01-Installation-Cluster/terraform
-</span><span id="__span-36-2"><a id="__codelineno-36-2" name="__codelineno-36-2" href="#__codelineno-36-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">KUBECONFIG</span><span class="o">=</span><span class="nv">$PWD</span>/kubeconfig.yaml
-</span><span id="__span-36-3"><a id="__codelineno-36-3" name="__codelineno-36-3" href="#__codelineno-36-3"></a>kubectl<span class="w"> </span>get<span class="w"> </span>nodes
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-40-1"><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a><span class="nb">cd</span><span class="w"> </span>&lt;racine-du-depot&gt;/labs/01-Installation-Cluster/terraform
+</span><span id="__span-40-2"><a id="__codelineno-40-2" name="__codelineno-40-2" href="#__codelineno-40-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">KUBECONFIG</span><span class="o">=</span><span class="nv">$PWD</span>/kubeconfig.yaml
+</span><span id="__span-40-3"><a id="__codelineno-40-3" name="__codelineno-40-3" href="#__codelineno-40-3"></a>kubectl<span class="w"> </span>get<span class="w"> </span>nodes
 </span></code></pre></div>
 <div class="admonition warning">
 <p class="admonition-title"><strong>Une variable par terminal</strong></p>
@@ -2234,8 +2265,8 @@
 <summary><strong>Indice : <code>kubectl</code> tente de joindre <code>localhost:8080</code></strong></summary>
 <p>Le message <code>dial tcp [::1]:8080: ... actively refused it</code> (ou <code>connection refused</code>) ne vient pas du cluster : <code>kubectl</code> n'a trouvé aucun kubeconfig utilisable et se rabat sur <code>localhost:8080</code>. <code>KUBECONFIG</code> pointe vers un fichier inexistant, en général parce que la commande a été lancée depuis un autre dossier que celui prévu (<code>$PWD</code> vaut le dossier courant).</p>
 <p>Vérifiez, puis redéfinissez la variable depuis le bon dossier :</p>
-<div class="language-powershell highlight"><pre><span></span><code><span id="__span-37-1"><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a><span class="nv">$env:KUBECONFIG</span>                  <span class="c"># chemin utilisé</span>
-</span><span id="__span-37-2"><a id="__codelineno-37-2" name="__codelineno-37-2" href="#__codelineno-37-2"></a><span class="nb">Test-Path</span> <span class="nv">$env:KUBECONFIG</span>        <span class="c"># doit afficher True</span>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-41-1"><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a><span class="nv">$env:KUBECONFIG</span>                  <span class="c"># chemin utilisé</span>
+</span><span id="__span-41-2"><a id="__codelineno-41-2" name="__codelineno-41-2" href="#__codelineno-41-2"></a><span class="nb">Test-Path</span> <span class="nv">$env:KUBECONFIG</span>        <span class="c"># doit afficher True</span>
 </span></code></pre></div>
 </details>
 <h3 id="etape-3-choisir-votre-modalite-de-travail-ateliers-03-a-07">Étape 3 : Choisir votre modalité de travail (Ateliers 03 à 07)<a class="headerlink" href="#etape-3-choisir-votre-modalite-de-travail-ateliers-03-a-07" title="Permanent link">&para;</a></h3>
