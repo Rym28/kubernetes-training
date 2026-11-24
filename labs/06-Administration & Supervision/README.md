@@ -2,10 +2,11 @@
 
 ### Objectifs Pédagogiques :
 * Lire les logs d'une application (`kubectl logs` en direct, multi-pods, conteneur précédent) et la chronologie des événements du cluster.
-* Exécuter une commande dans un conteneur avec `kubectl exec` pour vérifier ce qu'il voit : sa configuration et son réseau.
-* Appliquer une méthode de dépannage, du général au détail, sur 3 incidents classiques : `CrashLoopBackOff`, `OOMKilled` et Service sans réponse.
+* Exécuter une commande dans un conteneur avec `kubectl exec` pour vérifier la configuration qu'il a reçue.
+* Appliquer une méthode de dépannage, du général au détail, sur 2 incidents classiques : `CrashLoopBackOff` et `OOMKilled`.
 * Détecter une panne du système d'un nœud avec **Node Problem Detector** et retirer ce nœud du service (`kubectl cordon`).
 * Mesurer la consommation avec **Metrics Server** (`kubectl top`), collecter métriques et logs avec **Prometheus**, **Fluent Bit** et **Loki**, et les consulter dans **Grafana**.
+* *(Optionnel)* Superviser et dépanner le cluster depuis votre poste avec l'IDE graphique **FreeLens**, connecté par votre kubeconfig.
 * Situer cette pile par rapport aux services managés des clouds, dont **StackDriver** (aujourd'hui Google Cloud Observability).
 
 <div class="admonition info" markdown>
@@ -18,7 +19,7 @@ Les commandes de cet atelier sont **rigoureusement identiques** sous **Windows (
 <div class="admonition note" markdown>
 <p class="admonition-title"><strong>Environnement : le cluster 3 nœuds (1 control plane + 2 workers) de l'Atelier 01</strong></p>
 
-Node Problem Detector surveille les **workers**, et l'étape 3 de l'exercice 4 en retire un du service : réalisez ce lab sur ce cluster, piloté au choix :
+Node Problem Detector surveille les **workers**, et l'étape 3 de l'exercice 3 en retire un du service : réalisez ce lab sur ce cluster, piloté au choix :
 
 * **Option A (Recommandée - Confort DevOps Local) :** depuis votre machine locale, avec votre `kubectl` et votre `kubeconfig`. Dans **chaque nouveau terminal**, placé à la racine du dépôt, pointez d'abord `kubectl` vers le fichier `kubeconfig.yaml` récupéré à l'étape 1 de l'exercice 4 de l'Atelier 01 :
     * Windows (PowerShell) : `$env:KUBECONFIG = "$PWD\labs\01-Installation-Cluster\terraform\kubeconfig.yaml"`
@@ -26,7 +27,7 @@ Node Problem Detector surveille les **workers**, et l'étape 3 de l'exercice 4 e
     * Vérification : `kubectl get nodes` doit afficher les 3 nœuds à l'état `Ready`.
 * **Option B (PC d'entreprise verrouillé) :** en SSH sur `k8s-control` : l'outillage et les manifests sont pré-installés dans `~/labs/`.
 
-🛟 **Secours : Minikube sur votre poste** (session AWS indisponible), piloté forcément depuis votre poste comme en Option A. Remplacez `k8s-worker-1` par `minikube`, y compris dans `manifests/inject-kernel-err.yaml`. Pour ouvrir Grafana (étape 3 de l'exercice 5), utilisez `minikube service grafana -n monitoring --url`.
+🛟 **Secours : Minikube sur votre poste** (session AWS indisponible), piloté forcément depuis votre poste comme en Option A. Remplacez `k8s-worker-1` par `minikube`, y compris dans `manifests/inject-kernel-err.yaml`. Pour ouvrir Grafana (étape 3 de l'exercice 4), utilisez `minikube service grafana -n monitoring --url`.
 
 </div>
 
@@ -102,7 +103,7 @@ kubectl delete pv pv-postgres --ignore-not-found   # le PV n'appartient à aucun
 
 Placez-vous ensuite dans le dossier du lab, qui contient les fichiers `manifests/`, `npd/` et `monitoring/` utilisés plus loin : `cd "labs/06-Administration & Supervision"` (Option A) ou `cd ~/"labs/06-Administration & Supervision"` (Option B).
 
-Lancez enfin **dès maintenant** la pile de supervision de l'exercice 5. Elle télécharge ses images et démarre pendant que vous faites les exercices 1 à 4 ; elle enregistrera aussi les logs des incidents de l'exercice 3. Inutile d'attendre : passez directement à l'exercice 1.
+Lancez enfin **dès maintenant** la pile de supervision de l'exercice 4. Elle télécharge ses images et démarre pendant que vous faites les exercices 1 à 3 ; elle enregistrera aussi les logs des incidents de l'exercice 2. Inutile d'attendre : passez directement à l'exercice 1.
 
 ```bash
 kubectl apply -f monitoring/00-namespace.yaml -f monitoring/01-metrics-server.yaml -f monitoring/02-loki.yaml -f monitoring/03-fluentbit.yaml -f monitoring/04-prometheus.yaml -f monitoring/05-grafana.yaml
@@ -110,12 +111,12 @@ kubectl apply -f monitoring/00-namespace.yaml -f monitoring/01-metrics-server.ya
 
 ---
 
-## Exercice 1 : Lire les logs et les événements
+## Exercice 1 : Lire les logs et les événements, entrer dans un conteneur
 
 <div class="admonition abstract" markdown>
 <p class="admonition-title"><strong>Ce que vous allez comprendre</strong></p>
 
-Les **logs** sont les messages qu'une application écrit sur sa sortie standard ; Kubernetes les conserve pour chaque conteneur. Les **événements** retracent ce que le cluster a fait : placement d'un pod, téléchargement d'image, redémarrage, erreur.
+Les **logs** sont les messages qu'une application écrit sur sa sortie standard ; Kubernetes les conserve pour chaque conteneur. Les **événements** retracent ce que le cluster a fait : placement d'un pod, téléchargement d'image, redémarrage, erreur. Quand ils ne suffisent pas, `kubectl exec` lance une commande **dans** le conteneur pour vérifier ce qu'il voit.
 
 </div>
 
@@ -133,7 +134,6 @@ kubectl logs -l app=campus-backend --tail=5 --prefix
 
 1. Quelle ligne indique que Spring Boot a fini de démarrer ? En combien de secondes ?
 2. Le Deployment a 2 pods : de combien de pods viennent les lignes de la première commande ? Et celles de la seconde ?
-3. Quelle option de `kubectl logs` lirait les logs du conteneur **précédent**, celui qui a planté ? (Vous l'avez vue à l'Atelier 03.)
 
 </div>
 
@@ -158,22 +158,11 @@ kubectl get events --sort-by=.metadata.creationTimestamp
 
 Un pod crée successivement les événements `Scheduled` (placé sur un nœud), `Pulled` (image disponible), `Created` puis `Started` (conteneur lancé).
 
-Les logs d'un pod **meurent avec lui**. En production, on les centralise hors du cluster : c'est le rôle de Fluent Bit et Loki (exercice 5).
+Les logs d'un pod **meurent avec lui**. En production, on les centralise hors du cluster : c'est le rôle de Fluent Bit et Loki (exercice 4).
 
 </details>
 
----
-
-## Exercice 2 : Exécuter une commande dans un conteneur
-
-<div class="admonition abstract" markdown>
-<p class="admonition-title"><strong>Ce que vous allez comprendre</strong></p>
-
-Quand les logs ne suffisent pas, on vérifie ce que voit le conteneur lui-même : sa configuration et son réseau. `kubectl exec` lance une commande **dans** un conteneur en cours d'exécution.
-
-</div>
-
-### Étape 1 : Vérifier la configuration reçue par le backend
+### Étape 3 : Vérifier la configuration reçue par le backend
 
 Vous avez utilisé `kubectl exec` à l'Atelier 02. Vous voulez exécuter `env | grep SPRING` dans un pod du Deployment `campus-backend`.
 
@@ -193,32 +182,16 @@ Tout ce qui suit `--` s'exécute dans le conteneur. Le `|` serait interprété p
 
 </details>
 
-### Étape 2 : Vérifier le réseau vu du frontend
-
-`wget -qO-` télécharge une page et l'affiche, sans autre message :
-
-```bash
-kubectl exec deployment/campus-frontend -- wget -qO- http://campus-backend:8080/actuator/health
-```
-
-<div class="admonition question" markdown>
-<p class="admonition-title"><strong>À vous de répondre</strong></p>
-
-1. Que répond l'API ? Le frontend joint-il le backend ?
-2. Par quel nom le frontend joint-il le backend ? Sur quel objet repose ce nom (Atelier 04) ?
-
-</div>
-
 <div class="admonition warning" markdown>
 <p class="admonition-title"><strong><code>exec</code> sert à observer, pas à corriger</strong></p>
 
-Toute modification faite dans le conteneur disparaît au prochain redémarrage du pod : on corrige le manifest, jamais le conteneur en direct. Pour un terminal interactif : `kubectl exec -it deployment/campus-frontend -- sh` (quittez avec `exit`).
+Toute modification faite dans le conteneur disparaît au prochain redémarrage du pod : on corrige le manifest, jamais le conteneur en direct. Pour un terminal interactif : `kubectl exec -it deployment/campus-backend -- sh` (quittez avec `exit`).
 
 </div>
 
 ---
 
-## Exercice 3 : Dépanner avec méthode
+## Exercice 2 : Dépanner avec méthode
 
 <div class="admonition abstract" markdown>
 <p class="admonition-title"><strong>Ce que vous allez comprendre</strong></p>
@@ -235,7 +208,7 @@ Face à un incident, on suit toujours le même ordre, du général au détail. L
 | 4. Entrer | `kubectl exec <pod> -- …` | La configuration et le réseau vus du pod |
 | 5. Élargir | `kubectl describe node`, `kubectl top` | Le nœud, les ressources |
 
-### Étape 1 : Incidents A et B, deux pods qui redémarrent en boucle
+### Étape 1 : Deux pods qui redémarrent en boucle
 
 Vous lancez deux pods défaillants **en même temps** et les observez ensemble (`Ctrl + C` pour quitter) :
 
@@ -258,7 +231,7 @@ Au bout d'une minute environ, les deux pods affichent `CrashLoopBackOff` : ils r
 3. Que signifie un `Exit Code` différent de 0 ? Qui a tué le processus de `oom-victim` ?
 4. Quelle commande affiche le message écrit par le conteneur de `crash-app` **qui a planté** ? Quel est ce message ?
 5. Proposez deux corrections possibles pour `oom-victim`.
-6. Supprimez les deux pods. Vous retrouverez les logs de `crash-app` à l'exercice 5, après sa suppression.
+6. Supprimez les deux pods. Vous retrouverez les logs de `crash-app` à l'exercice 4, après sa suppression.
 
 </div>
 
@@ -269,35 +242,9 @@ Si la commande répond `unable to retrieve container logs`, le pod est dans le c
 
 </details>
 
-### Étape 2 : Incident C, un Service sans réponse
-
-Un collègue a créé un Service `campus-api` pour le backend. Créez-le, puis interrogez-le depuis un pod de test :
-
-```bash
-kubectl create service clusterip campus-api --tcp=8080:8080
-kubectl run test-api --image=curlimages/curl:8.11.1 --rm -i --restart=Never -- curl -s -m 5 http://campus-api:8080/actuator/health
-```
-
-`kubectl` affiche `pod campus-dev/test-api terminated (Error)` : aucune réponse. Le Service existe pourtant.
-
-<div class="admonition question" markdown>
-<p class="admonition-title"><strong>À vous de répondre</strong></p>
-
-1. Quel est le réflexe « Service muet ? » vu à l'Atelier 04 ? Que renvoie-t-il ici ?
-2. Comparez le sélecteur du Service (`kubectl describe service campus-api`) et les labels des pods backend (`kubectl get pods -l app=campus-backend --show-labels`). Où est l'erreur ?
-3. Corrigez le sélecteur avec la commande ci-dessous, puis relancez le pod de test : que répond maintenant l'API ?
-
-</div>
-
-```bash
-kubectl set selector service campus-api app=campus-backend
-```
-
-Supprimez ensuite le Service : `kubectl delete service campus-api`.
-
 ---
 
-## Exercice 4 : Détecter une panne de nœud
+## Exercice 3 : Détecter une panne de nœud
 
 <div class="admonition abstract" markdown>
 <p class="admonition-title"><strong>Ce que vous allez comprendre</strong></p>
@@ -352,13 +299,6 @@ kubectl delete pod inject-kernel-err
 
 </div>
 
-<div class="admonition warning" markdown>
-<p class="admonition-title"><strong>Pod privilégié</strong></p>
-
-Un pod privilégié a tous les pouvoirs sur le nœud : il n'est utilisé ici que pour la simulation. Les conteneurs de l'application, eux, tournent sans privilèges : le starter du backend déclare un `securityContext` (pas de root, pas d'élévation de privilèges).
-
-</div>
-
 ### Étape 3 : Retirer le nœud du service
 
 `kubectl cordon` marque un nœud comme non planifiable, sans toucher aux pods qui y tournent ; `kubectl uncordon` le remet en service :
@@ -372,9 +312,7 @@ kubectl uncordon k8s-worker-1
 <div class="admonition question" markdown>
 <p class="admonition-title"><strong>À vous de répondre</strong></p>
 
-1. Quel statut affiche `k8s-worker-1` après `cordon` ?
-2. Les pods qui tournaient déjà sur ce nœud ont-ils été déplacés ?
-3. Avant une réparation, quelle commande viderait le nœud de ses pods (voir l'encadré ci-dessous) ?
+1. Quel statut affiche `k8s-worker-1` après `cordon` ? Les pods qui y tournaient déjà ont-ils été déplacés ?
 
 </div>
 
@@ -387,7 +325,7 @@ kubectl uncordon k8s-worker-1
 
 ---
 
-## Exercice 5 : Mesurer la consommation et centraliser les logs
+## Exercice 4 : Mesurer la consommation et centraliser les logs
 
 <div class="admonition abstract" markdown>
 <p class="admonition-title"><strong>Ce que vous allez comprendre</strong></p>
@@ -396,13 +334,10 @@ Pour suivre un cluster en continu, il faut collecter régulièrement les **métr
 
 </div>
 
-| Outil | Rôle |
-| :--- | :--- |
-| **Metrics Server** | Mesure la consommation **actuelle** des nœuds et des pods, sans historique : c'est elle qu'affiche `kubectl top`. Pas installé par défaut avec kubeadm. |
-| **Prometheus** | Interroge régulièrement les nœuds et conserve les métriques dans le temps. |
-| **Fluent Bit** | Agent présent sur chaque nœud (DaemonSet) : lit les logs des conteneurs et les envoie à Loki. |
-| **Loki** | Stocke les logs et les classe par labels (pod, namespace, application). |
-| **Grafana** | Interface web qui interroge Prometheus et Loki. |
+| | Collecte | Stockage dans le temps | Consultation |
+| :--- | :--- | :--- | :--- |
+| **Métriques** | **Metrics Server** : consommation actuelle, affichée par `kubectl top` (pas installé par défaut avec kubeadm) | **Prometheus** | **Grafana** |
+| **Logs** | **Fluent Bit** : un agent par nœud (DaemonSet) | **Loki** | **Grafana** |
 
 ### Étape 1 : Vérifier la pile de supervision
 
@@ -417,14 +352,14 @@ kubectl get pods -n kube-system -l k8s-app=metrics-server
 <p class="admonition-title"><strong>À vous de répondre</strong></p>
 
 1. Tous les pods sont-ils `Running` ? Quel objet Kubernetes a créé les pods `fluent-bit` ?
-2. Combien de pods `fluent-bit` voyez-vous ? NPD (exercice 4) n'en a que 2 : pourquoi Fluent Bit en a-t-il un de plus ?
+2. Combien de pods `fluent-bit` voyez-vous ? NPD (exercice 3) n'en a que 2 : pourquoi Fluent Bit en a-t-il un de plus ?
 
 </div>
 
 <details class="tip" markdown>
 <summary><strong>Indice : aucun pod dans <code>monitoring</code></strong></summary>
 
-Vous avez sauté la dernière commande de l'étape 0 : lancez-la maintenant et attendez que les pods soient `Running` (1 à 2 minutes). Fluent Bit ne collecte que les lignes écrites **après** son démarrage : rejouez l'incident A (étape 1 de l'exercice 3) pour avoir des logs à retrouver à l'étape 3.
+Vous avez sauté la dernière commande de l'étape 0 : lancez-la maintenant et attendez que les pods soient `Running` (1 à 2 minutes). Fluent Bit ne collecte que les lignes écrites **après** son démarrage : rejouez `crash-app` (étape 1 de l'exercice 2) pour avoir des logs à retrouver à l'étape 3.
 
 </details>
 
@@ -456,13 +391,7 @@ Ouvrez **`http://<IP_PUBLIQUE_D_UN_WORKER>:30300`** et connectez-vous avec `admi
     sum(container_memory_working_set_bytes{namespace="campus-dev", container!=""}) by (pod)
     ```
 
-* rechargez deux ou trois fois le portail (`http://<IP_PUBLIQUE_D_UN_WORKER>:30088`), puis choisissez la source **Loki** et exécutez cette requête, qui sélectionne les logs des pods portant le label `app=campus-frontend` (le journal des accès du serveur Nginx) :
-
-    ```logql
-    {app="campus-frontend"}
-    ```
-
-* toujours dans **Loki**, exécutez cette requête, qui sélectionne les logs du pod `crash-app` de l'incident A (`kubectl run` lui a posé le label `run=crash-app`) :
+* choisissez ensuite la source **Loki** et exécutez cette requête, qui sélectionne les logs du pod `crash-app` de l'exercice 2 (`kubectl run` lui a posé le label `run=crash-app`) :
 
     ```logql
     {run="crash-app"}
@@ -472,7 +401,7 @@ Ouvrez **`http://<IP_PUBLIQUE_D_UN_WORKER>:30300`** et connectez-vous avec `admi
 <p class="admonition-title"><strong>À vous de répondre</strong></p>
 
 1. Combien de courbes affiche la requête Prometheus ? Retrouvez-vous l'ordre de grandeur de `kubectl top pods` ?
-2. Dans Loki, retrouvez-vous vos rechargements du portail ? Et les messages `Demarrage` et `Erreur fatale` de `crash-app` ? Ce pod a été supprimé à l'exercice 3 : pourquoi `kubectl logs crash-app` ne peut-il plus les afficher ?
+2. Dans Loki, retrouvez-vous les messages `Demarrage` et `Erreur fatale` de `crash-app` ? Ce pod a été supprimé à l'exercice 2 : pourquoi `kubectl logs crash-app` ne peut-il plus les afficher ?
 
 </div>
 
@@ -492,29 +421,59 @@ Sur un cluster managé, cette pile est fournie par le cloud. Chez Google, ce ser
 
 </div>
 
-<details class="example" markdown>
-<summary><strong>Pour aller plus loin (optionnel, ~5 min) : superviser le cluster avec FreeLens</strong></summary>
+---
 
-[**FreeLens**](https://freelensapp.github.io/) est un IDE graphique installé sur **votre poste**, qui montre en direct l'état des objets du cluster, sans rien installer dans le cluster. C'est le fork communautaire libre de Lens/OpenLens.
+## Exercice 5 (optionnel, ~10 min) : Superviser le cluster avec FreeLens
 
-1. Installez FreeLens (Windows, macOS ou Linux) depuis [freelensapp.github.io](https://freelensapp.github.io/).
-2. **Catalog → Clusters → Add from Kubeconfig**, puis sélectionnez le fichier `kubeconfig.yaml` préparé à l'Atelier 01.
-3. Ouvrez le cluster : rejouez l'incident A (étape 1 de l'exercice 3) et observez le pod changer d'état dans **Workloads → Pods**.
+<div class="admonition abstract" markdown>
+<p class="admonition-title"><strong>Ce que vous allez comprendre</strong></p>
+
+[**FreeLens**](https://freelensapp.github.io/) est une interface graphique installée sur **votre poste**. Comme `kubectl`, elle se connecte à l'API Server avec votre **kubeconfig** : elle affiche en clics ce que vous avez fait en ligne de commande.
+
+</div>
+
+### Étape 1 : Installer FreeLens et le connecter au cluster
+
+1. Installez FreeLens depuis [freelensapp.github.io](https://freelensapp.github.io/), puis lancez-le.
+2. Donnez-lui votre kubeconfig, `labs/01-Installation-Cluster/terraform/kubeconfig.yaml` (Atelier 01), au choix :
+    * **File → Preferences → Kubernetes → Kubeconfig Syncs → Sync file(s)**, puis sélectionnez le fichier (recommandé : FreeLens suit le fichier quand vous le régénérez avec `get-kubeconfig`) ;
+    * ou **Catalog → + → Add from kubeconfig**, puis collez le contenu du fichier.
+3. Ouvrez le cluster dans **Catalog → Clusters** et choisissez le namespace `campus-dev`.
 
 ![Cluster connecté dans FreeLens](img/freelens-cluster.png)
 
-FreeLens lit les métriques de **Metrics Server** : sans lui, les graphiques de consommation restent vides. En Option B, FreeLens doit joindre le port 6443 du cluster depuis votre poste : sans cet accès, contentez-vous de Grafana.
+<details class="tip" markdown>
+<summary><strong>Indice : FreeLens ne se connecte pas</strong></summary>
+
+* Testez le même fichier avec `kubectl get nodes`. S'il échoue aussi, l'IP publique a changé : régénérez le kubeconfig avec `get-kubeconfig`.
+* Sinon, votre réseau bloque le port 6443 (fréquent en Option B) : contentez-vous de Grafana.
 
 </details>
+
+### Étape 2 : Retrouver les commandes du lab
+
+| Dans FreeLens | Équivalent `kubectl` |
+| :--- | :--- |
+| **Workloads → Pods**, clic sur un pod : état, **Events**, icônes **Logs** et **Shell** | `get pods`, `describe pod`, `logs`, `exec -it` |
+| **Nodes**, clic sur un nœud : **Conditions** ; menu **⋮** → **Cordon** / **Uncordon** | `describe node`, `cordon` / `uncordon` |
+
+<div class="admonition question" markdown>
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+
+1. Rejouez `crash-app` (étape 1 de l'exercice 2) : où lisez-vous dans FreeLens qu'il redémarre en boucle, et son message `Erreur fatale` ?
+2. Faites **Cordon** sur `k8s-worker-1` depuis FreeLens : que renvoie `kubectl get nodes` ? Remettez le nœud en service avec **Uncordon**.
+
+</div>
 
 ---
 
 ## Critères de Validation (Checklist)
 
 - [ ] Vous savez lire les logs d'un pod en direct, ceux de tous les pods d'une étiquette (`--prefix`) et ceux du conteneur précédent (`--previous`).
-- [ ] Vous avez vérifié avec `kubectl exec` la configuration reçue par le backend (`env`) et le réseau vu du frontend (`wget` vers `campus-backend`).
-- [ ] Vous avez diagnostiqué `CrashLoopBackOff` (`Exit Code`), `OOMKilled` (`Reason`) et un Service sans réponse (Endpoints vides), en suivant la méthode get → describe → logs → exec → nœud.
+- [ ] Vous avez vérifié avec `kubectl exec` la configuration reçue par le backend (`env`).
+- [ ] Vous avez diagnostiqué `CrashLoopBackOff` (`Exit Code`) et `OOMKilled` (`Reason`), en suivant la méthode get → describe → logs → exec → nœud.
 - [ ] Vous avez déployé Node Problem Detector, constaté la condition `KernelDeadlock=True` et retiré le nœud du service avec `kubectl cordon`, puis l'avez remis en service.
 - [ ] `kubectl top nodes` et `kubectl top pods` affichent la consommation (Metrics Server).
-- [ ] Vous avez retrouvé dans Grafana la mémoire des pods (Prometheus), les accès au frontend et les logs du pod supprimé `crash-app` (Loki).
+- [ ] Vous avez retrouvé dans Grafana la mémoire des pods (Prometheus) et les logs du pod supprimé `crash-app` (Loki).
 - [ ] Vous savez citer l'équivalent managé de cette pile chez Google (StackDriver, aujourd'hui Google Cloud Observability), AWS et Azure.
+- [ ] *(Optionnel)* FreeLens est connecté au cluster par votre kubeconfig ; vous y avez suivi `crash-app` et fait `Cordon` / `Uncordon` sur un nœud.
