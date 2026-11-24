@@ -279,6 +279,57 @@ terraform destroy -auto-approve
 
 </details>
 
+<details class="note" markdown>
+<summary><strong>Reprendre après l'arrêt du Learner Lab, sans rien réinstaller</strong></summary>
+
+Fin de session (minuteur de 4 h écoulé ou **End Lab**) : vos instances, leurs disques, l'Elastic IP de `k8s-control` et donc tout le cluster sont conservés. Ne relancez **ni** `terraform apply`, **ni** `create-cluster`, **ni** les scripts d'installation : trois gestes suffisent.
+
+**1. Rouvrir la session AWS**
+
+Sur AWS Academy, cliquez sur **Start Lab**, attendez le voyant vert, puis recopiez le nouveau bloc **AWS Details → AWS CLI → Show** dans le fichier `credentials` (étape 5). Ces identifiants ne servent qu'à la commande `aws` : `kubectl`, lui, s'authentifie avec le certificat contenu dans `kubeconfig.yaml`.
+
+**2. Démarrer les instances si elles sont arrêtées**
+
+Depuis le dossier `terraform/` :
+
+```powershell
+..\scripts\start-session.ps1          # Windows (PowerShell)
+```
+
+```bash
+bash ../scripts/start-session.sh      # Linux / macOS (Bash)
+```
+
+Le script démarre uniquement les instances arrêtées. Si elles tournent déjà, il affiche « Aucune instance arrêtée trouvée » puis le tableau des 3 instances : c'est normal, passez à la suite.
+
+**3. Reconnecter `kubectl`**
+
+Toujours depuis `terraform/` :
+
+```powershell
+$env:KUBECONFIG = (Resolve-Path .\kubeconfig.yaml).Path      # Windows (PowerShell)
+kubectl get nodes
+```
+
+```bash
+export KUBECONFIG=$PWD/kubeconfig.yaml                       # Linux / macOS (Bash)
+kubectl get nodes
+```
+
+Résultat attendu : les 3 nœuds `Ready`, avec vos Deployments, Services et volumes des ateliers précédents toujours en place (`kubectl get all -A`). Juste après un démarrage, comptez 1 à 2 minutes avant que les nœuds repassent `Ready`.
+
+<details class="tip" markdown>
+<summary><strong>Indice : <code>kubectl</code> ne répond pas après la reprise</strong></summary>
+
+* **`localhost:8080` refusé** : `KUBECONFIG` n'est pas défini dans ce terminal, ou pointe vers un fichier absent. Refaites l'étape 3 depuis `terraform/`.
+* **Délai dépassé (`i/o timeout`)** : les instances ne tournent pas encore, ou la session AWS n'est pas démarrée. Refaites les étapes 1 et 2.
+* **Nœuds `NotReady`** pendant plus de 5 minutes : connectez-vous en SSH sur `k8s-control` (commande affichée par `start-session`) et lancez `kubectl get pods -n kube-system`.
+* **`kubeconfig.yaml` perdu ou erreur `x509`** : régénérez-le sans toucher au cluster avec `..\scripts\get-kubeconfig.ps1` (Windows) ou `bash ../scripts/get-kubeconfig.sh` (Linux / macOS).
+
+</details>
+
+</details>
+
 ---
 
 ## Exercice 3 : Installer le cluster avec Kubeadm
