@@ -599,18 +599,22 @@ Ne committez et ne partagez jamais `kubeconfig.yaml`.
 
 ### Étape 2 : Utiliser ce kubeconfig dans votre terminal
 
-Depuis le dossier `terraform/` :
+Le chemin dépend du dossier courant. Placez-vous d'abord dans `labs/01-Installation-Cluster/terraform/` :
 
 **Votre poste — Windows (PowerShell)**
 
 ```powershell
-$env:KUBECONFIG = "$PWD\kubeconfig.yaml"
+cd <racine-du-depot>\labs\01-Installation-Cluster\terraform
+$env:KUBECONFIG = (Resolve-Path .\kubeconfig.yaml).Path
 kubectl get nodes
 ```
+
+`Resolve-Path` stocke le chemin absolu et s'arrête en erreur si `kubeconfig.yaml` n'est pas dans le dossier courant.
 
 **Votre poste — Linux / macOS (Bash)**
 
 ```bash
+cd <racine-du-depot>/labs/01-Installation-Cluster/terraform
 export KUBECONFIG=$PWD/kubeconfig.yaml
 kubectl get nodes
 ```
@@ -621,6 +625,20 @@ kubectl get nodes
 Redéfinissez `KUBECONFIG` dans chaque nouveau terminal, aux ateliers suivants également.
 
 </div>
+
+<details class="tip" markdown>
+<summary><strong>Indice : <code>kubectl</code> tente de joindre <code>localhost:8080</code></strong></summary>
+
+Le message `dial tcp [::1]:8080: ... actively refused it` (ou `connection refused`) ne vient pas du cluster : `kubectl` n'a trouvé aucun kubeconfig utilisable et se rabat sur `localhost:8080`. `KUBECONFIG` pointe vers un fichier inexistant, en général parce que la commande a été lancée depuis un autre dossier que celui prévu (`$PWD` vaut le dossier courant).
+
+Vérifiez, puis redéfinissez la variable depuis le bon dossier :
+
+```powershell
+$env:KUBECONFIG                  # chemin utilisé
+Test-Path $env:KUBECONFIG        # doit afficher True
+```
+
+</details>
 
 ### Étape 3 : Choisir votre modalité de travail (Ateliers 03 à 07)
 
