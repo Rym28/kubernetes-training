@@ -15,12 +15,7 @@ Le support de présentation reprend les apports théoriques du formateur (enviro
 
 Le support de cours **Kubernetes — XW335** (133 diapositives) est consultable en lecture seule ci-dessous. Naviguez avec les boutons ou les flèches du clavier (cliquez d'abord sur la visionneuse).
 
-<!-- Support en lecture seule : le PDF n'est pas publié (il est conservé hors du dépôt, dans supports/).
-Pour ouvrir le téléchargement en fin de session : copier supports/XW335_Kubernetes_Support-Cours.pdf
-dans docs/assets/, puis ajouter ici :
 [:material-file-pdf-box: Télécharger le support de cours (PDF)](assets/XW335_Kubernetes_Support-Cours.pdf){ .md-button .md-button--primary }
--->
-
 <div id="slide-viewer" class="slide-viewer" tabindex="0" data-total="133" data-base="../assets/slides/">
   <div class="sv-stage"><img class="sv-img" src="../assets/slides/slide-001.webp" alt="Diapositive 1" draggable="false"></div>
   <div class="sv-bar">

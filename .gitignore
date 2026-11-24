@@ -20,7 +20,7 @@ site/
 # Pour versionner les corrections sur votre dépôt privé formateur :
 # Commentez la ligne avec un '#' ou utilisez une branche dédiée.
 # ==============================================================
-corrections/
+# corrections/   (publiées sur le site : onglet « Corrigés »)
 
 # Terraform
 **/.terraform/
@@ -65,5 +65,6 @@ __pycache__/
 # Support de cours source (PDF) : jamais publié, lecture seule via docs/assets/slides/
 supports/
 *Support-Cours*.pdf
+!docs/assets/XW335_Kubernetes_Support-Cours.pdf
 
 # Ateliers du Jour 2 : tous publiés (05, 07 puis 06)

@@ -1,0 +1,1 @@
+--8<-- "corrections/07-securite-longue/CORRIGE.md"

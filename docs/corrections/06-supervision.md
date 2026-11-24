@@ -1,0 +1,1 @@
+--8<-- "corrections/06-supervision/CORRIGE.md"

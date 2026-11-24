@@ -91,5 +91,21 @@ nav:
           - "Atelier 05 : Configuration & Stockage Persistant (PV / PVC / PostgreSQL)": labs/05-configuration-stockage-persistant.md
           - "Atelier 06 : Exploitation, Observabilité & Reverse Debugging": labs/06-exploitation-observabilite-debugging.md
           - "Atelier 07 : Sécurité, Quotas & Isolement Réseau (NetworkPolicy)": labs/07-securite-quotas-isolement-reseau.md
+  - Corrigés:
+      - Vue d'Ensemble: corrections/index.md
+      - "Corrigé Atelier 02 : Les Pods": corrections/02-pods.md
+      - "Corrigé Atelier 03 : Déploiements": corrections/03-deploiements.md
+      - "Corrigé Atelier 04 : Services & DNS": corrections/04-services.md
+      - "Corrigé Atelier 05 : Configuration & Stockage": corrections/05-volumes.md
+      - "Corrigé Atelier 06 : Exploitation & Observabilité": corrections/06-supervision.md
+      - "Corrigé Atelier 07 : Sécurité & Isolement Réseau": corrections/07-securite.md
+      - Versions longues:
+          - "Atelier 04 (énoncé + corrigé)": corrections/04-services-version-longue.md
+          - "Atelier 05 : énoncé": corrections/05-volumes-longue-enonce.md
+          - "Atelier 05 : corrigé": corrections/05-volumes-longue-corrige.md
+          - "Atelier 06 : énoncé": corrections/06-supervision-longue-enonce.md
+          - "Atelier 06 : corrigé": corrections/06-supervision-longue-corrige.md
+          - "Atelier 07 : énoncé": corrections/07-securite-longue-enonce.md
+          - "Atelier 07 : corrigé": corrections/07-securite-longue-corrige.md
   - Support de Cours: support-cours.md
   - Évaluation des Acquis: evaluation.md

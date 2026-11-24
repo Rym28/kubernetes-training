@@ -1,0 +1,1 @@
+--8<-- "corrections/04-services/VERSION-LONGUE.md"
