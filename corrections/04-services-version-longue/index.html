@@ -1,0 +1,2452 @@
+
+<!doctype html>
+<html lang="fr" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Ateliers pratiques d'orchestration et déploiement de conteneurs avec Kubernetes.">
+      
+      
+        <meta name="author" content="Rym Regaieg">
+      
+      
+        <link rel="canonical" href="https://rym28.github.io/kubernetes-training/corrections/04-services-version-longue/">
+      
+      
+        <link rel="prev" href="../07-securite/">
+      
+      
+        <link rel="next" href="../05-volumes-longue-enonce/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.2">
+    
+    
+      
+        <title>Atelier 04 (énoncé + corrigé) - Kubernetes & Orchestration — Ateliers Pratiques</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#atelier-04-version-longue-enonce-corrige" class="md-skip">
+          Aller au contenu
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="En-tête">
+    <a href="../.." title="Kubernetes &amp; Orchestration — Ateliers Pratiques" class="md-header__button md-logo" aria-label="Kubernetes & Orchestration — Ateliers Pratiques" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Kubernetes & Orchestration — Ateliers Pratiques
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Atelier 04 (énoncé + corrigé)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple"  aria-label="Passer au mode sombre"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Passer au mode sombre" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="cyan"  aria-label="Passer au mode clair"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Passer au mode clair" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Rechercher" placeholder="Rechercher" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Recherche">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Effacer" aria-label="Effacer" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initialisation de la recherche
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Rym28/kubernetes-training" title="Aller au dépôt" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Rym28/kubernetes-training
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Onglets" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Accueil
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../application/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Architecture & Environnement
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../labs/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Ateliers Pratiques
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Corrigés
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../support-cours/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Support de Cours
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../evaluation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Évaluation des Acquis
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Kubernetes &amp; Orchestration — Ateliers Pratiques" class="md-nav__button md-logo" aria-label="Kubernetes & Orchestration — Ateliers Pratiques" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Kubernetes & Orchestration — Ateliers Pratiques
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Rym28/kubernetes-training" title="Aller au dépôt" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Rym28/kubernetes-training
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Accueil
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture & Environnement
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture & Environnement
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../application/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Application Fil Rouge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../setup-environnement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prérequis & Environnement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cluster-aws-express/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cluster AWS en une commande
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../labs/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ateliers Pratiques
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Ateliers Pratiques
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Partie 1 — Déploiement du Cluster & Fondations (Jour 1)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Partie 1 — Déploiement du Cluster & Fondations (Jour 1)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../labs/01-provisionnement-cluster/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 01 : Provisionnement du Cluster
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../labs/02-pods-trois-briques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 02 : Les Pods : les Trois Briques du Campus Summer Portal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../labs/03-deploiements-resilience-rollback/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 03 : Déploiements — Résilience & Rollback
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../labs/04-reseau-services-dns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 04 : Réseau, Services & Découverte DNS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Partie 2 — Persistance, Exploitation & Sécurité (Jour 2)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Partie 2 — Persistance, Exploitation & Sécurité (Jour 2)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../labs/05-configuration-stockage-persistant/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 05 : Configuration & Stockage Persistant (PV / PVC / PostgreSQL)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../labs/06-exploitation-observabilite-debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 06 : Exploitation, Observabilité & Reverse Debugging
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../labs/07-securite-quotas-isolement-reseau/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 07 : Sécurité, Quotas & Isolement Réseau (NetworkPolicy)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Corrigés
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Corrigés
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-pods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Corrigé Atelier 02 : Les Pods
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-deploiements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Corrigé Atelier 03 : Déploiements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-services/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Corrigé Atelier 04 : Services & DNS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-volumes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Corrigé Atelier 05 : Configuration & Stockage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-supervision/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Corrigé Atelier 06 : Exploitation & Observabilité
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-securite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Corrigé Atelier 07 : Sécurité & Isolement Réseau
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_8" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4_8" id="__nav_4_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Versions longues
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_8_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Versions longues
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 04 (énoncé + corrigé)
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 04 (énoncé + corrigé)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table des matières">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table des matières
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quand-utiliser-la-version-longue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quand utiliser la version longue ?
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-volumes-longue-enonce/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 05 : énoncé
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-volumes-longue-corrige/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 05 : corrigé
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-supervision-longue-enonce/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 06 : énoncé
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-supervision-longue-corrige/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 06 : corrigé
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-securite-longue-enonce/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 07 : énoncé
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-securite-longue-corrige/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 07 : corrigé
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../support-cours/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Support de Cours
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Évaluation des Acquis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table des matières">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table des matières
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quand-utiliser-la-version-longue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quand utiliser la version longue ?
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="atelier-04-version-longue-enonce-corrige">Atelier 04 — Version longue (énoncé + corrigé)<a class="headerlink" href="#atelier-04-version-longue-enonce-corrige" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>🔒 <strong>Confidentiel formateur.</strong> Version longue de l'Atelier 04 (4 exercices, 15 étapes), conservée comme <strong>variante</strong> de l'énoncé publié <code>labs/04-Les Services/README.md</code> (version courte : 3 exercices, 10 étapes). Corrigé de la version courte : <code>CORRIGE.md</code> du même dossier.</p>
+</blockquote>
+<h2 id="quand-utiliser-la-version-longue">Quand utiliser la version longue ?<a class="headerlink" href="#quand-utiliser-la-version-longue" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: left;">Version courte (publiée)</th>
+<th style="text-align: left;">Version longue (ce fichier)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Structure</td>
+<td style="text-align: left;">3 exercices, 10 étapes</td>
+<td style="text-align: left;">4 exercices, 15 étapes</td>
+</tr>
+<tr>
+<td style="text-align: left;">Suppression d'un pod</td>
+<td style="text-align: left;">Une fois, <strong>après</strong> création du Service (comparaison pod / Service d'un coup)</td>
+<td style="text-align: left;">Deux fois : <strong>avant</strong> le Service (constat du problème), puis <strong>après</strong> (constat de la solution)</td>
+</tr>
+<tr>
+<td style="text-align: left;">Lecture du manifest du Service</td>
+<td style="text-align: left;">Intégrée à l'étape de création (champs annotés dans le tableau)</td>
+<td style="text-align: left;">Étape dédiée (type, ports, sélecteur)</td>
+</tr>
+<tr>
+<td style="text-align: left;">Deployment frontend</td>
+<td style="text-align: left;">Commande donnée</td>
+<td style="text-align: left;">À retrouver par le stagiaire (réinvestissement Atelier 03)</td>
+</tr>
+<tr>
+<td style="text-align: left;">Les 3 ports NodePort</td>
+<td style="text-align: left;">Regroupés dans les questions de l'étape NodePort</td>
+<td style="text-align: left;">Étape dédiée</td>
+</tr>
+<tr>
+<td style="text-align: left;">Test des deux workers</td>
+<td style="text-align: left;">Même étape</td>
+<td style="text-align: left;">Deux étapes distinctes</td>
+</tr>
+<tr>
+<td style="text-align: left;">Vérification du démarrage Spring Boot</td>
+<td style="text-align: left;">Début de l'exercice DNS</td>
+<td style="text-align: left;">Fin de l'étape 0 (bloquante)</td>
+</tr>
+</tbody>
+</table>
+<p>À privilégier avec un groupe <strong>en avance</strong> ou plus <strong>débutant</strong> qui a besoin de constater le problème avant de recevoir la solution (démarche inductive). Compter <strong>15 à 20 min de plus</strong> que la version courte : à reprendre sur le temps tampon du déroulé (<code>corrections/README.md</code>). Pour la diffuser, copier la partie « Énoncé » ci-dessous à la place de <code>labs/04-Les Services/README.md</code> et <code>docs/labs/04-reseau-services-dns.md</code> (les deux doivent rester identiques).</p>
+<hr />
+<h1 id="partie-1-enonce-version-longue">Partie 1 — Énoncé (version longue)<a class="headerlink" href="#partie-1-enonce-version-longue" title="Permanent link">&para;</a></h1>
+<h2 id="atelier-04-reseau-services-decouverte-dns">Atelier 04 : Réseau, Services &amp; Découverte DNS<a class="headerlink" href="#atelier-04-reseau-services-decouverte-dns" title="Permanent link">&para;</a></h2>
+<h3 id="objectifs-pedagogiques">Objectifs Pédagogiques :<a class="headerlink" href="#objectifs-pedagogiques" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Observer le réseau des Pods (une IP par pod, attribuée par le CNI) et constater que ces adresses changent à chaque recréation, d'où le besoin d'un <strong>Service</strong>.</li>
+<li>Créer de façon déclarative le Service <strong>ClusterIP</strong> <code>campus-backend</code> et vérifier qu'il sélectionne ses pods par leur label.</li>
+<li>Joindre un Service par son nom court et par son nom complet <code>&lt;service&gt;.&lt;namespace&gt;.svc.cluster.local</code> (DNS du cluster).</li>
+<li>Exposer le frontend hors du cluster avec un Service <strong>NodePort</strong> et distinguer <code>targetPort</code>, <code>port</code> et <code>nodePort</code>.</li>
+</ul>
+<div class="admonition info">
+<p class="admonition-title"><strong>Compatibilité OS</strong></p>
+<p>Les commandes de cet atelier (<code>kubectl expose</code>, <code>kubectl get svc</code>, <code>kubectl run</code>) sont <strong>rigoureusement identiques</strong> sous <strong>Windows (PowerShell)</strong>, <strong>Linux (Ubuntu)</strong> et <strong>macOS (Terminal)</strong>. Quand une commande diffère, des onglets vous proposent les deux variantes.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title"><strong>Environnement : le cluster 3 nœuds (1 control plane + 2 workers) de l'Atelier 01</strong></p>
+<p>Ce lab exploite le fait qu'un NodePort est ouvert sur <strong>chaque</strong> nœud : réalisez-le sur ce cluster, piloté au choix :</p>
+<ul>
+<li><strong>Option A (Recommandée - Confort DevOps Local) :</strong> depuis votre machine locale, avec votre <code>kubectl</code> et votre <code>kubeconfig</code>. Dans <strong>chaque nouveau terminal</strong>, placé à la racine du dépôt, pointez d'abord <code>kubectl</code> vers le fichier <code>kubeconfig.yaml</code> récupéré à l'étape 1 de l'exercice 4 de l'Atelier 01 :<ul>
+<li>Windows (PowerShell) : <code>$env:KUBECONFIG = "$PWD\labs\01-Installation-Cluster\terraform\kubeconfig.yaml"</code></li>
+<li>Linux / macOS (Bash) : <code>export KUBECONFIG=$PWD/labs/01-Installation-Cluster/terraform/kubeconfig.yaml</code></li>
+<li>Vérification : <code>kubectl get nodes</code> doit afficher les 3 nœuds à l'état <code>Ready</code>.</li>
+</ul>
+</li>
+<li><strong>Option B (PC d'entreprise verrouillé) :</strong> en SSH sur <code>k8s-control</code> : l'outillage et les manifests sont pré-installés dans <code>~/labs/</code>.</li>
+</ul>
+<p>🛟 <strong>Secours : Minikube sur votre poste</strong> (session AWS indisponible), piloté forcément depuis votre poste comme en Option A. Tout fonctionne à l'identique, sauf l'accès navigateur des étapes 4 et 5 de l'exercice 4, pour lequel un encadré dédié est fourni.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title"><strong>Namespace de travail : <code>campus-dev</code></strong></p>
+<p>Ce lab est <strong>indépendant des autres</strong> : son étape 0 crée <code>campus-dev</code> s'il n'existe pas encore, puis y installe ou met à jour tout ce dont il a besoin. Vous pouvez le réaliser sans avoir fait les labs précédents ; pour le recommencer à zéro, utilisez l'encadré « Repartir de zéro » de l'étape 0.</p>
+</div>
+<hr />
+<h2 id="contexte-metier">Contexte Métier<a class="headerlink" href="#contexte-metier" title="Permanent link">&para;</a></h2>
+<p>Dans une architecture Kubernetes, les pods naissent, meurent et changent d'adresse IP à chaque mise à jour, incident ou redémarrage. Si le frontend contactait le backend par l'adresse IP d'un pod, la communication casserait dès la première mise à jour. Nous mettons en place des <strong>Services</strong> : une adresse IP virtuelle stable, un nom DNS pérenne et une répartition automatique du trafic entre les pods.</p>
+<ul>
+<li>Image Frontend : <code>regaieg/campus:frontend-1.0.0</code> (port <code>8080</code>)</li>
+<li>Image Backend : <code>regaieg/campus:backend-1.0.0</code> (port <code>8080</code>), fournie par le starter</li>
+</ul>
+<div class="admonition tip">
+<p class="admonition-title"><strong>Mode d'emploi</strong></p>
+<ul>
+<li>Les encadrés rouges <strong>« À vous de répondre »</strong> contiennent les questions. Pour les commandes déjà vues dans les labs précédents, on vous demande la commande au lieu de vous la donner : cherchez avec <code>kubectl --help</code>, <code>kubectl &lt;commande&gt; --help</code> ou <code>kubectl explain</code>.</li>
+<li>Les commandes nouvelles sont données.</li>
+<li>Les encadrés <strong>« Indice »</strong> sont repliés : cliquez dessus seulement si vous bloquez.</li>
+</ul>
+</div>
+<hr />
+<h2 id="etape-0-preparer-lenvironnement">Étape 0 : Préparer l'environnement<a class="headerlink" href="#etape-0-preparer-lenvironnement" title="Permanent link">&para;</a></h2>
+<p>Le dossier <code>starter/</code> du lab installe l'état de départ : la base PostgreSQL de développement (avec son Service <code>postgres</code>) et l'API <code>campus-backend</code> en 3 réplicas, <strong>sans</strong> Service : c'est vous qui allez le créer.</p>
+<p>Créez le namespace <code>campus-dev</code> s'il n'existe pas encore, sélectionnez-le, puis appliquez le starter. Si vous sortez du lab précédent, vos objets sont conservés et simplement mis à jour. Depuis la racine du dépôt (Option A) ou depuis <code>~</code> sur <code>k8s-control</code> (Option B : mettez d'abord le dépôt à jour avec <code>git -C ~/formation pull</code>, puis remplacez <code>labs/</code> par <code>~/labs/</code>) :</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>kubectl<span class="w"> </span>create<span class="w"> </span>namespace<span class="w"> </span>campus-dev<span class="w"> </span>--dry-run<span class="o">=</span>client<span class="w"> </span>-o<span class="w"> </span>yaml<span class="w"> </span><span class="p">|</span><span class="w"> </span>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>-<span class="w">   </span><span class="c1"># sans effet s'il existe déjà</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>kubectl<span class="w"> </span>config<span class="w"> </span>set-context<span class="w"> </span>--current<span class="w"> </span>--namespace<span class="o">=</span>campus-dev
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span><span class="s2">"labs/04-Les Services/starter/"</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>kubectl<span class="w"> </span>rollout<span class="w"> </span>status<span class="w"> </span>deployment/campus-backend<span class="w"> </span>--timeout<span class="o">=</span>300s
+</span></code></pre></div>
+<details class="warning">
+<summary><strong>Environnement incohérent ou lab à recommencer ? Repartez de zéro</strong></summary>
+<p>Supprimez le namespace et tout son contenu, puis relancez les commandes ci-dessus :</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>kubectl<span class="w"> </span>delete<span class="w"> </span>namespace<span class="w"> </span>campus-dev<span class="w">   </span><span class="c1"># ⚠️ supprime tout le contenu de campus-dev</span>
+</span></code></pre></div>
+<p><em>La suppression peut prendre jusqu'à une minute : <code>kubectl</code> rend la main quand elle est terminée.</em></p>
+</details>
+<p>L'API n'a pas de sonde de santé : <code>rollout status</code> rend la main dès que les conteneurs tournent, avant que Spring Boot ait fini de démarrer (20 secondes à 2 minutes). Vérifiez que chaque pod backend a bien démarré :</p>
+<p><strong>Linux / macOS</strong></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>kubectl<span class="w"> </span>logs<span class="w"> </span>-l<span class="w"> </span><span class="nv">app</span><span class="o">=</span>campus-backend<span class="w"> </span>--prefix<span class="w"> </span>--tail<span class="o">=</span>-1<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">"Started CampusOpsApplication"</span>
+</span></code></pre></div>
+<p><strong>Windows (PowerShell)</strong></p>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">kubectl</span> <span class="n">logs</span> <span class="n">-l</span> <span class="n">app</span><span class="p">=</span><span class="n">campus-backend</span> <span class="p">-</span><span class="n">-prefix</span> <span class="p">-</span><span class="n">-tail</span><span class="p">=-</span><span class="n">1</span> <span class="p">|</span> <span class="nb">Select-String</span> <span class="s2">"Started CampusOpsApplication"</span>
+</span></code></pre></div>
+<p>Relancez la commande jusqu'à obtenir <strong>3 lignes</strong>, une par pod backend.</p>
+<div class="admonition note">
+<p class="admonition-title"><strong>Un redémarrage au premier lancement est normal</strong></p>
+<p>Les pods créent en même temps les tables de la base neuve : l'un d'eux peut échouer (<code>relation ... already exists</code>) avant de repartir.</p>
+</div>
+<hr />
+<h2 id="exercice-1-constater-que-ladresse-ip-dun-pod-nest-pas-fiable">Exercice 1 : Constater que l'adresse IP d'un pod n'est pas fiable<a class="headerlink" href="#exercice-1-constater-que-ladresse-ip-dun-pod-nest-pas-fiable" title="Permanent link">&para;</a></h2>
+<div class="admonition abstract">
+<p class="admonition-title"><strong>Ce que vous allez comprendre</strong></p>
+<p>Chaque pod reçoit sa propre adresse IP, mais cette adresse disparaît avec lui. Aucun client ne peut donc s'y fier.</p>
+</div>
+<h3 id="etape-1-reperer-les-adresses-ip-des-pods-backend">Étape 1 : Repérer les adresses IP des pods backend<a class="headerlink" href="#etape-1-reperer-les-adresses-ip-des-pods-backend" title="Permanent link">&para;</a></h3>
+<div class="admonition question">
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+<ol>
+<li>Quelle commande liste les pods portant le label <code>app=campus-backend</code>, <strong>avec leur adresse IP et leur nœud</strong> ? Notez les adresses affichées.</li>
+<li>Dans quelle plage se trouvent ces adresses ? Sur quel(s) nœud(s) tournent les pods ?</li>
+</ol>
+</div>
+<details class="tip">
+<summary><strong>Indice : qui attribue ces adresses ?</strong></summary>
+<p>L'option qui ajoute les colonnes <code>IP</code> et <code>NODE</code> a déjà servi à l'Atelier 02 et à l'Atelier 03.</p>
+<p>Chaque pod reçoit son adresse à sa création (plage <code>192.168.x.x</code>), attribuée par le plugin réseau (<strong>CNI</strong>) : Calico sur votre cluster. Les pods répartis sur les deux workers se joignent directement, d'un nœud à l'autre, sans traduction d'adresse (NAT).</p>
+</details>
+<h3 id="etape-2-supprimer-un-pod-backend">Étape 2 : Supprimer un pod backend<a class="headerlink" href="#etape-2-supprimer-un-pod-backend" title="Permanent link">&para;</a></h3>
+<div class="admonition question">
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+<ol>
+<li>Quelle commande supprime l'un des pods de la liste ?</li>
+</ol>
+</div>
+<h3 id="etape-3-constater-le-changement-dadresse">Étape 3 : Constater le changement d'adresse<a class="headerlink" href="#etape-3-constater-le-changement-dadresse" title="Permanent link">&para;</a></h3>
+<p>Relancez la commande de l'étape 1.</p>
+<div class="admonition question">
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+<ol>
+<li>Combien de pods voyez-vous ? Lequel est nouveau (colonne <code>AGE</code>) ?</li>
+<li>Le nouveau pod a-t-il repris le <strong>nom</strong> et l'<strong>adresse IP</strong> du pod supprimé ?</li>
+<li>Quel composant l'a recréé (revoyez l'Atelier 03) ?</li>
+<li>Conclusion : pourquoi le frontend ne peut-il pas appeler le backend par l'adresse IP d'un pod ?</li>
+</ol>
+</div>
+<hr />
+<h2 id="exercice-2-creer-le-service-clusterip-du-backend">Exercice 2 : Créer le Service ClusterIP du backend<a class="headerlink" href="#exercice-2-creer-le-service-clusterip-du-backend" title="Permanent link">&para;</a></h2>
+<div class="admonition abstract">
+<p class="admonition-title"><strong>Ce que vous allez comprendre</strong></p>
+<p>Un Service offre une adresse et un nom <strong>stables</strong> devant un groupe de pods. Il ne connaît pas ses pods par leur nom : il les retrouve grâce à leurs <strong>labels</strong>.</p>
+</div>
+<h3 id="etape-1-generer-le-manifest-du-service">Étape 1 : Générer le manifest du Service<a class="headerlink" href="#etape-1-generer-le-manifest-du-service" title="Permanent link">&para;</a></h3>
+<p>Plutôt que d'écrire le Service à la main, générez-le à partir du Deployment qu'il doit servir, <strong>sans rien créer dans le cluster</strong>, et enregistrez-le dans <code>service-backend.yaml</code> :</p>
+<p><strong>Linux / macOS, Git Bash, PowerShell 7</strong></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>kubectl<span class="w"> </span>expose<span class="w"> </span>deployment<span class="w"> </span>campus-backend<span class="w"> </span>--name<span class="o">=</span>campus-backend<span class="w"> </span>--port<span class="o">=</span><span class="m">8080</span><span class="w"> </span>--target-port<span class="o">=</span><span class="m">8080</span><span class="w"> </span>--type<span class="o">=</span>ClusterIP<span class="w"> </span>--dry-run<span class="o">=</span>client<span class="w"> </span>-o<span class="w"> </span>yaml<span class="w"> </span>&gt;<span class="w"> </span>service-backend.yaml
+</span></code></pre></div>
+<p><strong>Windows PowerShell 5.1</strong></p>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">kubectl</span> <span class="n">expose</span> <span class="n">deployment</span> <span class="n">campus-backend</span> <span class="p">-</span><span class="n">-name</span><span class="p">=</span><span class="n">campus-backend</span> <span class="p">-</span><span class="n">-port</span><span class="p">=</span><span class="n">8080</span> <span class="p">-</span><span class="n">-target-port</span><span class="p">=</span><span class="n">8080</span> <span class="p">-</span><span class="n">-type</span><span class="p">=</span><span class="n">ClusterIP</span> <span class="p">-</span><span class="n">-dry-run</span><span class="p">=</span><span class="n">client</span> <span class="n">-o</span> <span class="n">yaml</span> <span class="p">|</span> <span class="nb">Out-File</span> <span class="n">-Encoding</span> <span class="n">utf8</span> <span class="n">service-backend</span><span class="p">.</span><span class="n">yaml</span>
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Élément</th>
+<th style="text-align: left;">Rôle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>expose deployment campus-backend</code></td>
+<td style="text-align: left;">Crée un Service devant les pods de ce Deployment</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>--name=campus-backend</code></td>
+<td style="text-align: left;">Nom du Service : c'est le nom DNS attendu par le Nginx du frontend, il ne doit pas changer</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>--port=8080</code></td>
+<td style="text-align: left;">Port exposé par le Service</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>--target-port=8080</code></td>
+<td style="text-align: left;">Port sur lequel écoute le conteneur</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>--type=ClusterIP</code></td>
+<td style="text-align: left;">Service interne, joignable uniquement depuis le cluster (type par défaut)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>--dry-run=client -o yaml</code></td>
+<td style="text-align: left;">Construit l'objet sans l'envoyer au cluster et l'affiche en YAML</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition question">
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+<ol>
+<li>Quelle commande crée le Service à partir de votre fichier, de manière <strong>déclarative</strong> ?</li>
+</ol>
+</div>
+<h3 id="etape-2-lire-le-manifest">Étape 2 : Lire le manifest<a class="headerlink" href="#etape-2-lire-le-manifest" title="Permanent link">&para;</a></h3>
+<p>Ouvrez <code>service-backend.yaml</code> dans votre éditeur.</p>
+<div class="admonition question">
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+<ol>
+<li>Quel champ indique le <strong>type</strong> du Service ?</li>
+<li>Où se trouvent le port du Service et le port du conteneur ?</li>
+<li>Vous n'avez écrit aucun label dans votre commande. Pourtant, la section <code>spec.selector</code> contient <code>app: campus-backend</code>. D'où vient-elle ? À quoi sert-elle ?</li>
+<li>Si le sélecteur contenait par erreur <code>app: campus-backnd</code>, le Service serait-il créé ? Recevrait-il du trafic ?</li>
+</ol>
+</div>
+<details class="tip">
+<summary><strong>Indice : les trois éléments d'un Service</strong></summary>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Champ</th>
+<th style="text-align: left;">Valeur</th>
+<th style="text-align: left;">Rôle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>spec.type</code></td>
+<td style="text-align: left;"><code>ClusterIP</code></td>
+<td style="text-align: left;">Service interne au cluster</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>spec.ports</code></td>
+<td style="text-align: left;"><code>port: 8080</code>, <code>targetPort: 8080</code></td>
+<td style="text-align: left;">Port du Service → port du conteneur</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>spec.selector</code></td>
+<td style="text-align: left;"><code>app: campus-backend</code></td>
+<td style="text-align: left;">Les pods qui recevront le trafic (recopié depuis le Deployment par <code>kubectl expose</code>)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Pas d'étiquette, pas de trafic :</strong> un Service et ses pods sont découplés, seul le sélecteur de labels les relie. Si aucun pod ne correspond au sélecteur, le Service existe bien, mais il ne transmet rien. <code>kubectl explain service.spec</code> détaille chaque champ.</p>
+</details>
+<h3 id="etape-3-verifier-ladresse-du-service-et-ses-endpoints">Étape 3 : Vérifier l'adresse du Service et ses Endpoints<a class="headerlink" href="#etape-3-verifier-ladresse-du-service-et-ses-endpoints" title="Permanent link">&para;</a></h3>
+<p>Les Services s'abrègent <code>svc</code> dans <code>kubectl</code> (<code>kubectl get svc</code> équivaut à <code>kubectl get services</code>).</p>
+<p>La liste des adresses de pods vers lesquelles le Service envoie le trafic s'appelle ses <strong>Endpoints</strong>. Affichez-la :</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>endpoints<span class="w"> </span>campus-backend
+</span></code></pre></div>
+<div class="admonition question">
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+<ol>
+<li>Quelle commande affiche le Service <code>campus-backend</code> ? Notez son adresse IP virtuelle (colonne <code>CLUSTER-IP</code>).</li>
+<li>Comparez les Endpoints avec les adresses de vos pods backend (étape 1 de l'exercice 1) : que constatez-vous ?</li>
+<li>L'adresse <code>CLUSTER-IP</code> du Service fait-elle partie de la liste des Endpoints ? Pourquoi ?</li>
+</ol>
+</div>
+<h3 id="etape-4-verifier-la-stabilite-du-service">Étape 4 : Vérifier la stabilité du Service<a class="headerlink" href="#etape-4-verifier-la-stabilite-du-service" title="Permanent link">&para;</a></h3>
+<p>Supprimez de nouveau un pod backend, attendez que son remplaçant soit <code>Running</code>, puis relancez les deux commandes de l'étape 3.</p>
+<div class="admonition question">
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+<ol>
+<li>La <code>CLUSTER-IP</code> du Service a-t-elle changé ?</li>
+<li>La liste des Endpoints a-t-elle changé ? Qui l'a mise à jour ?</li>
+<li>Un client qui appelle le Service a-t-il dû modifier quelque chose ?</li>
+</ol>
+</div>
+<details class="tip">
+<summary><strong>Indice : Service stable, Endpoints vivants</strong></summary>
+<p>Kubernetes surveille en permanence les pods qui correspondent au sélecteur du Service. Dès qu'un pod apparaît ou disparaît, il met à jour la liste des Endpoints. L'adresse du Service, elle, reste fixe pendant toute sa vie : c'est elle que les clients utilisent.</p>
+</details>
+<hr />
+<h2 id="exercice-3-joindre-un-service-par-son-nom-dns">Exercice 3 : Joindre un Service par son nom (DNS)<a class="headerlink" href="#exercice-3-joindre-un-service-par-son-nom-dns" title="Permanent link">&para;</a></h2>
+<div class="admonition abstract">
+<p class="admonition-title"><strong>Ce que vous allez comprendre</strong></p>
+<p>Kubernetes donne un <strong>nom</strong> à chaque Service. Les applications s'appellent par ce nom, jamais par une adresse IP.</p>
+</div>
+<h3 id="etape-1-appeler-le-backend-par-son-nom">Étape 1 : Appeler le backend par son nom<a class="headerlink" href="#etape-1-appeler-le-backend-par-son-nom" title="Permanent link">&para;</a></h3>
+<p>Démarrez un pod de test équipé de <code>curl</code> (il est supprimé automatiquement quand vous le quittez) :</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>kubectl<span class="w"> </span>run<span class="w"> </span>test-dns<span class="w"> </span>--image<span class="o">=</span>curlimages/curl:8.11.1<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>--restart<span class="o">=</span>Never<span class="w"> </span>--<span class="w"> </span>sh
+</span></code></pre></div>
+<p>Dans le terminal de ce pod, appelez le backend par le <strong>nom de son Service</strong>, puis par son <strong>nom complet</strong>, de la forme <code>&lt;service&gt;.&lt;namespace&gt;.svc.cluster.local</code> :</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>curl<span class="w"> </span>http://campus-backend:8080/actuator/health
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>curl<span class="w"> </span>http://campus-backend.campus-dev.svc.cluster.local:8080/actuator/health
+</span></code></pre></div>
+<p>Tapez <code>exit</code> pour quitter le pod de test.</p>
+<div class="admonition question">
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+<ol>
+<li>Que répond le backend ?</li>
+<li>Avez-vous eu besoin de connaître l'adresse IP d'un pod ou du Service ?</li>
+<li>Le nom court et le nom complet donnent-ils la même réponse ?</li>
+<li>Le backend se connecte à sa base avec l'adresse <code>jdbc:postgresql://postgres:5432/campus</code>. À quoi correspond le nom <code>postgres</code> ?</li>
+</ol>
+</div>
+<details class="tip">
+<summary><strong>Indice : nom court ou nom complet ?</strong></summary>
+<ul>
+<li>Depuis un pod du <strong>même namespace</strong>, le nom court suffit : <code>campus-backend</code>, <code>postgres</code>.</li>
+<li>Depuis un <strong>autre namespace</strong>, on ajoute le namespace : <code>campus-backend.campus-dev</code>, ou le nom complet <code>campus-backend.campus-dev.svc.cluster.local</code>.</li>
+</ul>
+</details>
+<details class="tip">
+<summary><strong>Indice : <code>curl</code> échoue</strong></summary>
+<ul>
+<li><strong>Le nom est introuvable :</strong> vérifiez que le Service existe, avec <code>kubectl get svc campus-backend</code>.</li>
+<li><strong>Le nom est trouvé mais rien ne répond :</strong> vérifiez ses Endpoints, avec <code>kubectl get endpoints campus-backend</code>.</li>
+<li><strong><code>Connection refused</code> de temps en temps :</strong> le pod recréé à l'étape 4 de l'exercice 2 n'a pas fini de démarrer (20 secondes à 2 minutes). Attendez un peu et relancez la commande.</li>
+</ul>
+</details>
+<hr />
+<h2 id="exercice-4-exposer-le-frontend-hors-du-cluster-nodeport">Exercice 4 : Exposer le frontend hors du cluster (NodePort)<a class="headerlink" href="#exercice-4-exposer-le-frontend-hors-du-cluster-nodeport" title="Permanent link">&para;</a></h2>
+<div class="admonition abstract">
+<p class="admonition-title"><strong>Ce que vous allez comprendre</strong></p>
+<p>Un Service <code>ClusterIP</code> n'est joignable que depuis le cluster. Pour ouvrir l'application à un navigateur, on utilise un Service <code>NodePort</code>, qui ouvre un port sur <strong>chaque</strong> nœud.</p>
+</div>
+<h3 id="etape-1-deployer-le-frontend">Étape 1 : Déployer le frontend<a class="headerlink" href="#etape-1-deployer-le-frontend" title="Permanent link">&para;</a></h3>
+<p>Créez un Deployment avec les caractéristiques suivantes, en générant d'abord son manifest dans un fichier <code>deployment-frontend.yaml</code>, puis en l'appliquant :</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Valeur</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Nom</td>
+<td style="text-align: left;"><code>campus-frontend</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">Image</td>
+<td style="text-align: left;"><code>regaieg/campus:frontend-1.0.0</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">Réplicas</td>
+<td style="text-align: left;"><code>2</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">Port du conteneur</td>
+<td style="text-align: left;"><code>8080</code></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition question">
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+<ol>
+<li>Quelle commande génère ce manifest <strong>sans rien créer dans le cluster</strong> (revoyez l'exercice 1 de l'Atelier 03) ?</li>
+<li>Quelle commande l'applique ?</li>
+<li>À l'Atelier 02, le pod frontend ne démarrait que grâce à un <code>hostAliases</code>. Pourquoi démarre-t-il maintenant sans cette astuce ?</li>
+</ol>
+</div>
+<details class="tip">
+<summary><strong>Indice : générer un Deployment</strong></summary>
+<p><code>kubectl create deployment &lt;nom&gt; --help</code> liste les options <code>--image</code>, <code>--replicas</code> et <code>--port</code>. Ajoutez <code>--dry-run=client -o yaml</code> et redirigez la sortie vers le fichier (<code>&gt; fichier.yaml</code>, ou <code>| Out-File -Encoding utf8 fichier.yaml</code> sous Windows PowerShell 5.1).</p>
+<p>Le Nginx du frontend relaie les appels <code>/api/</code> vers l'hôte <code>campus-backend:8080</code> et vérifie ce nom au démarrage : demandez-vous ce que vous avez créé à l'étape 1 de l'exercice 2.</p>
+</details>
+<h3 id="etape-2-creer-le-service-nodeport">Étape 2 : Créer le Service NodePort<a class="headerlink" href="#etape-2-creer-le-service-nodeport" title="Permanent link">&para;</a></h3>
+<p>Créez un fichier <code>service-frontend.yaml</code> :</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Service</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="nt">metadata</span><span class="p">:</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">campus-frontend-svc</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="nt">spec</span><span class="p">:</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">NodePort</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="w">  </span><span class="nt">selector</span><span class="p">:</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="w">    </span><span class="nt">app</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">campus-frontend</span>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="w">  </span><span class="nt">ports</span><span class="p">:</span>
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">targetPort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8080</span><span class="w">   </span><span class="c1"># ① port du conteneur</span>
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="w">    </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">80</span><span class="w">           </span><span class="c1"># ② port du Service</span>
+</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="w">    </span><span class="nt">nodePort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30088</span><span class="w">    </span><span class="c1"># ③ port ouvert sur chaque nœud</span>
+</span></code></pre></div>
+<div class="admonition note">
+<p class="admonition-title"><strong>Pourquoi 30088 ?</strong></p>
+<p>Le port <code>30080</code> est réservé au contrôleur Ingress NGINX du cluster.</p>
+</div>
+<div class="admonition question">
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+<ol>
+<li>Quelle commande applique ce fichier ? Quelle commande liste ensuite <strong>tous</strong> les Services du namespace ?</li>
+<li>Combien de Services voyez-vous ? De quel type est chacun ?</li>
+<li>Que signifie la valeur <code>80:30088/TCP</code> affichée pour <code>campus-frontend-svc</code> ?</li>
+<li>Le Service <code>NodePort</code> possède-t-il lui aussi une <code>CLUSTER-IP</code> ? Qu'en déduisez-vous sur le lien entre <code>NodePort</code> et <code>ClusterIP</code> ?</li>
+</ol>
+</div>
+<h3 id="etape-3-distinguer-les-3-ports-dun-service-nodeport">Étape 3 : Distinguer les 3 ports d'un Service NodePort<a class="headerlink" href="#etape-3-distinguer-les-3-ports-dun-service-nodeport" title="Permanent link">&para;</a></h3>
+<p>Reprenez les repères ①, ② et ③ du manifest de l'étape 2.</p>
+<div class="admonition question">
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+<ol>
+<li>Lequel de ces ports est celui sur lequel le conteneur écoute réellement ?</li>
+<li>Lequel est utilisé par les <strong>autres pods</strong> du cluster pour joindre le Service ?</li>
+<li>Lequel est ouvert sur les nœuds et joignable depuis l'extérieur ? Dans quelle plage doit-il se trouver ?</li>
+<li>Dans quel ordre une requête venue de votre navigateur traverse-t-elle ces trois ports ?</li>
+</ol>
+</div>
+<details class="tip">
+<summary><strong>Indice : les 3 ports, de l'intérieur vers l'extérieur</strong></summary>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Valeur dans notre lab</th>
+<th style="text-align: left;">Rôle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">① <code>targetPort</code></td>
+<td style="text-align: left;"><code>8080</code></td>
+<td style="text-align: left;">Port sur lequel le conteneur écoute réellement dans le pod.</td>
+</tr>
+<tr>
+<td style="text-align: left;">② <code>port</code></td>
+<td style="text-align: left;"><code>80</code></td>
+<td style="text-align: left;">Port de l'adresse IP virtuelle du Service, utilisé par les autres pods du cluster.</td>
+</tr>
+<tr>
+<td style="text-align: left;">③ <code>nodePort</code></td>
+<td style="text-align: left;"><code>30088</code></td>
+<td style="text-align: left;">Port ouvert sur <strong>chaque nœud</strong> du cluster (plage 30000-32767), accessible de l'extérieur.</td>
+</tr>
+</tbody>
+</table>
+<p><code>kubectl explain service.spec.ports</code> décrit chacun de ces champs.</p>
+</details>
+<div class="admonition info">
+<p class="admonition-title"><strong>Et le type LoadBalancer ?</strong></p>
+<p>Dans le cloud (EKS, AKS, GKE), il ajoute devant les NodePorts un répartiteur de charge avec une vraie IP publique. Notre cluster kubeadm n'a pas de fournisseur cloud : un tel Service resterait en <code>EXTERNAL-IP &lt;pending&gt;</code>.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Besoin</th>
+<th style="text-align: left;">Type de Service</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Trafic interne au cluster</td>
+<td style="text-align: left;"><code>ClusterIP</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">Accès externe sur notre cluster</td>
+<td style="text-align: left;"><code>NodePort</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">Production dans le cloud</td>
+<td style="text-align: left;"><code>LoadBalancer</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="etape-4-acceder-a-lapplication-depuis-votre-navigateur">Étape 4 : Accéder à l'application depuis votre navigateur<a class="headerlink" href="#etape-4-acceder-a-lapplication-depuis-votre-navigateur" title="Permanent link">&para;</a></h3>
+<p>Récupérez l'adresse IP publique de votre nœud worker <code>k8s-worker-1</code> (affichée par <code>start-session</code> ou dans la console AWS), puis ouvrez <strong><code>http://&lt;IP_PUBLIQUE_WORKER&gt;:30088</code></strong>.</p>
+<div class="admonition warning">
+<p class="admonition-title"><strong>Les IP publiques changent à chaque redémarrage de la session AWS</strong></p>
+<p>Relevez-les à nouveau dans la console AWS au début de chaque séance : une ancienne adresse ne répond plus.</p>
+</div>
+<div class="admonition question">
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+<ol>
+<li>Le portail affiche-t-il les offres de stage ? D'où viennent ces données ?</li>
+<li>Citez, dans l'ordre, les objets traversés par une requête, du navigateur jusqu'à la base de données.</li>
+</ol>
+</div>
+<details class="example">
+<summary><strong>Vous êtes sur Minikube (secours) ?</strong></summary>
+<p>Avec le pilote Docker sous Windows ou macOS, l'adresse du nœud Minikube n'est pas joignable depuis votre poste. Remplacez cette étape par un tunnel vers le Service :</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>minikube<span class="w"> </span>service<span class="w"> </span>campus-frontend-svc<span class="w"> </span>-n<span class="w"> </span>campus-dev<span class="w"> </span>--url
+</span></code></pre></div>
+<p>La commande affiche une adresse <code>http://127.0.0.1:&lt;port&gt;</code> : ouvrez-la dans votre navigateur et <strong>laissez le terminal ouvert</strong> tant que vous l'utilisez (<code>Ctrl + C</code> pour fermer le tunnel). L'étape 5 n'a pas d'équivalent : Minikube n'a qu'un seul nœud.</p>
+</details>
+<h3 id="etape-5-constater-que-le-nodeport-est-ouvert-sur-chaque-nud">Étape 5 : Constater que le NodePort est ouvert sur chaque nœud<a class="headerlink" href="#etape-5-constater-que-le-nodeport-est-ouvert-sur-chaque-nud" title="Permanent link">&para;</a></h3>
+<p>Ouvrez maintenant <strong><code>http://&lt;IP_PUBLIQUE_k8s-worker-2&gt;:30088</code></strong>.</p>
+<div class="admonition question">
+<p class="admonition-title"><strong>À vous de répondre</strong></p>
+<ol>
+<li>Le portail répond-il aussi ?</li>
+<li>Quelle commande indique sur quel(s) nœud(s) tournent les pods frontend ?</li>
+<li>Un nœud qui n'héberge <strong>aucun</strong> pod frontend répondrait-il quand même ? Pourquoi ?</li>
+</ol>
+</div>
+<details class="tip">
+<summary><strong>Indice : le chemin complet d'une requête</strong></summary>
+<p><strong>navigateur → NodePort <code>30088</code> d'un nœud → Service <code>campus-frontend-svc</code> → pod frontend (Nginx) → Service <code>campus-backend</code> → pod API → Service <code>postgres</code> → base</strong>.</p>
+<p>Le port <code>30088</code> est ouvert sur <strong>tous</strong> les nœuds, qu'ils hébergent ou non un pod frontend : le nœud qui reçoit la requête la transmet à l'un des pods sélectionnés par le Service, où qu'il se trouve.</p>
+</details>
+<details class="tip">
+<summary><strong>Indice : la page ne s'affiche pas ou le tableau de bord reste vide</strong></summary>
+<ul>
+<li><strong>Le navigateur n'obtient aucune réponse :</strong> utilisez l'IP <strong>publique</strong> d'un worker (pas l'IP privée <code>172.31.x.x</code>) et le port <code>30088</code>. Les IP publiques changent à chaque redémarrage de la session AWS.</li>
+<li><strong>Le port est bloqué par le pare-feu de votre entreprise (Option A) :</strong> passez par un tunnel, comme à l'<a href="../../labs/02-Les%20Pods/README.md">Atelier 02</a> : <code>kubectl port-forward svc/campus-frontend-svc 8081:80</code> lancé <strong>depuis votre poste</strong>, puis ouvrez <code>http://localhost:8081</code>. En Option B, ce tunnel s'ouvrirait sur <code>k8s-control</code> et non sur votre poste : il ne vous aiderait pas.</li>
+<li><strong>La page s'affiche mais les données sont absentes :</strong> testez l'API à travers le frontend avec <code>curl http://&lt;IP_PUBLIQUE_WORKER&gt;:30088/actuator/health</code>. Une erreur <code>502 Bad Gateway</code> signifie que le Service <code>campus-backend</code> ne transmet rien : appliquez le réflexe <strong>« Service muet ? <code>kubectl get endpoints</code> »</strong>. Une liste vide signifie que le sélecteur du Service et les labels des pods ne correspondent pas.</li>
+</ul>
+</details>
+<hr />
+<h2 id="criteres-de-validation-checklist">Critères de Validation (Checklist)<a class="headerlink" href="#criteres-de-validation-checklist" title="Permanent link">&para;</a></h2>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Vous avez constaté qu'un pod recréé change d'adresse IP (<code>kubectl get pods -o wide</code>).</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <code>campus-backend</code> est un Service <code>ClusterIP</code> dont les Endpoints listent les pods backend, et vous savez qu'une liste vide signale un sélecteur qui ne correspond à aucun label (<code>kubectl get endpoints campus-backend</code>).</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <code>campus-backend</code> répond par son nom court et par son nom complet <code>campus-backend.campus-dev.svc.cluster.local</code>.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <code>campus-frontend-svc</code> est exposé en <code>NodePort</code> sur le port <code>30088</code> et le portail s'affiche dans le navigateur via l'IP de chacun des deux workers.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Vous distinguez <code>targetPort</code> (8080), <code>port</code> (80) et <code>nodePort</code> (30088).</li>
+</ul>
+<hr />
+<h1 id="partie-2-corrige-version-longue">Partie 2 — Corrigé (version longue)<a class="headerlink" href="#partie-2-corrige-version-longue" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>Sorties relevées sur le cluster de formation (kubeadm v1.30, Calico, 1 control plane + 2 workers) : les noms de pods, adresses IP et <code>CLUSTER-IP</code> changent d'une session à l'autre.</p>
+</blockquote>
+<h2 id="etape-0-preparer-lenvironnement_1">Étape 0 — Préparer l'environnement<a class="headerlink" href="#etape-0-preparer-lenvironnement_1" title="Permanent link">&para;</a></h2>
+<p>Commandes données dans l'énoncé. Attendu : <code>deployment.apps/campus-postgres</code>, <code>service/postgres</code> et <code>deployment.apps/campus-backend</code> créés (ou <code>configured</code> / <code>unchanged</code> si l'on sort de l'Atelier 03), puis <code>deployment "campus-backend" successfully rolled out</code>, puis <strong>3 lignes</strong> <code>Started CampusOpsApplication in … seconds</code>.</p>
+<p>Dans cette version, la vérification des logs est bloquante dès l'étape 0 : prévoir 20 secondes à 2 minutes d'attente. Les stagiaires rapides peuvent commencer l'exercice 1 pendant ce temps (il n'a pas besoin que l'API réponde).</p>
+<p>Erreur fréquente : oublier les guillemets autour du chemin <code>"labs/04-Les Services/starter/"</code>, qui contient une espace (<code>error: the path "labs/04-Les" does not exist</code>).</p>
+<hr />
+<h2 id="exercice-1-constater-que-ladresse-ip-dun-pod-nest-pas-fiable_1">Exercice 1 — Constater que l'adresse IP d'un pod n'est pas fiable<a class="headerlink" href="#exercice-1-constater-que-ladresse-ip-dun-pod-nest-pas-fiable_1" title="Permanent link">&para;</a></h2>
+<h3 id="etape-1-reperer-les-adresses-ip-des-pods-backend_1">Étape 1 — Repérer les adresses IP des pods backend<a class="headerlink" href="#etape-1-reperer-les-adresses-ip-des-pods-backend_1" title="Permanent link">&para;</a></h3>
+<p><strong>1.</strong></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-l<span class="w"> </span><span class="nv">app</span><span class="o">=</span>campus-backend<span class="w"> </span>-o<span class="w"> </span>wide
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>NAME                             READY   STATUS    RESTARTS   AGE   IP               NODE
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>campus-backend-c9c4d5fdf-4ld8z   1/1     Running   0          38s   192.168.230.19   k8s-worker-1
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>campus-backend-c9c4d5fdf-sbgk9   1/1     Running   0          38s   192.168.140.12   k8s-worker-2
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>campus-backend-c9c4d5fdf-vzpgh   1/1     Running   0          38s   192.168.230.17   k8s-worker-1
+</span></code></pre></div>
+<p><strong>2.</strong> Plage <code>192.168.x.x</code> : plage des pods configurée pour Calico ; chaque worker reçoit son propre sous-bloc (<code>192.168.230.x</code> sur <code>k8s-worker-1</code>, <code>192.168.140.x</code> sur <code>k8s-worker-2</code>). Les pods sont répartis sur les deux workers (anti-affinité du starter), jamais sur <code>k8s-control</code>.</p>
+<h3 id="etape-2-supprimer-un-pod-backend_1">Étape 2 — Supprimer un pod backend<a class="headerlink" href="#etape-2-supprimer-un-pod-backend_1" title="Permanent link">&para;</a></h3>
+<p><strong>1.</strong></p>
+<p><div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>kubectl<span class="w"> </span>delete<span class="w"> </span>pod<span class="w"> </span>campus-backend-c9c4d5fdf-4ld8z
+</span></code></pre></div>
+Attendu : <code>pod "campus-backend-c9c4d5fdf-4ld8z" deleted</code>.</p>
+<h3 id="etape-3-constater-le-changement-dadresse_1">Étape 3 — Constater le changement d'adresse<a class="headerlink" href="#etape-3-constater-le-changement-dadresse_1" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>NAME                             READY   STATUS    RESTARTS   AGE   IP               NODE
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>campus-backend-c9c4d5fdf-cg9zd   1/1     Running   0          3s    192.168.140.15   k8s-worker-2
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>campus-backend-c9c4d5fdf-sbgk9   1/1     Running   0          60s   192.168.140.12   k8s-worker-2
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>campus-backend-c9c4d5fdf-vzpgh   1/1     Running   0          60s   192.168.230.17   k8s-worker-1
+</span></code></pre></div>
+<p><strong>1.</strong> Toujours <strong>3 pods</strong>. Le nouveau est celui dont l'<code>AGE</code> est de quelques secondes (<code>cg9zd</code>).</p>
+<p><strong>2.</strong> Non : <strong>nouveau nom</strong> (nouveau suffixe aléatoire) et <strong>nouvelle adresse IP</strong>, parfois sur un autre nœud.</p>
+<p><strong>3.</strong> Le <strong>ReplicaSet</strong> du Deployment <code>campus-backend</code> : il constate 2 pods au lieu des 3 demandés et en recrée un (boucle de réconciliation vue à l'Atelier 03).</p>
+<p><strong>4.</strong> L'adresse d'un pod change à chaque recréation (mise à jour, panne, rollback, mise à l'échelle). Un frontend configuré avec une IP de pod tomberait en erreur à la première recréation et ne saurait pas répartir le trafic entre 3 pods. Il faut une adresse <strong>stable</strong> devant le groupe de pods : c'est le rôle du Service (exercice 2).</p>
+<hr />
+<h2 id="exercice-2-creer-le-service-clusterip-du-backend_1">Exercice 2 — Créer le Service ClusterIP du backend<a class="headerlink" href="#exercice-2-creer-le-service-clusterip-du-backend_1" title="Permanent link">&para;</a></h2>
+<h3 id="etape-1-generer-le-manifest-du-service_1">Étape 1 — Générer le manifest du Service<a class="headerlink" href="#etape-1-generer-le-manifest-du-service_1" title="Permanent link">&para;</a></h3>
+<p>Commande de génération donnée dans l'énoncé.</p>
+<p><strong>1.</strong></p>
+<p><div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>service-backend.yaml
+</span></code></pre></div>
+Attendu : <code>service/campus-backend created</code>.</p>
+<p>Erreur fréquente sous Windows PowerShell 5.1 : utiliser <code>&gt;</code> au lieu de <code>| Out-File -Encoding utf8</code>. Le fichier est écrit en UTF-16 et <code>kubectl apply</code> échoue (<code>error converting YAML to JSON</code> ou caractères illisibles).</p>
+<h3 id="etape-2-lire-le-manifest_1">Étape 2 — Lire le manifest<a class="headerlink" href="#etape-2-lire-le-manifest_1" title="Permanent link">&para;</a></h3>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Service</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="nt">metadata</span><span class="p">:</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="w">  </span><span class="nt">labels</span><span class="p">:</span>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="w">    </span><span class="nt">app</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">campus-backend</span>
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">campus-backend</span>
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="nt">spec</span><span class="p">:</span>
+</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="w">  </span><span class="nt">ports</span><span class="p">:</span>
+</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8080</span>
+</span><span id="__span-16-10"><a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a><span class="w">    </span><span class="nt">protocol</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TCP</span>
+</span><span id="__span-16-11"><a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a><span class="w">    </span><span class="nt">targetPort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8080</span>
+</span><span id="__span-16-12"><a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a><span class="w">  </span><span class="nt">selector</span><span class="p">:</span>
+</span><span id="__span-16-13"><a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a><span class="w">    </span><span class="nt">app</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">campus-backend</span>
+</span><span id="__span-16-14"><a id="__codelineno-16-14" name="__codelineno-16-14" href="#__codelineno-16-14"></a><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ClusterIP</span>
+</span><span id="__span-16-15"><a id="__codelineno-16-15" name="__codelineno-16-15" href="#__codelineno-16-15"></a><span class="nt">status</span><span class="p">:</span>
+</span><span id="__span-16-16"><a id="__codelineno-16-16" name="__codelineno-16-16" href="#__codelineno-16-16"></a><span class="w">  </span><span class="nt">loadBalancer</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
+</span></code></pre></div>
+<p><strong>1.</strong> <code>spec.type: ClusterIP</code>.</p>
+<p><strong>2.</strong> Dans <code>spec.ports</code> : <code>port: 8080</code> est le port du Service, <code>targetPort: 8080</code> le port du conteneur.</p>
+<p><strong>3.</strong> <code>kubectl expose deployment</code> a <strong>recopié le sélecteur du Deployment</strong> (<code>spec.selector.matchLabels</code>). Il désigne les pods qui recevront le trafic : tous ceux qui portent le label <code>app: campus-backend</code>, quel que soit leur nom.</p>
+<p><strong>4.</strong> Oui, le Service serait créé : l'API Server ne vérifie pas qu'un pod correspond au sélecteur. Mais il ne recevrait <strong>aucun trafic</strong> utile : aucun pod ne porte <code>app: campus-backnd</code>, sa liste d'Endpoints serait vide et les connexions échoueraient (<code>Connection refused</code> ou délai dépassé).</p>
+<blockquote>
+<p><strong>Pourquoi ?</strong> L'API Server ne valide que la syntaxe du manifeste. Un Service peut légitimement exister avant ses pods, ou entre deux rollouts. Le contrôleur d'Endpoints compare ensuite en continu le sélecteur aux labels des pods. Sans correspondance, la liste reste vide : le DNS résout bien la ClusterIP, mais aucun pod n'est derrière.</p>
+<p><strong>Diagnostic :</strong> <code>kubectl get endpoints campus-backend</code> affiche <code>&lt;none&gt;</code>. Comparez alors le sélecteur (<code>kubectl describe svc campus-backend</code>) aux labels des pods (<code>kubectl get pods --show-labels</code>). Corrigez le sélecteur et refaites <code>kubectl apply</code> : les Endpoints se remplissent aussitôt, sans redémarrer les pods.</p>
+</blockquote>
+<h3 id="etape-3-verifier-ladresse-du-service-et-ses-endpoints_1">Étape 3 — Vérifier l'adresse du Service et ses Endpoints<a class="headerlink" href="#etape-3-verifier-ladresse-du-service-et-ses-endpoints_1" title="Permanent link">&para;</a></h3>
+<p><div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>endpoints<span class="w"> </span>campus-backend
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>NAME             ENDPOINTS                                                     AGE
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>campus-backend   192.168.140.12:8080,192.168.140.15:8080,192.168.230.17:8080   1s
+</span></code></pre></div></p>
+<p><strong>1.</strong></p>
+<p><div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>svc<span class="w"> </span>campus-backend
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>NAME             TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>campus-backend   ClusterIP   10.109.242.31   &lt;none&gt;        8080/TCP   5s
+</span></code></pre></div>
+La <code>CLUSTER-IP</code> est dans la plage des Services (<code>10.96.0.0/12</code> par défaut avec kubeadm), distincte de celle des pods.</p>
+<p><strong>2.</strong> Les Endpoints sont <strong>exactement</strong> les adresses IP des 3 pods backend <strong>actuels</strong> (y compris le pod recréé à l'exercice 1, pas celui supprimé), suivies du <code>targetPort</code> <code>8080</code>.</p>
+<p><strong>3.</strong> Non : la <code>CLUSTER-IP</code> est une adresse <strong>virtuelle</strong>, portée par aucun pod ni aucune interface. <code>kube-proxy</code> programme chaque nœud pour que le trafic envoyé à <code>CLUSTER-IP:8080</code> soit redirigé vers l'un des Endpoints. La liste des Endpoints, elle, ne contient que des adresses de pods réels.</p>
+<h3 id="etape-4-verifier-la-stabilite-du-service_1">Étape 4 — Vérifier la stabilité du Service<a class="headerlink" href="#etape-4-verifier-la-stabilite-du-service_1" title="Permanent link">&para;</a></h3>
+<p><div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>kubectl<span class="w"> </span>delete<span class="w"> </span>pod<span class="w"> </span>campus-backend-c9c4d5fdf-sbgk9
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-l<span class="w"> </span><span class="nv">app</span><span class="o">=</span>campus-backend<span class="w"> </span>-w<span class="w">        </span><span class="c1"># attendre le remplaçant Running, puis Ctrl + C</span>
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>kubectl<span class="w"> </span>get<span class="w"> </span>svc<span class="w"> </span>campus-backend
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>kubectl<span class="w"> </span>get<span class="w"> </span>endpoints<span class="w"> </span>campus-backend
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>NAME             TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>campus-backend   ClusterIP   10.109.242.31   &lt;none&gt;        8080/TCP   2m
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a>NAME             ENDPOINTS                                                     AGE
+</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a>campus-backend   192.168.140.15:8080,192.168.140.21:8080,192.168.230.17:8080   2m
+</span></code></pre></div></p>
+<p><strong>1.</strong> Non : la <code>CLUSTER-IP</code> (<code>10.109.242.31</code>) reste fixe pendant toute la vie du Service.</p>
+<p><strong>2.</strong> Oui : l'adresse du pod supprimé (<code>192.168.140.12</code>) a disparu, celle du nouveau pod (<code>192.168.140.21</code>) est apparue. C'est le <strong>contrôleur Endpoints</strong> (dans le <code>kube-controller-manager</code>) qui la met à jour.</p>
+<p><strong>3.</strong> Non : le client appelle toujours la même adresse (et, à l'exercice 3, le même nom). La recréation du pod lui est invisible.</p>
+<hr />
+<h2 id="exercice-3-joindre-un-service-par-son-nom-dns_1">Exercice 3 — Joindre un Service par son nom (DNS)<a class="headerlink" href="#exercice-3-joindre-un-service-par-son-nom-dns_1" title="Permanent link">&para;</a></h2>
+<h3 id="etape-1-appeler-le-backend-par-son-nom_1">Étape 1 — Appeler le backend par son nom<a class="headerlink" href="#etape-1-appeler-le-backend-par-son-nom_1" title="Permanent link">&para;</a></h3>
+<p>Commandes données dans l'énoncé. Réponse des deux <code>curl</code> :</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="p">{</span><span class="nt">"status"</span><span class="p">:</span><span class="s2">"UP"</span><span class="p">,</span><span class="nt">"components"</span><span class="p">:{</span><span class="nt">"db"</span><span class="p">:{</span><span class="nt">"status"</span><span class="p">:</span><span class="s2">"UP"</span><span class="p">,</span><span class="nt">"details"</span><span class="p">:{</span><span class="nt">"database"</span><span class="p">:</span><span class="s2">"PostgreSQL"</span><span class="p">,</span><span class="nt">"validationQuery"</span><span class="p">:</span><span class="s2">"isValid()"</span><span class="p">}},</span><span class="nt">"diskSpace"</span><span class="p">:{</span><span class="nt">"status"</span><span class="p">:</span><span class="s2">"UP"</span><span class="p">,</span><span class="err">...</span><span class="p">},</span><span class="nt">"livenessState"</span><span class="p">:{</span><span class="nt">"status"</span><span class="p">:</span><span class="s2">"UP"</span><span class="p">},</span><span class="nt">"ping"</span><span class="p">:{</span><span class="nt">"status"</span><span class="p">:</span><span class="s2">"UP"</span><span class="p">},</span><span class="nt">"readinessState"</span><span class="p">:{</span><span class="nt">"status"</span><span class="p">:</span><span class="s2">"UP"</span><span class="p">}},</span><span class="nt">"groups"</span><span class="p">:[</span><span class="s2">"liveness"</span><span class="p">,</span><span class="s2">"readiness"</span><span class="p">]}</span>
+</span></code></pre></div>
+<p><strong>1.</strong> <code>"status":"UP"</code>, avec <code>"db":{"status":"UP"}</code> : l'API répond et joint aussi sa base.</p>
+<p><strong>2.</strong> Non : le DNS du cluster (CoreDNS) traduit le nom en <code>CLUSTER-IP</code>, puis <code>kube-proxy</code> redirige vers un pod.</p>
+<p><strong>3.</strong> Oui. Le nom court <code>campus-backend</code> est complété automatiquement avec le namespace du pod de test (<code>campus-dev</code>) ; le nom complet <code>campus-backend.campus-dev.svc.cluster.local</code> désigne le même Service.</p>
+<p><strong>4.</strong> <code>postgres</code> est le <strong>nom du Service</strong> de la base, dans le même namespace <code>campus-dev</code> (créé par le starter). Le backend n'utilise jamais l'adresse IP du pod PostgreSQL.</p>
+<p>Erreurs fréquentes :
+* <code>curl: (6) Could not resolve host</code> : faute de frappe dans le nom, ou pod de test créé dans un autre namespace (namespace courant non défini à l'étape 0).
+* <code>curl: (7) Failed to connect … Connection refused</code> de temps en temps : le pod recréé à l'étape 4 de l'exercice 2 figure déjà dans les Endpoints mais Spring Boot n'a pas fini de démarrer (pas de sonde de disponibilité avant l'Atelier 07). Attendre et relancer.
+* Message <code>warning: couldn't attach to pod/test-dns, falling back to streaming logs</code> : sans conséquence.</p>
+<hr />
+<h2 id="exercice-4-exposer-le-frontend-hors-du-cluster-nodeport_1">Exercice 4 — Exposer le frontend hors du cluster (NodePort)<a class="headerlink" href="#exercice-4-exposer-le-frontend-hors-du-cluster-nodeport_1" title="Permanent link">&para;</a></h2>
+<h3 id="etape-1-deployer-le-frontend_1">Étape 1 — Déployer le frontend<a class="headerlink" href="#etape-1-deployer-le-frontend_1" title="Permanent link">&para;</a></h3>
+<p><strong>1.</strong></p>
+<p>Linux / macOS, Git Bash, PowerShell 7 :</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>kubectl<span class="w"> </span>create<span class="w"> </span>deployment<span class="w"> </span>campus-frontend<span class="w"> </span>--image<span class="o">=</span>regaieg/campus:frontend-1.0.0<span class="w"> </span>--replicas<span class="o">=</span><span class="m">2</span><span class="w"> </span>--port<span class="o">=</span><span class="m">8080</span><span class="w"> </span>--dry-run<span class="o">=</span>client<span class="w"> </span>-o<span class="w"> </span>yaml<span class="w"> </span>&gt;<span class="w"> </span>deployment-frontend.yaml
+</span></code></pre></div>
+<p>Windows PowerShell 5.1 :</p>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="n">kubectl</span> <span class="n">create</span> <span class="n">deployment</span> <span class="n">campus-frontend</span> <span class="p">-</span><span class="n">-image</span><span class="p">=</span><span class="n">regaieg</span><span class="p">/</span><span class="n">campus</span><span class="p">:</span><span class="n">frontend</span><span class="p">-</span><span class="n">1</span><span class="p">.</span><span class="n">0</span><span class="p">.</span><span class="n">0</span> <span class="p">-</span><span class="n">-replicas</span><span class="p">=</span><span class="n">2</span> <span class="p">-</span><span class="n">-port</span><span class="p">=</span><span class="n">8080</span> <span class="p">-</span><span class="n">-dry-run</span><span class="p">=</span><span class="n">client</span> <span class="n">-o</span> <span class="n">yaml</span> <span class="p">|</span> <span class="nb">Out-File</span> <span class="n">-Encoding</span> <span class="n">utf8</span> <span class="n">deployment-frontend</span><span class="p">.</span><span class="n">yaml</span>
+</span></code></pre></div>
+<p><strong>2.</strong></p>
+<p><div class="language-bash highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>deployment-frontend.yaml
+</span></code></pre></div>
+Attendu : <code>deployment.apps/campus-frontend created</code>, puis 2 pods <code>Running</code>. <code>kubectl create deployment</code> pose automatiquement le label <code>app: campus-frontend</code>, attendu par le sélecteur du Service de l'étape 2.</p>
+<p><strong>3.</strong> Le Nginx du frontend relaie <code>/api/</code> vers l'hôte <code>campus-backend:8080</code> et vérifie ce nom au démarrage. À l'Atelier 02, ce nom n'existait pas : <code>hostAliases</code> le simulait. Il désigne maintenant le <strong>Service</strong> <code>campus-backend</code> (exercice 2), que CoreDNS résout.</p>
+<p>Erreur fréquente : déployer le frontend <strong>avant</strong> de créer le Service <code>campus-backend</code>. Les pods partent en <code>CrashLoopBackOff</code> (<code>host not found in upstream "campus-backend"</code>). Il suffit de créer le Service : les pods redémarrent seuls et finissent <code>Running</code>.</p>
+<h3 id="etape-2-creer-le-service-nodeport_1">Étape 2 — Créer le Service NodePort<a class="headerlink" href="#etape-2-creer-le-service-nodeport_1" title="Permanent link">&para;</a></h3>
+<p><strong>1.</strong></p>
+<p><div class="language-bash highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>service-frontend.yaml
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>kubectl<span class="w"> </span>get<span class="w"> </span>services
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>NAME                  TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>campus-backend        ClusterIP   10.109.242.31   &lt;none&gt;        8080/TCP       5m
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a>campus-frontend-svc   NodePort    10.101.5.60     &lt;none&gt;        80:30088/TCP   1s
+</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a>postgres              ClusterIP   10.107.175.83   &lt;none&gt;        5432/TCP       7m
+</span></code></pre></div></p>
+<p><strong>2.</strong> <strong>3 Services</strong> : <code>campus-backend</code> (<code>ClusterIP</code>), <code>postgres</code> (<code>ClusterIP</code>, créé par le starter) et <code>campus-frontend-svc</code> (<code>NodePort</code>).</p>
+<p><strong>3.</strong> <code>80:30088/TCP</code> : le Service écoute sur le port <code>80</code> de sa <code>CLUSTER-IP</code> (<code>port</code>) et sur le port <code>30088</code> de <strong>chaque nœud</strong> (<code>nodePort</code>), en TCP. Le <code>targetPort</code> (8080) n'apparaît pas dans cette colonne.</p>
+<p><strong>4.</strong> Oui (<code>10.101.5.60</code>) : un Service <code>NodePort</code> <strong>est</strong> un <code>ClusterIP</code> auquel Kubernetes ajoute un port ouvert sur chaque nœud. Les autres pods peuvent donc toujours le joindre par son nom (<code>http://campus-frontend-svc/</code>).</p>
+<p>Erreur fréquente : <code>nodePort: 30080</code> → <code>provided port is already allocated</code> (port réservé à l'Ingress NGINX). Une valeur hors de la plage 30000-32767 est refusée (<code>provided port is not in the valid range</code>).</p>
+<h3 id="etape-3-distinguer-les-3-ports-dun-service-nodeport_1">Étape 3 — Distinguer les 3 ports d'un Service NodePort<a class="headerlink" href="#etape-3-distinguer-les-3-ports-dun-service-nodeport_1" title="Permanent link">&para;</a></h3>
+<p><strong>1.</strong> ① <code>targetPort: 8080</code> : le port sur lequel Nginx écoute dans le conteneur.</p>
+<p><strong>2.</strong> ② <code>port: 80</code> : le port de la <code>CLUSTER-IP</code>, utilisé par les autres pods.</p>
+<p><strong>3.</strong> ③ <code>nodePort: 30088</code> : ouvert sur chaque nœud, joignable de l'extérieur, dans la plage <strong>30000-32767</strong>.</p>
+<p><strong>4.</strong> <strong><code>nodePort</code> (30088, sur le nœud) → <code>port</code> (80, sur le Service) → <code>targetPort</code> (8080, dans le pod).</strong></p>
+<h3 id="etape-4-acceder-a-lapplication-depuis-votre-navigateur_1">Étape 4 — Accéder à l'application depuis votre navigateur<a class="headerlink" href="#etape-4-acceder-a-lapplication-depuis-votre-navigateur_1" title="Permanent link">&para;</a></h3>
+<p><strong>1.</strong> Oui : le tableau de bord, les offres de stage, les départements et les candidatures s'affichent. Ces données viennent de <strong>PostgreSQL</strong> : la page appelle <code>/api/…</code>, que Nginx relaie au backend, qui interroge la base (données de démonstration insérées au démarrage du backend).</p>
+<p><strong>2.</strong> <strong>navigateur → <code>nodePort</code> 30088 de <code>k8s-worker-1</code> → Service <code>campus-frontend-svc</code> → pod frontend (Nginx) → Service <code>campus-backend</code> → pod API → Service <code>postgres</code> → pod PostgreSQL.</strong></p>
+<p>Erreur fréquente (constatée en préparation) : utiliser les IP publiques notées lors d'une session précédente, ou celles affichées par un <code>terraform output</code> non rafraîchi. Les IP publiques des workers changent à chaque redémarrage de la session AWS : la page ne répond pas (délai dépassé). Relever les IP actuelles dans la console AWS.</p>
+<h3 id="etape-5-constater-que-le-nodeport-est-ouvert-sur-chaque-nud_1">Étape 5 — Constater que le NodePort est ouvert sur chaque nœud<a class="headerlink" href="#etape-5-constater-que-le-nodeport-est-ouvert-sur-chaque-nud_1" title="Permanent link">&para;</a></h3>
+<p><strong>1.</strong> Oui, le portail répond aussi via <code>k8s-worker-2</code>.</p>
+<p><strong>2.</strong></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-l<span class="w"> </span><span class="nv">app</span><span class="o">=</span>campus-frontend<span class="w"> </span>-o<span class="w"> </span>wide
+</span></code></pre></div>
+<p><strong>3.</strong> Oui : <code>kube-proxy</code> ouvre le port <code>30088</code> sur <strong>tous</strong> les nœuds, y compris ceux qui n'hébergent aucun pod frontend, et même sur <code>k8s-control</code> (vérifié en préparation : réponse <code>200</code> sur <code>http://&lt;IP_control_plane&gt;:30088</code>). Le nœud qui reçoit la requête la transmet à l'un des pods du Service, où qu'il se trouve.</p>
+<hr />
+<h2 id="criteres-de-validation-commandes-de-controle">Critères de validation — commandes de contrôle<a class="headerlink" href="#criteres-de-validation-commandes-de-controle" title="Permanent link">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-l<span class="w"> </span><span class="nv">app</span><span class="o">=</span>campus-backend<span class="w"> </span>-o<span class="w"> </span>wide<span class="w">           </span><span class="c1"># 3 pods, IP 192.168.x.x</span>
+</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a>kubectl<span class="w"> </span>get<span class="w"> </span>svc<span class="w">                                          </span><span class="c1"># campus-backend (ClusterIP), postgres (ClusterIP), campus-frontend-svc (NodePort 80:30088)</span>
+</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a>kubectl<span class="w"> </span>get<span class="w"> </span>endpoints<span class="w"> </span>campus-backend<span class="w">                     </span><span class="c1"># 3 adresses de pods en :8080</span>
+</span><span id="__span-30-4"><a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a>kubectl<span class="w"> </span>run<span class="w"> </span>test-dns<span class="w"> </span>--image<span class="o">=</span>curlimages/curl:8.11.1<span class="w"> </span>--rm<span class="w"> </span>-i<span class="w"> </span>--restart<span class="o">=</span>Never<span class="w"> </span>--<span class="w"> </span>curl<span class="w"> </span>-s<span class="w"> </span>http://campus-backend.campus-dev.svc.cluster.local:8080/actuator/health<span class="w">   </span><span class="c1"># "status":"UP"</span>
+</span><span id="__span-30-5"><a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a>curl<span class="w"> </span>-s<span class="w"> </span>-o<span class="w"> </span>/dev/null<span class="w"> </span>-w<span class="w"> </span><span class="s2">"%{http_code}\n"</span><span class="w"> </span>http://&lt;IP_PUBLIQUE_WORKER&gt;:30088/<span class="w">   </span><span class="c1"># 200 sur chacun des deux workers</span>
+</span></code></pre></div>
+<h2 id="etat-de-fin-de-lab">État de fin de lab<a class="headerlink" href="#etat-de-fin-de-lab" title="Permanent link">&para;</a></h2>
+<p>Identique à la version courte : <code>service-backend.yaml</code>, <code>deployment-frontend.yaml</code>, <code>service-frontend.yaml</code> ; PostgreSQL de développement, backend en 3 réplicas, frontend en 2 réplicas, Services <code>campus-backend</code>, <code>postgres</code> et <code>campus-frontend-svc</code> (NodePort 30088). Le starter de l'Atelier 05 repart de cet état.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Retour en haut de la page
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2026 Rym Regaieg
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "navigation.indexes", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copi\u00e9 dans le presse-papier", "clipboard.copy": "Copier dans le presse-papier", "search.result.more.one": "1 de plus sur cette page", "search.result.more.other": "# de plus sur cette page", "search.result.none": "Aucun document trouv\u00e9", "search.result.one": "1 document trouv\u00e9", "search.result.other": "# documents trouv\u00e9s", "search.result.placeholder": "Taper pour d\u00e9marrer la recherche", "search.result.term.missing": "Non trouv\u00e9", "select.version": "S\u00e9lectionner la version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+        <script src="../../javascripts/slides.js"></script>
+      
+    
+  </body>
+</html>

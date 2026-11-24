@@ -1,0 +1,2470 @@
+
+<!doctype html>
+<html lang="fr" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Ateliers pratiques d'orchestration et déploiement de conteneurs avec Kubernetes.">
+      
+      
+        <meta name="author" content="Rym Regaieg">
+      
+      
+        <link rel="canonical" href="https://rym28.github.io/kubernetes-training/corrections/07-securite-longue-corrige/">
+      
+      
+        <link rel="prev" href="../07-securite-longue-enonce/">
+      
+      
+        <link rel="next" href="../../support-cours/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.2">
+    
+    
+      
+        <title>Atelier 07 : corrigé - Kubernetes & Orchestration — Ateliers Pratiques</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#corrige-atelier-07-version-longue-securite-quotas-de-ressources-isolement-reseau" class="md-skip">
+          Aller au contenu
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="En-tête">
+    <a href="../.." title="Kubernetes &amp; Orchestration — Ateliers Pratiques" class="md-header__button md-logo" aria-label="Kubernetes & Orchestration — Ateliers Pratiques" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Kubernetes & Orchestration — Ateliers Pratiques
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Atelier 07 : corrigé
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple"  aria-label="Passer au mode sombre"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Passer au mode sombre" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="cyan"  aria-label="Passer au mode clair"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Passer au mode clair" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Rechercher" placeholder="Rechercher" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Recherche">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Effacer" aria-label="Effacer" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initialisation de la recherche
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Rym28/kubernetes-training" title="Aller au dépôt" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Rym28/kubernetes-training
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Onglets" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Accueil
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../application/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Architecture & Environnement
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../labs/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Ateliers Pratiques
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Corrigés
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../support-cours/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Support de Cours
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../evaluation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Évaluation des Acquis
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Kubernetes &amp; Orchestration — Ateliers Pratiques" class="md-nav__button md-logo" aria-label="Kubernetes & Orchestration — Ateliers Pratiques" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Kubernetes & Orchestration — Ateliers Pratiques
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Rym28/kubernetes-training" title="Aller au dépôt" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Rym28/kubernetes-training
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Accueil
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture & Environnement
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture & Environnement
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../application/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Application Fil Rouge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../setup-environnement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prérequis & Environnement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cluster-aws-express/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cluster AWS en une commande
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../labs/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ateliers Pratiques
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Ateliers Pratiques
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Partie 1 — Déploiement du Cluster & Fondations (Jour 1)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Partie 1 — Déploiement du Cluster & Fondations (Jour 1)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../labs/01-provisionnement-cluster/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 01 : Provisionnement du Cluster
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../labs/02-pods-trois-briques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 02 : Les Pods : les Trois Briques du Campus Summer Portal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../labs/03-deploiements-resilience-rollback/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 03 : Déploiements — Résilience & Rollback
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../labs/04-reseau-services-dns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 04 : Réseau, Services & Découverte DNS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Partie 2 — Persistance, Exploitation & Sécurité (Jour 2)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Partie 2 — Persistance, Exploitation & Sécurité (Jour 2)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../labs/05-configuration-stockage-persistant/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 05 : Configuration & Stockage Persistant (PV / PVC / PostgreSQL)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../labs/06-exploitation-observabilite-debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 06 : Exploitation, Observabilité & Reverse Debugging
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../labs/07-securite-quotas-isolement-reseau/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 07 : Sécurité, Quotas & Isolement Réseau (NetworkPolicy)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Corrigés
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Corrigés
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-pods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Corrigé Atelier 02 : Les Pods
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-deploiements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Corrigé Atelier 03 : Déploiements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-services/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Corrigé Atelier 04 : Services & DNS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-volumes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Corrigé Atelier 05 : Configuration & Stockage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-supervision/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Corrigé Atelier 06 : Exploitation & Observabilité
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-securite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Corrigé Atelier 07 : Sécurité & Isolement Réseau
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_8" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4_8" id="__nav_4_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Versions longues
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_8_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Versions longues
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-services-version-longue/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 04 (énoncé + corrigé)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-volumes-longue-enonce/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 05 : énoncé
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-volumes-longue-corrige/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 05 : corrigé
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-supervision-longue-enonce/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 06 : énoncé
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-supervision-longue-corrige/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 06 : corrigé
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-securite-longue-enonce/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 07 : énoncé
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 07 : corrigé
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 07 : corrigé
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table des matières">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table des matières
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#etape-0-preparer-lenvironnement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 0 — Préparer l'environnement
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-1-limiter-les-ressources-avec-limitrange-resourcequota" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 1 — Limiter les ressources avec LimitRange &amp; ResourceQuota
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 1 — Limiter les ressources avec LimitRange &amp; ResourceQuota">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-installer-un-limitrange" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 — Installer un LimitRange
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-plafonner-le-namespace-avec-un-resourcequota" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 — Plafonner le namespace avec un ResourceQuota
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-3-tester-le-rejet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 3 — Tester le rejet
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-2-cloisonner-le-reseau-avec-les-networkpolicies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 2 — Cloisonner le réseau avec les NetworkPolicies
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 2 — Cloisonner le réseau avec les NetworkPolicies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-constater-que-le-reseau-est-ouvert" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 — Constater que le réseau est ouvert
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-tout-fermer-default-deny" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 — Tout fermer (Default Deny)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-3-ouvrir-les-trois-flux-legitimes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 3 — Ouvrir les trois flux légitimes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-4-tester-lintrusion-et-les-flux-legitimes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 4 — Tester l'intrusion et les flux légitimes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-3-durcir-les-conteneurs-avec-un-securitycontext" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 3 — Durcir les conteneurs avec un SecurityContext
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 3 — Durcir les conteneurs avec un SecurityContext">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-constater-lidentite-actuelle-du-backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 — Constater l'identité actuelle du backend
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-appliquer-le-deployment-durci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 — Appliquer le Deployment durci
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-3-verifier-le-durcissement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 3 — Vérifier le durcissement
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-4-controler-lacces-a-lapi-avec-rbac" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 4 — Contrôler l'accès à l'API avec RBAC
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 4 — Contrôler l&#39;accès à l&#39;API avec RBAC">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-auditer-les-droits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 — Auditer les droits
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-deleguer-un-acces-en-lecture-seule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 — Déléguer un accès en lecture seule
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-5-proteger-lapi-server-et-etcd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 5 — Protéger l'API Server et etcd
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 5 — Protéger l&#39;API Server et etcd">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-tester-lexposition-reseau-depuis-votre-poste" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 — Tester l'exposition réseau depuis votre poste
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-demonstration-formateur" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 — Démonstration formateur
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nettoyage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nettoyage
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../support-cours/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Support de Cours
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Évaluation des Acquis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table des matières">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table des matières
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#etape-0-preparer-lenvironnement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 0 — Préparer l'environnement
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-1-limiter-les-ressources-avec-limitrange-resourcequota" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 1 — Limiter les ressources avec LimitRange &amp; ResourceQuota
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 1 — Limiter les ressources avec LimitRange &amp; ResourceQuota">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-installer-un-limitrange" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 — Installer un LimitRange
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-plafonner-le-namespace-avec-un-resourcequota" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 — Plafonner le namespace avec un ResourceQuota
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-3-tester-le-rejet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 3 — Tester le rejet
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-2-cloisonner-le-reseau-avec-les-networkpolicies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 2 — Cloisonner le réseau avec les NetworkPolicies
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 2 — Cloisonner le réseau avec les NetworkPolicies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-constater-que-le-reseau-est-ouvert" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 — Constater que le réseau est ouvert
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-tout-fermer-default-deny" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 — Tout fermer (Default Deny)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-3-ouvrir-les-trois-flux-legitimes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 3 — Ouvrir les trois flux légitimes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-4-tester-lintrusion-et-les-flux-legitimes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 4 — Tester l'intrusion et les flux légitimes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-3-durcir-les-conteneurs-avec-un-securitycontext" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 3 — Durcir les conteneurs avec un SecurityContext
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 3 — Durcir les conteneurs avec un SecurityContext">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-constater-lidentite-actuelle-du-backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 — Constater l'identité actuelle du backend
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-appliquer-le-deployment-durci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 — Appliquer le Deployment durci
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-3-verifier-le-durcissement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 3 — Vérifier le durcissement
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-4-controler-lacces-a-lapi-avec-rbac" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 4 — Contrôler l'accès à l'API avec RBAC
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 4 — Contrôler l&#39;accès à l&#39;API avec RBAC">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-auditer-les-droits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 — Auditer les droits
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-deleguer-un-acces-en-lecture-seule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 — Déléguer un accès en lecture seule
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-5-proteger-lapi-server-et-etcd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 5 — Protéger l'API Server et etcd
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 5 — Protéger l&#39;API Server et etcd">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-tester-lexposition-reseau-depuis-votre-poste" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 — Tester l'exposition réseau depuis votre poste
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-demonstration-formateur" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 — Démonstration formateur
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nettoyage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nettoyage
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="corrige-atelier-07-version-longue-securite-quotas-de-ressources-isolement-reseau">Corrigé — Atelier 07 (version longue) : Sécurité, Quotas de Ressources &amp; Isolement Réseau<a class="headerlink" href="#corrige-atelier-07-version-longue-securite-quotas-de-ressources-isolement-reseau" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>🔒 <strong>Confidentiel formateur.</strong> À diffuser en fin d'atelier uniquement. Énoncé : <code>corrections/07-securite-longue/README.md</code> (archive de la version longue). La version en vigueur et son corrigé sont <code>labs/07-Sécurité Cluster/README.md</code> et <code>corrections/07-securite/CORRIGE.md</code>. Manifests fournis : <code>labs/07-Sécurité Cluster/manifests/</code>.</p>
+<p>⏱️ <strong>Durée indicative :</strong> 1 h 30 à 1 h 45 (étape 0 : 10 min ; Ex. 1 : 15 min ; Ex. 2 : 25 min ; Ex. 3 : 15 min ; Ex. 4 : 10 min ; Ex. 5 : 15 min, démonstration comprise ; correction collective : 15 min).</p>
+<p>📅 <strong>Ordre de passage : 05 → 07 → 06</strong>, comme la version en vigueur (même starter, mêmes manifests).</p>
+<p>✅ <strong>Sorties vérifiées sur le cluster de formation</strong> (kubeadm v1.30, Calico). Les compteurs <code>Used</code> du ResourceQuota (étape 2 de l'exercice 1 et étape 3 de l'exercice 3) dépendent des pods présents au moment de la commande.</p>
+</blockquote>
+<hr />
+<h2 id="etape-0-preparer-lenvironnement">Étape 0 — Préparer l'environnement<a class="headerlink" href="#etape-0-preparer-lenvironnement" title="Permanent link">&para;</a></h2>
+<p>Commandes données dans l'énoncé. Attendu : <code>deployment "campus-postgres" successfully rolled out</code>, puis <code>deployment "campus-backend" successfully rolled out</code> (le backend a des sondes : <code>rollout status</code> attend la fin du démarrage de Spring Boot). 5 pods : 2 backend, 2 frontend, 1 base. Un ancien pod backend peut rester quelques secondes <code>Terminating</code> : le compteur <code>pods</code> du quota (exercice 1) peut alors afficher 6.</p>
+<p>Erreur fréquente : oublier les guillemets autour de <code>"labs/07-Sécurité Cluster"</code> (espace et accent dans le chemin), (<code>"labs/07-Sécurité Cluster/starter/"</code>, <code>"labs/07-Sécurité Cluster/manifests/…"</code>). Les commandes ci-dessous s'exécutent depuis la racine du dépôt.</p>
+<hr />
+<h2 id="exercice-1-limiter-les-ressources-avec-limitrange-resourcequota">Exercice 1 — Limiter les ressources avec LimitRange &amp; ResourceQuota<a class="headerlink" href="#exercice-1-limiter-les-ressources-avec-limitrange-resourcequota" title="Permanent link">&para;</a></h2>
+<h3 id="etape-1-installer-un-limitrange">Étape 1 — Installer un LimitRange<a class="headerlink" href="#etape-1-installer-un-limitrange" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span><span class="s2">"labs/07-Sécurité Cluster/manifests/01-limitrange.yaml"</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>kubectl<span class="w"> </span>describe<span class="w"> </span>limitrange<span class="w"> </span>campus-default-limits
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>kubectl<span class="w"> </span>describe<span class="w"> </span>pod<span class="w"> </span>-l<span class="w"> </span><span class="nv">app</span><span class="o">=</span>campus-backend
+</span></code></pre></div>
+<p>Sortie attendue (extrait) :
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Type        Resource  Min  Max  Default Request  Default Limit  Max Limit/Request Ratio
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>----        --------  ---  ---  ---------------  -------------  -----------------------
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>Container   cpu       -    -    100m             500m           -
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>Container   memory    -    -    128Mi            512Mi          -
+</span></code></pre></div></p>
+<ul>
+<li>Un conteneur sans <code>resources</code> reçoit <code>requests: cpu 100m, memory 128Mi</code> (<code>defaultRequest</code>) et <code>limits: cpu 500m, memory 512Mi</code> (<code>default</code>).</li>
+<li>Les pods déjà en cours d'exécution <strong>n'ont pas</strong> ces valeurs : <code>kubectl describe pod</code> sur un pod backend ne montre ni <code>Requests</code> ni <code>Limits</code>. Le LimitRange agit à l'<strong>admission</strong> (création d'un pod par l'API Server) ; il ne modifie jamais un pod existant. Les valeurs s'appliqueront aux prochains pods recréés.</li>
+</ul>
+<h3 id="etape-2-plafonner-le-namespace-avec-un-resourcequota">Étape 2 — Plafonner le namespace avec un ResourceQuota<a class="headerlink" href="#etape-2-plafonner-le-namespace-avec-un-resourcequota" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span><span class="s2">"labs/07-Sécurité Cluster/manifests/02-resourcequota.yaml"</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>kubectl<span class="w"> </span>describe<span class="w"> </span>resourcequota<span class="w"> </span>campus-compute-quota
+</span></code></pre></div>
+<p>Sortie attendue (vérifiée sur le cluster) :
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Resource         Used  Hard
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>--------         ----  ----
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>limits.cpu       0     4
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>limits.memory    0     4Gi
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>pods             5     10
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>requests.cpu     0     2
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>requests.memory  0     2Gi
+</span></code></pre></div></p>
+<ul>
+<li><code>pods</code> : <strong>5</strong> déjà comptés (2 backend, 2 frontend, 1 base).</li>
+<li><code>requests.cpu</code> à <strong>0</strong> : les pods existants ont été créés avant le LimitRange et ne déclarent aucune ressource ; ils comptent pour 0 dans le quota.</li>
+<li>Sans LimitRange, un nouveau pod sans <code>resources</code> serait <strong>refusé</strong> : <code>failed quota: campus-compute-quota: must specify limits.cpu for: …; limits.memory …; requests.cpu …; requests.memory …</code>. Dès qu'un quota porte sur le CPU ou la mémoire, chaque nouveau pod doit déclarer ces valeurs. Conséquence piège : même un <code>kubectl run</code> de test ou un redémarrage de pod échouerait.</li>
+</ul>
+<h3 id="etape-3-tester-le-rejet">Étape 3 — Tester le rejet<a class="headerlink" href="#etape-3-tester-le-rejet" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span><span class="s2">"labs/07-Sécurité Cluster/manifests/03-pod-trop-gros.yaml"</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pod<span class="w"> </span>pod-trop-gros
+</span></code></pre></div>
+<p>Sortie attendue :
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>Error from server (Forbidden): error when creating "labs/07-Sécurité Cluster/manifests/03-pod-trop-gros.yaml": pods "pod-trop-gros" is forbidden: exceeded quota: campus-compute-quota, requested: limits.cpu=5,requests.cpu=5, used: limits.cpu=0,requests.cpu=0, limited: limits.cpu=4,requests.cpu=2
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>Error from server (NotFound): pods "pod-trop-gros" not found
+</span></code></pre></div></p>
+<ul>
+<li>Les deux plafonds CPU sont dépassés : <code>requests.cpu</code> (5 &gt; 2) et <code>limits.cpu</code> (5 &gt; 4).</li>
+<li>Le pod <strong>n'existe pas</strong> : il n'a jamais été enregistré.</li>
+<li>Le refus a lieu <strong>avant</strong> tout placement : c'est le contrôleur d'admission <code>ResourceQuota</code> de l'API Server qui rejette la requête. Le Scheduler n'est jamais sollicité.</li>
+</ul>
+<hr />
+<h2 id="exercice-2-cloisonner-le-reseau-avec-les-networkpolicies">Exercice 2 — Cloisonner le réseau avec les NetworkPolicies<a class="headerlink" href="#exercice-2-cloisonner-le-reseau-avec-les-networkpolicies" title="Permanent link">&para;</a></h2>
+<h3 id="etape-1-constater-que-le-reseau-est-ouvert">Étape 1 — Constater que le réseau est ouvert<a class="headerlink" href="#etape-1-constater-que-le-reseau-est-ouvert" title="Permanent link">&para;</a></h3>
+<p>Commande donnée. Sortie : <code>postgres:5432 - accepting connections</code>, puis <code>pod "rogue-pod" deleted</code>.</p>
+<ul>
+<li>N'importe quel pod du cluster, même sans rapport avec l'application, atteint la base.</li>
+<li>Risque : un conteneur compromis (faille web, image piégée) peut attaquer PostgreSQL directement (force brute, exploitation d'une faille du serveur), sans passer par l'API.</li>
+</ul>
+<p>Note : grâce au LimitRange, ce pod sans <code>resources</code> est accepté malgré le quota.</p>
+<h3 id="etape-2-tout-fermer-default-deny">Étape 2 — Tout fermer (<em>Default Deny</em>)<a class="headerlink" href="#etape-2-tout-fermer-default-deny" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span><span class="s2">"labs/07-Sécurité Cluster/manifests/04-default-deny-ingress.yaml"</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>kubectl<span class="w"> </span>run<span class="w"> </span>rogue-pod<span class="w"> </span>--image<span class="o">=</span>postgres:16-alpine<span class="w"> </span>--rm<span class="w"> </span>-i<span class="w"> </span>--restart<span class="o">=</span>Never<span class="w"> </span>--<span class="w"> </span>pg_isready<span class="w"> </span>-h<span class="w"> </span>postgres<span class="w"> </span>-p<span class="w"> </span><span class="m">5432</span><span class="w"> </span>-t<span class="w"> </span><span class="m">3</span>
+</span></code></pre></div>
+<ul>
+<li><code>pg_isready</code> répond <code>postgres:5432 - no response</code> (code retour 2 : <code>kubectl</code> peut afficher <code>pod campus-dev/rogue-pod terminated (Error)</code>, c'est attendu).</li>
+<li>Le portail ne s'affiche plus (délai d'attente dépassé) : plus <strong>aucune</strong> connexion n'entre dans <strong>aucun</strong> pod du namespace, y compris le trafic du NodePort vers le frontend.</li>
+<li>Les pods restent <code>Running</code> et <code>READY</code> : Calico autorise toujours le trafic du nœud hôte vers ses pods, donc les sondes HTTP du kubelet passent.</li>
+</ul>
+<h3 id="etape-3-ouvrir-les-trois-flux-legitimes">Étape 3 — Ouvrir les trois flux légitimes<a class="headerlink" href="#etape-3-ouvrir-les-trois-flux-legitimes" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span><span class="s2">"labs/07-Sécurité Cluster/manifests/05-campus-networkpolicies.yaml"</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>kubectl<span class="w"> </span>get<span class="w"> </span>networkpolicy
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>kubectl<span class="w"> </span>describe<span class="w"> </span>networkpolicy
+</span></code></pre></div>
+<p>Sortie attendue : 4 NetworkPolicies (<code>default-deny-ingress</code>, <code>allow-web-to-frontend</code>, <code>allow-frontend-to-backend</code>, <code>allow-only-backend-to-postgres</code>). La colonne <code>POD-SELECTOR</code> affiche <code>&lt;none&gt;</code> pour la première (tous les pods).</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Règle</th>
+<th style="text-align: left;">Pods protégés (<code>podSelector</code>)</th>
+<th style="text-align: left;">Sources autorisées (<code>from</code>)</th>
+<th style="text-align: left;">Port</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>allow-web-to-frontend</code></td>
+<td style="text-align: left;"><code>app=campus-frontend</code></td>
+<td style="text-align: left;">toutes (pas de <code>from</code>)</td>
+<td style="text-align: left;">TCP 8080</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>allow-frontend-to-backend</code></td>
+<td style="text-align: left;"><code>app=campus-backend</code></td>
+<td style="text-align: left;">pods <code>app=campus-frontend</code> du namespace</td>
+<td style="text-align: left;">TCP 8080</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>allow-only-backend-to-postgres</code></td>
+<td style="text-align: left;"><code>app=campus-postgres</code></td>
+<td style="text-align: left;">pods <code>app=campus-backend</code> du namespace</td>
+<td style="text-align: left;">TCP 5432</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Absence de <code>from</code> = <strong>toutes les sources</strong>, mais seulement sur le port indiqué. Indispensable pour le NodePort : le trafic du navigateur arrive par n'importe quel nœud, avec une adresse source réécrite (SNAT) variable ; on ne peut pas le désigner par un sélecteur de pods.</li>
+</ul>
+<p>Erreur fréquente : croire que le <code>podSelector</code> désigne la <strong>source</strong>. Il désigne la <strong>destination</strong> protégée.</p>
+<h3 id="etape-4-tester-lintrusion-et-les-flux-legitimes">Étape 4 — Tester l'intrusion et les flux légitimes<a class="headerlink" href="#etape-4-tester-lintrusion-et-les-flux-legitimes" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>kubectl<span class="w"> </span>run<span class="w"> </span>rogue-pod<span class="w"> </span>--image<span class="o">=</span>postgres:16-alpine<span class="w"> </span>--rm<span class="w"> </span>-i<span class="w"> </span>--restart<span class="o">=</span>Never<span class="w"> </span>--<span class="w"> </span>pg_isready<span class="w"> </span>-h<span class="w"> </span>postgres<span class="w"> </span>-p<span class="w"> </span><span class="m">5432</span><span class="w"> </span>-t<span class="w"> </span><span class="m">3</span>
+</span></code></pre></div>
+<ul>
+<li><code>rogue-pod</code> : <code>postgres:5432 - no response</code>. Aucune règle n'autorise un pod sans label <code>app=campus-backend</code> à joindre la base.</li>
+<li><code>test-auth</code> : <code>postgres:5432 - accepting connections</code>. Il porte <code>app=campus-backend</code> : la règle <code>allow-only-backend-to-postgres</code> le laisse passer.</li>
+<li>Le portail fonctionne de nouveau, données comprises. <code>/actuator/health</code> renvoie <code>{"status":"UP","components":{"db":{"status":"UP",…}…}}</code> : la chaîne navigateur → frontend → backend → PostgreSQL est entièrement autorisée.</li>
+<li>Faiblesse : <strong>n'importe qui pouvant créer un pod peut poser n'importe quel label</strong>. Une NetworkPolicy fondée sur les labels n'est solide que si le droit de créer des pods est restreint : c'est le rôle du <strong>RBAC</strong> (exercice 4).</li>
+</ul>
+<hr />
+<h2 id="exercice-3-durcir-les-conteneurs-avec-un-securitycontext">Exercice 3 — Durcir les conteneurs avec un SecurityContext<a class="headerlink" href="#exercice-3-durcir-les-conteneurs-avec-un-securitycontext" title="Permanent link">&para;</a></h2>
+<h3 id="etape-1-constater-lidentite-actuelle-du-backend">Étape 1 — Constater l'identité actuelle du backend<a class="headerlink" href="#etape-1-constater-lidentite-actuelle-du-backend" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>deployment/campus-backend<span class="w"> </span>--<span class="w"> </span>id
+</span></code></pre></div>
+<p>Sortie (vérifiée sur le cluster) : <code>uid=0(root) gid=0(root) groups=0(root)</code>.</p>
+<ul>
+<li>Le processus Java tourne en <strong>root</strong>. Si l'application est compromise, l'attaquant est root dans le conteneur : il peut modifier les fichiers de l'image, installer des outils et, en cas de faille du runtime ou de volume <code>hostPath</code> mal configuré, tenter de s'échapper vers le nœud.</li>
+</ul>
+<h3 id="etape-2-appliquer-le-deployment-durci">Étape 2 — Appliquer le Deployment durci<a class="headerlink" href="#etape-2-appliquer-le-deployment-durci" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span><span class="s2">"labs/07-Sécurité Cluster/manifests/06-deployment-backend-secure.yaml"</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>kubectl<span class="w"> </span>rollout<span class="w"> </span>status<span class="w"> </span>deployment/campus-backend<span class="w"> </span>--timeout<span class="o">=</span>300s
+</span></code></pre></div>
+<ul>
+<li>Bloc ① : <code>runAsUser: 10001</code> force l'UID du processus ; <code>runAsNonRoot: true</code> fait refuser par le kubelet tout conteneur qui tournerait malgré tout en UID 0 (<code>CreateContainerConfigError: container has runAsNonRoot and image will run as root</code>).</li>
+<li>Bloc ② : <code>allowPrivilegeEscalation: false</code> interdit à un processus de gagner plus de privilèges que son parent (binaires <code>setuid</code> comme <code>sudo</code>) ; <code>capabilities.drop: [ALL]</code> retire toutes les capacités Linux (<code>NET_RAW</code>, <code>CHOWN</code>, <code>SETUID</code>…), même celles accordées par défaut.</li>
+<li>Bloc ③ : le LimitRange fournit des valeurs génériques (100m / 512Mi). Le backend Spring Boot a des besoins propres : on les déclare explicitement pour un placement correct (<code>requests</code>) et une protection adaptée (<code>limits</code>). Bonne pratique : ressources explicites sur toute application de production.</li>
+</ul>
+<p>Le rolling update crée temporairement un 3e pod backend (<code>maxSurge: 1</code>) : il entre dans le quota (6 pods sur 10).</p>
+<p>Erreur fréquente : passer <code>readOnlyRootFilesystem: true</code> sans volume <code>emptyDir</code> sur <code>/tmp</code> → Spring Boot échoue au démarrage (Tomcat ne peut pas créer son répertoire de travail).</p>
+<h3 id="etape-3-verifier-le-durcissement">Étape 3 — Vérifier le durcissement<a class="headerlink" href="#etape-3-verifier-le-durcissement" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>deployment/campus-backend<span class="w"> </span>--<span class="w"> </span>id
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>kubectl<span class="w"> </span>describe<span class="w"> </span>resourcequota<span class="w"> </span>campus-compute-quota
+</span></code></pre></div>
+<ul>
+<li><code>uid=10001(10001) gid=10001(10001) groups=10001(10001)</code> (précédé de <code>id: cannot find name for user ID 10001</code> et <code>… group ID 10001</code>). Ce message est <strong>normal</strong> : l'UID n'est pas déclaré dans <code>/etc/passwd</code> de l'image, ce qui n'empêche pas le processus de tourner.</li>
+<li>Quota (vérifié sur le cluster) : <code>requests.cpu</code> passe à <strong>300m</strong> et <code>requests.memory</code> à <strong>512Mi</strong> (2 pods × 150m / 256Mi) ; <code>limits.cpu</code> à <strong>1</strong>, <code>limits.memory</code> à <strong>1Gi</strong> (2 × 500m / 512Mi). Seuls les nouveaux pods backend déclarent des ressources ; frontend et base, créés avant le LimitRange, comptent toujours pour 0.</li>
+</ul>
+<hr />
+<h2 id="exercice-4-controler-lacces-a-lapi-avec-rbac">Exercice 4 — Contrôler l'accès à l'API avec RBAC<a class="headerlink" href="#exercice-4-controler-lacces-a-lapi-avec-rbac" title="Permanent link">&para;</a></h2>
+<h3 id="etape-1-auditer-les-droits">Étape 1 — Auditer les droits<a class="headerlink" href="#etape-1-auditer-les-droits" title="Permanent link">&para;</a></h3>
+<p>Commandes données. Sortie (vérifiée sur le cluster) :
+<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>ATTRIBUTE   VALUE
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>Username    kubernetes-admin
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>Groups      [kubeadm:cluster-admins system:authenticated]
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>yes
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>yes
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>no
+</span></code></pre></div></p>
+<ul>
+<li>Vous êtes <code>kubernetes-admin</code>, membre du groupe <code>kubeadm:cluster-admins</code>, lié par kubeadm au ClusterRole <code>cluster-admin</code> : tous les droits sur tout le cluster, d'où les <code>yes</code>. Le kubeconfig récupéré à l'Atelier 01 est donc un <strong>secret critique</strong>.</li>
+<li><code>kubectl auth can-i delete namespaces</code> affiche aussi <code>Warning: resource 'namespaces' is not namespace scoped</code> : le namespace courant <code>campus-dev</code> est ignoré pour une ressource de niveau cluster. Sans conséquence.</li>
+<li><code>system:serviceaccount:campus-dev:default</code> : le compte de service créé automatiquement dans chaque namespace. Tous les pods qui ne précisent pas <code>serviceAccountName</code> l'utilisent (ici : tous les pods de l'application). Réponse <code>no</code> : il n'a aucun droit RBAC, donc un pod compromis ne peut pas lire les Secrets via l'API.</li>
+</ul>
+<h3 id="etape-2-deleguer-un-acces-en-lecture-seule">Étape 2 — Déléguer un accès en lecture seule<a class="headerlink" href="#etape-2-deleguer-un-acces-en-lecture-seule" title="Permanent link">&para;</a></h3>
+<p>Commandes données. Réponses : <code>yes</code>, <code>no</code>, <code>no</code>.</p>
+<ul>
+<li><code>list pods</code> → <code>yes</code> : accordé par le Role <code>pod-reader</code> (verbes <code>get</code>, <code>list</code>, <code>watch</code> sur <code>pods</code>) via le RoleBinding <code>read-pods</code>.</li>
+<li><code>delete pods</code> → <code>no</code> : le verbe <code>delete</code> n'est pas dans le Role. Le RBAC est <strong>additif</strong> : tout ce qui n'est pas explicitement accordé est refusé.</li>
+<li><code>list pods -n kube-system</code> → <code>no</code> : un Role et un RoleBinding n'agissent que dans <strong>leur</strong> namespace (<code>campus-dev</code>).</li>
+<li>Rôles des objets : le <strong>ServiceAccount</strong> est l'identité (pour un programme) ; le <strong>Role</strong> est la liste des droits (verbes × ressources) dans un namespace ; le <strong>RoleBinding</strong> attribue ce Role à une identité.</li>
+<li>Pour un droit sur tout le cluster : un <strong>ClusterRole</strong> et un <strong>ClusterRoleBinding</strong>.</li>
+</ul>
+<hr />
+<h2 id="exercice-5-proteger-lapi-server-et-etcd">Exercice 5 — Protéger l'API Server et etcd<a class="headerlink" href="#exercice-5-proteger-lapi-server-et-etcd" title="Permanent link">&para;</a></h2>
+<h3 id="etape-1-tester-lexposition-reseau-depuis-votre-poste">Étape 1 — Tester l'exposition réseau depuis votre poste<a class="headerlink" href="#etape-1-tester-lexposition-reseau-depuis-votre-poste" title="Permanent link">&para;</a></h3>
+<p>Sorties (vérifiées depuis un poste local) :</p>
+<ul>
+<li><code>/version</code> → JSON <code>{"major": "1", "minor": "30", "gitVersion": "v1.30.14", …}</code> : l'API Server répond <strong>sans authentification</strong> à cette route publique (accès anonyme limité à quelques routes d'information).</li>
+<li><code>/api/v1/namespaces/campus-dev/secrets</code> → <code>403 Forbidden</code> : <code>secrets is forbidden: User "system:anonymous" cannot list resource "secrets"…</code>. La requête sans certificat ni jeton est traitée sous l'identité <strong><code>system:anonymous</code></strong>, qui n'a aucun droit RBAC.</li>
+<li>Port 2379 → aucune réponse, <code>Code retour : 28</code> = <strong>délai d'attente dépassé</strong> (<code>curl</code> : operation timed out). Le pare-feu AWS rejette silencieusement le paquet.</li>
+<li><code>main.tf</code> : le Security Group ouvre à <code>0.0.0.0/0</code> les ports <strong>22</strong> (SSH), <strong>6443</strong> (API Server) et <strong>30000-32767</strong> (NodePorts). Le port 2379 n'est couvert que par la règle <code>self = true</code> : seuls les membres du même Security Group (les nœuds du cluster) peuvent le joindre. De plus, etcd n'écoute que sur <code>127.0.0.1</code> et l'IP privée du nœud.</li>
+</ul>
+<h3 id="etape-2-demonstration-formateur">Étape 2 — Démonstration formateur<a class="headerlink" href="#etape-2-demonstration-formateur" title="Permanent link">&para;</a></h3>
+<p>Déroulé conseillé (5 min, en SSH sur <code>k8s-control</code>, en projetant le terminal) : commandes a à d de l'énoncé. Penser à supprimer <code>test-etcd</code> à la fin. Toutes les commandes ont été jouées en préparation.</p>
+<ul>
+<li>TLS mutuel : <code>etcd.yaml</code> contient <code>--client-cert-auth=true</code> et <code>--trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt</code>. Le <code>curl -sk</code> échoue pendant la négociation TLS (<strong>code retour 56</strong>, relevé en préparation ; 35 possible avec une autre version de <code>curl</code>) : etcd exige un certificat client signé par <strong>sa propre</strong> autorité. Le seul client légitime est l'<strong>API Server</strong> (<code>--etcd-servers=https://127.0.0.1:2379</code>, <code>--etcd-cafile</code>, <code>--etcd-certfile=/etc/kubernetes/pki/apiserver-etcd-client.crt</code>, <code>--etcd-keyfile</code> dans <code>kube-apiserver.yaml</code>).</li>
+<li>Droits : les 4 fichiers <code>.key</code> de <code>/etc/kubernetes/pki/etcd/</code> sont en mode <code>600</code> (<code>-rw-------</code>), propriétaire <code>root</code> ; les <code>.crt</code> sont en <code>644</code>. Sur le nœud, seul <code>root</code> (via <code>sudo</code>) peut lire les clés : un accès SSH <strong>non privilégié</strong> ne suffit pas. Par l'API, exécuter <code>etcdctl</code> dans le pod etcd exige le droit <code>create</code> sur <code>pods/exec</code> dans <code>kube-system</code>, c'est-à-dire en pratique des droits d'administrateur du cluster : encore une raison de protéger le kubeconfig <code>cluster-admin</code>.</li>
+<li>Si le formateur lance la commande c depuis <strong>Git Bash</strong> sur son poste plutôt qu'en SSH, préfixer par <code>MSYS_NO_PATHCONV=1</code> : sinon Git Bash convertit <code>/etc/kubernetes/...</code> en <code>C:/Program Files/Git/etc/...</code> (constaté le 23/11/2026).</li>
+<li><code>etcdctl</code> n'est <strong>pas installé</strong> sur <code>k8s-control</code> (constaté en préparation) : la démonstration l'exécute dans le pod statique <code>etcd-k8s-control</code>, qui embarque l'outil et monte <code>/etc/kubernetes/pki/etcd/</code>. Un message <code>websocket.go … Unknown stream id 1, discarding message</code> peut s'afficher : sans conséquence.</li>
+<li>Chiffrement : la sortie <code>motdepasseSuperSecret2026</code> montre la valeur en clair dans etcd. Base64 n'est qu'un <strong>encodage</strong> réversible par n'importe qui (<code>base64 -d</code>), sans clé : ce n'est pas un chiffrement. Parade : <code>EncryptionConfiguration</code> (<code>aescbc</code>, <code>aesgcm</code> ou <code>secretbox</code>) passée à l'API Server via <code>--encryption-provider-config</code>, ou mieux un fournisseur <strong>KMS</strong> externe ; puis réécrire les Secrets existants.</li>
+</ul>
+<p>Synthèse à faire reformuler par le groupe : les 4 verrous d'etcd (réseau, TLS mutuel, droits <code>root</code> sur les clés, chiffrement au repos) et les 5 points à sécuriser du programme (tableau de synthèse de l'énoncé).</p>
+<hr />
+<h2 id="nettoyage">Nettoyage<a class="headerlink" href="#nettoyage" title="Permanent link">&para;</a></h2>
+<p>Rien à faire avant l'Atelier 06 : son étape 0 supprime NetworkPolicies, ResourceQuota et LimitRange (sinon <code>test-api</code>, sans label, ne joindrait pas le backend, et le quota compterait les pods des incidents). Le backend durci est conservé. Pour tout retirer à la main :
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>kubectl<span class="w"> </span>delete<span class="w"> </span>networkpolicy<span class="w"> </span>--all
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>kubectl<span class="w"> </span>delete<span class="w"> </span>resourcequota<span class="w"> </span>campus-compute-quota
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>kubectl<span class="w"> </span>delete<span class="w"> </span>limitrange<span class="w"> </span>campus-default-limits
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>kubectl<span class="w"> </span>delete<span class="w"> </span>rolebinding<span class="w"> </span>read-pods<span class="w"> </span><span class="p">;</span><span class="w"> </span>kubectl<span class="w"> </span>delete<span class="w"> </span>role<span class="w"> </span>pod-reader<span class="w"> </span><span class="p">;</span><span class="w"> </span>kubectl<span class="w"> </span>delete<span class="w"> </span>serviceaccount<span class="w"> </span>campus-ci-runner
+</span></code></pre></div></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Retour en haut de la page
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2026 Rym Regaieg
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "navigation.indexes", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copi\u00e9 dans le presse-papier", "clipboard.copy": "Copier dans le presse-papier", "search.result.more.one": "1 de plus sur cette page", "search.result.more.other": "# de plus sur cette page", "search.result.none": "Aucun document trouv\u00e9", "search.result.one": "1 document trouv\u00e9", "search.result.other": "# documents trouv\u00e9s", "search.result.placeholder": "Taper pour d\u00e9marrer la recherche", "search.result.term.missing": "Non trouv\u00e9", "select.version": "S\u00e9lectionner la version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+        <script src="../../javascripts/slides.js"></script>
+      
+    
+  </body>
+</html>

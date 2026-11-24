@@ -1,0 +1,2438 @@
+
+<!doctype html>
+<html lang="fr" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Ateliers pratiques d'orchestration et déploiement de conteneurs avec Kubernetes.">
+      
+      
+        <meta name="author" content="Rym Regaieg">
+      
+      
+        <link rel="canonical" href="https://rym28.github.io/kubernetes-training/corrections/05-volumes-longue-corrige/">
+      
+      
+        <link rel="prev" href="../05-volumes-longue-enonce/">
+      
+      
+        <link rel="next" href="../06-supervision-longue-enonce/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.2">
+    
+    
+      
+        <title>Atelier 05 : corrigé - Kubernetes & Orchestration — Ateliers Pratiques</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#corrige-atelier-05-version-longue-configuration-stockage-persistant-pv-pvc-postgresql" class="md-skip">
+          Aller au contenu
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="En-tête">
+    <a href="../.." title="Kubernetes &amp; Orchestration — Ateliers Pratiques" class="md-header__button md-logo" aria-label="Kubernetes & Orchestration — Ateliers Pratiques" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Kubernetes & Orchestration — Ateliers Pratiques
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Atelier 05 : corrigé
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple"  aria-label="Passer au mode sombre"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Passer au mode sombre" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="cyan"  aria-label="Passer au mode clair"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Passer au mode clair" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Rechercher" placeholder="Rechercher" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Recherche">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Effacer" aria-label="Effacer" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initialisation de la recherche
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Rym28/kubernetes-training" title="Aller au dépôt" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Rym28/kubernetes-training
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Onglets" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Accueil
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../application/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Architecture & Environnement
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../labs/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Ateliers Pratiques
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Corrigés
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../support-cours/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Support de Cours
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../evaluation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Évaluation des Acquis
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Kubernetes &amp; Orchestration — Ateliers Pratiques" class="md-nav__button md-logo" aria-label="Kubernetes & Orchestration — Ateliers Pratiques" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Kubernetes & Orchestration — Ateliers Pratiques
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Rym28/kubernetes-training" title="Aller au dépôt" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Rym28/kubernetes-training
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Accueil
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture & Environnement
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture & Environnement
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../application/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Application Fil Rouge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../setup-environnement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prérequis & Environnement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cluster-aws-express/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cluster AWS en une commande
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../labs/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ateliers Pratiques
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Ateliers Pratiques
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Partie 1 — Déploiement du Cluster & Fondations (Jour 1)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Partie 1 — Déploiement du Cluster & Fondations (Jour 1)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../labs/01-provisionnement-cluster/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 01 : Provisionnement du Cluster
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../labs/02-pods-trois-briques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 02 : Les Pods : les Trois Briques du Campus Summer Portal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../labs/03-deploiements-resilience-rollback/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 03 : Déploiements — Résilience & Rollback
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../labs/04-reseau-services-dns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 04 : Réseau, Services & Découverte DNS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Partie 2 — Persistance, Exploitation & Sécurité (Jour 2)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Partie 2 — Persistance, Exploitation & Sécurité (Jour 2)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../labs/05-configuration-stockage-persistant/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 05 : Configuration & Stockage Persistant (PV / PVC / PostgreSQL)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../labs/06-exploitation-observabilite-debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 06 : Exploitation, Observabilité & Reverse Debugging
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../labs/07-securite-quotas-isolement-reseau/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 07 : Sécurité, Quotas & Isolement Réseau (NetworkPolicy)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Corrigés
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Corrigés
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-pods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Corrigé Atelier 02 : Les Pods
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-deploiements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Corrigé Atelier 03 : Déploiements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-services/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Corrigé Atelier 04 : Services & DNS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-volumes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Corrigé Atelier 05 : Configuration & Stockage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-supervision/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Corrigé Atelier 06 : Exploitation & Observabilité
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-securite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Corrigé Atelier 07 : Sécurité & Isolement Réseau
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_8" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4_8" id="__nav_4_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Versions longues
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_8_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Versions longues
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-services-version-longue/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 04 (énoncé + corrigé)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-volumes-longue-enonce/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 05 : énoncé
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 05 : corrigé
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 05 : corrigé
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table des matières">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table des matières
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#etape-0-preparer-lenvironnement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 0 — Préparer l'environnement
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-1-externaliser-la-configuration-avec-un-configmap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 1 — Externaliser la configuration avec un ConfigMap
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 1 — Externaliser la configuration avec un ConfigMap">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-creer-le-configmap-campus-config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 — Créer le ConfigMap campus-config
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-configmap-a-partir-dun-fichier" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 — ConfigMap à partir d'un fichier
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-2-proteger-les-identifiants-avec-un-secret" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 2 — Protéger les identifiants avec un Secret
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 2 — Protéger les identifiants avec un Secret">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-creer-le-secret" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 — Créer le Secret
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-lire-et-decoder-le-secret" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 — Lire et décoder le Secret
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-3-demander-du-stockage-persistant-pv-et-pvc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 3 — Demander du stockage persistant (PV et PVC)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 3 — Demander du stockage persistant (PV et PVC)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-la-storageclass-du-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 — La StorageClass du cluster
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-creer-le-pvc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 — Créer le PVC
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-4-deployer-postgresql-avec-son-volume-et-son-secret" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 4 — Déployer PostgreSQL avec son volume et son Secret
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 4 — Déployer PostgreSQL avec son volume et son Secret">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-lire-le-manifest-postgresql" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 — Lire le manifest PostgreSQL
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-appliquer-le-deploiement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 — Appliquer le déploiement
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-3-observer-le-volume-cree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 3 — Observer le volume créé
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-5-reconnecter-le-backend-et-prouver-la-persistance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 5 — Reconnecter le backend et prouver la persistance
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 5 — Reconnecter le backend et prouver la persistance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-reconfigurer-le-backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 — Reconfigurer le backend
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-ecrire-des-donnees-de-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 — Écrire des données de test
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-3-crash-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 3 — Crash-test
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-4-verifier-la-survie-des-donnees" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 4 — Vérifier la survie des données
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recapitulatif-manifests-de-fin-de-lab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Récapitulatif — Manifests de fin de lab
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-supervision-longue-enonce/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 06 : énoncé
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-supervision-longue-corrige/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 06 : corrigé
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-securite-longue-enonce/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 07 : énoncé
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-securite-longue-corrige/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 07 : corrigé
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../support-cours/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Support de Cours
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Évaluation des Acquis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table des matières">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table des matières
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#etape-0-preparer-lenvironnement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 0 — Préparer l'environnement
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-1-externaliser-la-configuration-avec-un-configmap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 1 — Externaliser la configuration avec un ConfigMap
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 1 — Externaliser la configuration avec un ConfigMap">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-creer-le-configmap-campus-config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 — Créer le ConfigMap campus-config
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-configmap-a-partir-dun-fichier" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 — ConfigMap à partir d'un fichier
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-2-proteger-les-identifiants-avec-un-secret" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 2 — Protéger les identifiants avec un Secret
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 2 — Protéger les identifiants avec un Secret">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-creer-le-secret" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 — Créer le Secret
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-lire-et-decoder-le-secret" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 — Lire et décoder le Secret
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-3-demander-du-stockage-persistant-pv-et-pvc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 3 — Demander du stockage persistant (PV et PVC)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 3 — Demander du stockage persistant (PV et PVC)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-la-storageclass-du-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 — La StorageClass du cluster
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-creer-le-pvc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 — Créer le PVC
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-4-deployer-postgresql-avec-son-volume-et-son-secret" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 4 — Déployer PostgreSQL avec son volume et son Secret
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 4 — Déployer PostgreSQL avec son volume et son Secret">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-lire-le-manifest-postgresql" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 — Lire le manifest PostgreSQL
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-appliquer-le-deploiement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 — Appliquer le déploiement
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-3-observer-le-volume-cree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 3 — Observer le volume créé
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-5-reconnecter-le-backend-et-prouver-la-persistance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 5 — Reconnecter le backend et prouver la persistance
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 5 — Reconnecter le backend et prouver la persistance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-reconfigurer-le-backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 — Reconfigurer le backend
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-ecrire-des-donnees-de-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 — Écrire des données de test
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-3-crash-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 3 — Crash-test
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-4-verifier-la-survie-des-donnees" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 4 — Vérifier la survie des données
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recapitulatif-manifests-de-fin-de-lab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Récapitulatif — Manifests de fin de lab
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="corrige-atelier-05-version-longue-configuration-stockage-persistant-pv-pvc-postgresql">Corrigé — Atelier 05 (version longue) : Configuration &amp; Stockage Persistant (PV / PVC / PostgreSQL)<a class="headerlink" href="#corrige-atelier-05-version-longue-configuration-stockage-persistant-pv-pvc-postgresql" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>🔒 <strong>Confidentiel formateur.</strong> À diffuser en fin d'atelier uniquement. Énoncé : <code>corrections/05-volumes-longue/README.md</code> (archive de la version longue, avec StorageClass <code>local-path</code>). La version en vigueur et son corrigé sont <code>labs/05-Les Volumes/README.md</code> et <code>corrections/05-volumes/CORRIGE.md</code>.</p>
+</blockquote>
+<hr />
+<h2 id="etape-0-preparer-lenvironnement">Étape 0 — Préparer l'environnement<a class="headerlink" href="#etape-0-preparer-lenvironnement" title="Permanent link">&para;</a></h2>
+<p>Commandes données dans l'énoncé. Attendu : <code>campus-postgres</code> (base de développement <code>emptyDir</code>), <code>campus-backend</code> en 3 réplicas et <code>campus-frontend</code> déployés, avec les Services <code>postgres</code>, <code>campus-backend</code> et <code>campus-frontend-svc</code> (NodePort <code>30088</code>). La vérification des logs doit afficher 3 lignes <code>Started CampusOpsApplication</code>.</p>
+<hr />
+<h2 id="exercice-1-externaliser-la-configuration-avec-un-configmap">Exercice 1 — Externaliser la configuration avec un ConfigMap<a class="headerlink" href="#exercice-1-externaliser-la-configuration-avec-un-configmap" title="Permanent link">&para;</a></h2>
+<h3 id="etape-1-creer-le-configmap-campus-config">Étape 1 — Créer le ConfigMap <code>campus-config</code><a class="headerlink" href="#etape-1-creer-le-configmap-campus-config" title="Permanent link">&para;</a></h3>
+<p>Commande donnée (une seule ligne, valable en Bash comme en PowerShell). Sortie : <code>configmap/campus-config created</code>.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>configmap<span class="w"> </span>campus-config<span class="w"> </span>-o<span class="w"> </span>yaml
+</span></code></pre></div>
+<p>Sortie (extrait) :</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nt">data</span><span class="p">:</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">JAVA_TOOL_OPTIONS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-XX:MaxRAMPercentage=75</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nt">LOGGING_LEVEL_COM_OKDLAB</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">INFO</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="nt">SERVER_PORT</span><span class="p">:</span><span class="w"> </span><span class="s">"8080"</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="nt">SPRING_PROFILES_ACTIVE</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">production</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ConfigMap</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="nt">metadata</span><span class="p">:</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">campus-config</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">campus-dev</span>
+</span></code></pre></div>
+<ul>
+<li>Les quatre valeurs sont rangées sous la rubrique <strong><code>data</code></strong> (clés triées par ordre alphabétique). Un ConfigMap n'a pas de <code>spec</code> : il ne décrit pas un état désiré, il stocke des données.</li>
+<li>Les valeurs sont <strong>en clair</strong> : n'importe qui ayant le droit de lire le ConfigMap les voit. On n'y range <strong>jamais</strong> de mot de passe : c'est le rôle du Secret (exercice 2).</li>
+</ul>
+<p>Erreur fréquente : oublier le <code>-</code> final de <code>kubectl apply -f -</code>, la commande attend alors un nom de fichier.</p>
+<h3 id="etape-2-configmap-a-partir-dun-fichier">Étape 2 — ConfigMap à partir d'un fichier<a class="headerlink" href="#etape-2-configmap-a-partir-dun-fichier" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>kubectl<span class="w"> </span>describe<span class="w"> </span>configmap<span class="w"> </span>campus-app-props
+</span></code></pre></div>
+<p>Sortie (extrait) :</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Name:         campus-app-props
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>Namespace:    campus-dev
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>Data
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>====
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>extra-config.properties:
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>----
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>campus.feature.registration=enabled
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>campus.notification.channel=email
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>campus.max.students=250
+</span></code></pre></div>
+<ul>
+<li>Une <strong>seule</strong> clé : le <strong>nom du fichier</strong> (<code>extra-config.properties</code>). Sa valeur est <strong>tout le contenu</strong> du fichier.</li>
+<li><code>--from-file</code> sert quand l'application attend un <strong>fichier de configuration complet</strong> (<code>application.properties</code>, <code>nginx.conf</code>…), qu'on monte ensuite dans le conteneur comme un fichier. <code>--from-literal</code> convient à quelques variables d'environnement isolées.</li>
+</ul>
+<p>Ce ConfigMap n'est pas utilisé par l'application : il sert seulement à montrer la différence clé/fichier.</p>
+<p>Erreur fréquente : créer le fichier sous Windows avec <code>&gt;</code> dans PowerShell 5.1 (encodage UTF-16) : la valeur affichée est illisible. L'énoncé demande de le créer avec l'éditeur.</p>
+<hr />
+<h2 id="exercice-2-proteger-les-identifiants-avec-un-secret">Exercice 2 — Protéger les identifiants avec un Secret<a class="headerlink" href="#exercice-2-proteger-les-identifiants-avec-un-secret" title="Permanent link">&para;</a></h2>
+<h3 id="etape-1-creer-le-secret">Étape 1 — Créer le Secret<a class="headerlink" href="#etape-1-creer-le-secret" title="Permanent link">&para;</a></h3>
+<p>Commande donnée. Sortie : <code>secret/campus-db-credentials created</code>.</p>
+<ul>
+<li>On ne versionne pas ce manifest : il contient le mot de passe, simplement <strong>encodé en base64</strong>, donc lisible par quiconque accède au dépôt Git. C'est pourquoi les starters des labs suivants ne contiennent jamais le Secret : leur étape 0 le recrée par une commande.</li>
+</ul>
+<p>Erreur fréquente (Bash) : écrire <code>--from-literal=POSTGRES_PASSWORD=CampusSecret2026!</code> sans guillemets simples. Dans un terminal Bash interactif, <code>!</code> déclenche l'expansion d'historique (<code>event not found</code>). Les guillemets simples l'évitent.</p>
+<h3 id="etape-2-lire-et-decoder-le-secret">Étape 2 — Lire et décoder le Secret<a class="headerlink" href="#etape-2-lire-et-decoder-le-secret" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>secret<span class="w"> </span>campus-db-credentials<span class="w"> </span>-o<span class="w"> </span>yaml
+</span></code></pre></div>
+<p>Sortie (extrait) :</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nt">data</span><span class="p">:</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nt">POSTGRES_DB</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Y2FtcHVz</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span><span class="nt">POSTGRES_PASSWORD</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Q2FtcHVzU2VjcmV0MjAyNiE=</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">  </span><span class="nt">POSTGRES_USER</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Y2FtcHVz</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Secret</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Opaque</span>
+</span></code></pre></div>
+<ul>
+<li>Les valeurs ne sont pas lisibles directement : elles apparaissent <strong>encodées en base64</strong> (<code>Y2FtcHVz</code> = <code>campus</code>).</li>
+<li>Le décodage (commande donnée, Bash ou PowerShell) affiche <code>CampusSecret2026!</code>.</li>
+<li>Base64 est un <strong>encodage</strong>, pas un chiffrement : il n'y a aucune clé, tout le monde peut décoder. Peuvent lire le mot de passe tous ceux qui ont le droit <code>get secret</code> dans le namespace (RBAC, Atelier 07), et quiconque lit <code>etcd</code> si les Secrets n'y sont pas chiffrés au repos.</li>
+</ul>
+<hr />
+<h2 id="exercice-3-demander-du-stockage-persistant-pv-et-pvc">Exercice 3 — Demander du stockage persistant (PV et PVC)<a class="headerlink" href="#exercice-3-demander-du-stockage-persistant-pv-et-pvc" title="Permanent link">&para;</a></h2>
+<h3 id="etape-1-la-storageclass-du-cluster">Étape 1 — La StorageClass du cluster<a class="headerlink" href="#etape-1-la-storageclass-du-cluster" title="Permanent link">&para;</a></h3>
+<p>Sortie de <code>kubectl get storageclass</code> sur le cluster AWS :</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>NAME                   PROVISIONER             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>local-path (default)   rancher.io/local-path   Delete          WaitForFirstConsumer   false                  35h
+</span></code></pre></div>
+<ul>
+<li>Classe par défaut : <code>local-path</code> (mention <code>(default)</code>), fournie par l'outil <code>rancher.io/local-path</code>, installé à l'Atelier 01 par <code>setup-addons.sh</code>.</li>
+<li><code>VOLUMEBINDINGMODE</code> vaut <code>WaitForFirstConsumer</code> : le PV n'est créé qu'au moment où un <strong>pod</strong> utilise le PVC.</li>
+</ul>
+<p>Sur Minikube : classe <code>standard (default)</code>, provisioner <code>k8s.io/minikube-hostpath</code>, mode <code>Immediate</code>.</p>
+<h3 id="etape-2-creer-le-pvc">Étape 2 — Créer le PVC<a class="headerlink" href="#etape-2-creer-le-pvc" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>pvc-postgres.yaml
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pvc<span class="w"> </span>pvc-postgres
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pv
+</span></code></pre></div>
+<p>Sorties attendues :</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>NAME           STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>pvc-postgres   Pending                                      local-path     5s
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>No resources found
+</span></code></pre></div>
+<ul>
+<li>Le PVC est <strong><code>Pending</code></strong> et <strong>aucun PV</strong> n'existe.</li>
+<li>La demande attend parce que le mode <code>WaitForFirstConsumer</code> retarde la création du PV jusqu'au premier pod consommateur : <code>local-path</code> doit savoir sur quel worker créer le répertoire. Ce n'est <strong>pas</strong> une erreur.</li>
+<li>Mode demandé : <code>ReadWriteOnce</code> (lecture/écriture par un seul nœud). Il convient à une base de données : un seul serveur PostgreSQL doit écrire dans ses fichiers à la fois.</li>
+</ul>
+<p><code>kubectl describe pvc pvc-postgres</code> affiche l'événement <code>WaitForFirstConsumer</code> : <code>waiting for first consumer to be created before binding</code>.</p>
+<hr />
+<h2 id="exercice-4-deployer-postgresql-avec-son-volume-et-son-secret">Exercice 4 — Déployer PostgreSQL avec son volume et son Secret<a class="headerlink" href="#exercice-4-deployer-postgresql-avec-son-volume-et-son-secret" title="Permanent link">&para;</a></h2>
+<h3 id="etape-1-lire-le-manifest-postgresql">Étape 1 — Lire le manifest PostgreSQL<a class="headerlink" href="#etape-1-lire-le-manifest-postgresql" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Le conteneur lit <code>POSTGRES_PASSWORD</code> (comme <code>POSTGRES_DB</code> et <code>POSTGRES_USER</code>) dans le Secret <code>campus-db-credentials</code>, via <code>valueFrom.secretKeyRef</code>. Le mot de passe <strong>n'apparaît pas</strong> dans le fichier.</li>
+<li><code>volumes</code> (niveau pod) déclare <strong>quel</strong> stockage : le PVC <code>pvc-postgres</code>. <code>volumeMounts</code> (niveau conteneur) indique <strong>où</strong> le brancher : <code>/var/lib/postgresql/data</code>. Le champ <strong><code>name</code></strong> (<code>donnees</code>) relie les deux.</li>
+<li>Par rapport au starter, la source du volume passe de <code>emptyDir: {}</code> à <code>persistentVolumeClaim: claimName: pvc-postgres</code>.</li>
+</ul>
+<p><code>PGDATA=/var/lib/postgresql/data/pgdata</code> place les données dans un <strong>sous-répertoire</strong> du volume : PostgreSQL refuse d'initialiser une base dans un répertoire non vide (certains stockages y créent <code>lost+found</code>).</p>
+<h3 id="etape-2-appliquer-le-deploiement">Étape 2 — Appliquer le déploiement<a class="headerlink" href="#etape-2-appliquer-le-deploiement" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>postgres-deployment.yaml
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>kubectl<span class="w"> </span>rollout<span class="w"> </span>status<span class="w"> </span>deployment/campus-postgres
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>kubectl<span class="w"> </span>get<span class="w"> </span>endpoints<span class="w"> </span>postgres
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>kubectl<span class="w"> </span>logs<span class="w"> </span>-l<span class="w"> </span><span class="nv">app</span><span class="o">=</span>campus-postgres<span class="w"> </span>--tail<span class="o">=</span><span class="m">20</span>
+</span></code></pre></div>
+<ul>
+<li><code>rollout status</code> attend le nouveau pod. Avec <code>Recreate</code>, l'ancien pod s'arrête d'abord : pendant quelques secondes, il n'y a plus de base.</li>
+<li><code>kubectl get endpoints postgres</code> affiche une seule adresse <code>&lt;IP-du-nouveau-pod&gt;:5432</code> : le sélecteur <code>app=campus-postgres</code> du Service désigne automatiquement le nouveau pod.</li>
+<li>La base est prête quand les logs affichent <code>database system is ready to accept connections</code>. Au premier démarrage, PostgreSQL initialise d'abord le répertoire (<code>initdb</code>) avec un serveur temporaire : la phrase peut apparaître deux fois dans les logs complets, la dernière est celle qui compte. Avec <code>--tail=20</code>, on n'en voit en général qu'une (constaté en préparation).</li>
+</ul>
+<p>Erreur fréquente : PVC créé dans un autre namespace (<code>default</code>) : le pod reste <code>Pending</code> avec <code>persistentvolumeclaim "pvc-postgres" not found</code>.</p>
+<h3 id="etape-3-observer-le-volume-cree">Étape 3 — Observer le volume créé<a class="headerlink" href="#etape-3-observer-le-volume-cree" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pvc<span class="w"> </span>pvc-postgres
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pv
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-l<span class="w"> </span><span class="nv">app</span><span class="o">=</span>campus-postgres<span class="w"> </span>-o<span class="w"> </span>wide
+</span></code></pre></div>
+<p>Sorties attendues :</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>NAME           STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>pvc-postgres   Bound    pvc-3f2a…                                  1Gi        RWO            local-path     3m
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>NAME        CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                     STORAGECLASS   AGE
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>pvc-3f2a…   1Gi        RWO            Delete           Bound    campus-dev/pvc-postgres   local-path     1m
+</span></code></pre></div>
+<ul>
+<li>Le PVC est <strong><code>Bound</code></strong>.</li>
+<li>Le PV (nom généré <code>pvc-&lt;uid&gt;</code>) : <code>1Gi</code>, <code>RWO</code>, politique <code>Delete</code>, lié à <code>campus-dev/pvc-postgres</code>.</li>
+<li>Le pod PostgreSQL tourne sur l'un des workers (colonne <code>NODE</code>). Le PV <code>local-path</code> est un <strong>répertoire sur le disque de ce worker</strong> (<code>/opt/local-path-provisioner/…</code>) : le PV porte une affinité de nœud, et le pod ne peut plus être placé ailleurs. Si ce worker tombe, la base ne redémarre pas.</li>
+</ul>
+<hr />
+<h2 id="exercice-5-reconnecter-le-backend-et-prouver-la-persistance">Exercice 5 — Reconnecter le backend et prouver la persistance<a class="headerlink" href="#exercice-5-reconnecter-le-backend-et-prouver-la-persistance" title="Permanent link">&para;</a></h2>
+<h3 id="etape-1-reconfigurer-le-backend">Étape 1 — Reconfigurer le backend<a class="headerlink" href="#etape-1-reconfigurer-le-backend" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>envFrom</code> + <code>configMapRef</code> injecte <strong>toutes</strong> les clés du ConfigMap comme variables d'environnement, d'un coup. <code>env</code> + <code>secretKeyRef</code> choisit <strong>une</strong> clé précise du Secret et lui donne le nom de variable voulu (<code>POSTGRES_PASSWORD</code> → <code>SPRING_DATASOURCE_PASSWORD</code>).</li>
+<li>Oui, le fichier peut être versionné : il ne contient que des <strong>références</strong> (<code>campus-config</code>, <code>campus-db-credentials</code>), aucune valeur sensible.</li>
+</ul>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>deployment-backend.yaml
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>kubectl<span class="w"> </span>rollout<span class="w"> </span>status<span class="w"> </span>deployment/campus-backend
+</span></code></pre></div>
+<p>Linux / macOS :
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>kubectl<span class="w"> </span>logs<span class="w"> </span>-l<span class="w"> </span><span class="nv">app</span><span class="o">=</span>campus-backend<span class="w"> </span>--prefix<span class="w"> </span>--tail<span class="o">=</span>-1<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">"Started CampusOpsApplication"</span>
+</span></code></pre></div></p>
+<p>Windows (PowerShell) :
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="n">kubectl</span> <span class="n">logs</span> <span class="n">-l</span> <span class="n">app</span><span class="p">=</span><span class="n">campus-backend</span> <span class="p">-</span><span class="n">-prefix</span> <span class="p">-</span><span class="n">-tail</span><span class="p">=-</span><span class="n">1</span> <span class="p">|</span> <span class="nb">Select-String</span> <span class="s2">"Started CampusOpsApplication"</span>
+</span></code></pre></div></p>
+<ul>
+<li><strong>2 lignes</strong> : le Deployment est passé à 2 réplicas, et les deux pods ont démarré avec le nouveau mot de passe.</li>
+</ul>
+<p>Erreur fréquente : appliquer le backend <strong>avant</strong> le Secret. Les pods restent en <code>CreateContainerConfigError</code> (<code>secret "campus-db-credentials" not found</code>). Créer le Secret suffit : le kubelet réessaie tout seul.</p>
+<h3 id="etape-2-ecrire-des-donnees-de-test">Étape 2 — Écrire des données de test<a class="headerlink" href="#etape-2-ecrire-des-donnees-de-test" title="Permanent link">&para;</a></h3>
+<p>Sorties attendues :</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>CREATE TABLE
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>INSERT 0 2
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a> id |     nom
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>----+--------------
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>  1 | Alice Dubois
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>  2 | Bob Martin
+</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>(2 rows)
+</span></code></pre></div>
+<ul>
+<li>La table contient <strong>2 lignes</strong>.</li>
+<li><code>kubectl exec deployment/campus-postgres</code> choisit <strong>un pod du Deployment</strong> (ici le seul) : pratique quand on ne connaît pas le nom généré du pod.</li>
+</ul>
+<p><code>psql</code> se connecte par le socket local du conteneur, sans mot de passe : l'image officielle autorise les connexions locales (<code>trust</code>).</p>
+<h3 id="etape-3-crash-test">Étape 3 — Crash-test<a class="headerlink" href="#etape-3-crash-test" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>kubectl<span class="w"> </span>delete<span class="w"> </span>pod<span class="w"> </span>-l<span class="w"> </span><span class="nv">app</span><span class="o">=</span>campus-postgres
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-l<span class="w"> </span><span class="nv">app</span><span class="o">=</span>campus-postgres<span class="w"> </span>-w
+</span></code></pre></div>
+<ul>
+<li>Le nouveau pod porte un <strong>nouveau nom</strong> (<code>campus-postgres-&lt;hash&gt;-&lt;autre suffixe&gt;</code>).</li>
+<li>Le <strong>ReplicaSet</strong> du Deployment l'a recréé pour revenir à <code>replicas: 1</code> (Self-Healing, Atelier 03).</li>
+</ul>
+<h3 id="etape-4-verifier-la-survie-des-donnees">Étape 4 — Vérifier la survie des données<a class="headerlink" href="#etape-4-verifier-la-survie-des-donnees" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>deployment/campus-postgres<span class="w"> </span>--<span class="w"> </span>psql<span class="w"> </span>-U<span class="w"> </span>campus<span class="w"> </span>-d<span class="w"> </span>campus<span class="w"> </span>-c<span class="w"> </span><span class="s2">"SELECT * FROM test_candidats;"</span>
+</span></code></pre></div>
+<ul>
+<li>Les deux lignes <code>Alice Dubois</code> et <code>Bob Martin</code> sont toujours là.</li>
+<li>Le pod a été détruit, mais le <strong>PVC</strong> et son <strong>PV</strong> (le répertoire sur le worker) existent toujours : le nouveau pod a remonté le même volume. Avec l'<code>emptyDir</code> du starter, le volume naît et meurt avec le pod : la table aurait disparu (<code>relation "test_candidats" does not exist</code>).</li>
+</ul>
+<p>Si la commande renvoie <code>error: unable to upgrade connection</code> ou <code>container not found</code>, le nouveau pod n'est pas encore prêt : attendre <code>1/1 Running</code>.</p>
+<hr />
+<h2 id="recapitulatif-manifests-de-fin-de-lab">Récapitulatif — Manifests de fin de lab<a class="headerlink" href="#recapitulatif-manifests-de-fin-de-lab" title="Permanent link">&para;</a></h2>
+<p>Les manifests <code>pvc-postgres.yaml</code>, <code>postgres-deployment.yaml</code> et <code>deployment-backend.yaml</code> sont ceux de l'énoncé, sans modification. ⚠️ Cette version longue n'est <strong>pas</strong> compatible avec les starters actuels des Ateliers 06 et 07, qui contiennent le PV manuel <code>pv-postgres</code> et un PVC <code>storageClassName: ""</code> : après cette version, <code>kubectl apply</code> du starter 06 échoue sur le PVC (champ immuable). Avant l'Atelier 06, repartir de zéro (<code>kubectl delete namespace campus-dev</code>).</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Retour en haut de la page
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2026 Rym Regaieg
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "navigation.indexes", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copi\u00e9 dans le presse-papier", "clipboard.copy": "Copier dans le presse-papier", "search.result.more.one": "1 de plus sur cette page", "search.result.more.other": "# de plus sur cette page", "search.result.none": "Aucun document trouv\u00e9", "search.result.one": "1 document trouv\u00e9", "search.result.other": "# documents trouv\u00e9s", "search.result.placeholder": "Taper pour d\u00e9marrer la recherche", "search.result.term.missing": "Non trouv\u00e9", "select.version": "S\u00e9lectionner la version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+        <script src="../../javascripts/slides.js"></script>
+      
+    
+  </body>
+</html>

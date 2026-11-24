@@ -1,0 +1,2435 @@
+
+<!doctype html>
+<html lang="fr" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Ateliers pratiques d'orchestration et déploiement de conteneurs avec Kubernetes.">
+      
+      
+        <meta name="author" content="Rym Regaieg">
+      
+      
+        <link rel="canonical" href="https://rym28.github.io/kubernetes-training/corrections/06-supervision/">
+      
+      
+        <link rel="prev" href="../05-volumes/">
+      
+      
+        <link rel="next" href="../07-securite/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.2">
+    
+    
+      
+        <title>Corrigé Atelier 06 : Exploitation & Observabilité - Kubernetes & Orchestration — Ateliers Pratiques</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#corrige-atelier-06-exploitation-observabilite-reverse-debugging" class="md-skip">
+          Aller au contenu
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="En-tête">
+    <a href="../.." title="Kubernetes &amp; Orchestration — Ateliers Pratiques" class="md-header__button md-logo" aria-label="Kubernetes & Orchestration — Ateliers Pratiques" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Kubernetes & Orchestration — Ateliers Pratiques
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Corrigé Atelier 06 : Exploitation & Observabilité
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple"  aria-label="Passer au mode sombre"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Passer au mode sombre" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="cyan"  aria-label="Passer au mode clair"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Passer au mode clair" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Rechercher" placeholder="Rechercher" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Recherche">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Effacer" aria-label="Effacer" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initialisation de la recherche
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Rym28/kubernetes-training" title="Aller au dépôt" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Rym28/kubernetes-training
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Onglets" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Accueil
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../application/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Architecture & Environnement
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../labs/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Ateliers Pratiques
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Corrigés
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../support-cours/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Support de Cours
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../evaluation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Évaluation des Acquis
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Kubernetes &amp; Orchestration — Ateliers Pratiques" class="md-nav__button md-logo" aria-label="Kubernetes & Orchestration — Ateliers Pratiques" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Kubernetes & Orchestration — Ateliers Pratiques
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Rym28/kubernetes-training" title="Aller au dépôt" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Rym28/kubernetes-training
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Accueil
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture & Environnement
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture & Environnement
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../application/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Application Fil Rouge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../setup-environnement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prérequis & Environnement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cluster-aws-express/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cluster AWS en une commande
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../labs/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ateliers Pratiques
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Ateliers Pratiques
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Partie 1 — Déploiement du Cluster & Fondations (Jour 1)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Partie 1 — Déploiement du Cluster & Fondations (Jour 1)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../labs/01-provisionnement-cluster/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 01 : Provisionnement du Cluster
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../labs/02-pods-trois-briques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 02 : Les Pods : les Trois Briques du Campus Summer Portal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../labs/03-deploiements-resilience-rollback/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 03 : Déploiements — Résilience & Rollback
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../labs/04-reseau-services-dns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 04 : Réseau, Services & Découverte DNS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Partie 2 — Persistance, Exploitation & Sécurité (Jour 2)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Partie 2 — Persistance, Exploitation & Sécurité (Jour 2)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../labs/05-configuration-stockage-persistant/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 05 : Configuration & Stockage Persistant (PV / PVC / PostgreSQL)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../labs/06-exploitation-observabilite-debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 06 : Exploitation, Observabilité & Reverse Debugging
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../labs/07-securite-quotas-isolement-reseau/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 07 : Sécurité, Quotas & Isolement Réseau (NetworkPolicy)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Corrigés
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Corrigés
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-pods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Corrigé Atelier 02 : Les Pods
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-deploiements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Corrigé Atelier 03 : Déploiements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-services/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Corrigé Atelier 04 : Services & DNS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-volumes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Corrigé Atelier 05 : Configuration & Stockage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Corrigé Atelier 06 : Exploitation & Observabilité
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Corrigé Atelier 06 : Exploitation & Observabilité
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table des matières">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table des matières
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#duree-et-optimisations-testees-sur-le-cluster-aws-le-23112026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Durée et optimisations (testées sur le cluster AWS le 23/11/2026)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#etape-0-preparer-lenvironnement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 0 — Préparer l'environnement
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-1-lire-les-logs-et-les-evenements-entrer-dans-un-conteneur" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 1 — Lire les logs et les événements, entrer dans un conteneur
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 1 — Lire les logs et les événements, entrer dans un conteneur">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-lire-les-logs-du-backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 — Lire les logs du backend
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-lire-la-chronologie-des-evenements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 — Lire la chronologie des événements
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-3-verifier-la-configuration-recue-par-le-backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 3 — Vérifier la configuration reçue par le backend
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-2-depanner-avec-methode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 2 — Dépanner avec méthode
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 2 — Dépanner avec méthode">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-incidents-a-et-b-crashloopbackoff-et-oomkilled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 — Incidents A et B : CrashLoopBackOff et OOMKilled
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-3-detecter-une-panne-de-nud" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 3 — Détecter une panne de nœud
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 3 — Détecter une panne de nœud">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-deployer-node-problem-detector" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 — Déployer Node Problem Detector
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-simuler-une-erreur-du-noyau" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 — Simuler une erreur du noyau
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-3-retirer-le-nud-du-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 3 — Retirer le nœud du service
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-4-mesurer-la-consommation-et-centraliser-les-logs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 4 — Mesurer la consommation et centraliser les logs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 4 — Mesurer la consommation et centraliser les logs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-verifier-la-pile-de-supervision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 — Vérifier la pile de supervision
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-mesurer-la-consommation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 — Mesurer la consommation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-3-grafana" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 3 — Grafana
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-5-optionnel-freelens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 5 (optionnel) — FreeLens
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 5 (optionnel) — FreeLens">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-connexion-par-le-kubeconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 — Connexion par le kubeconfig
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-retrouver-les-commandes-du-lab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 — Retrouver les commandes du lab
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nettoyage-facultatif-en-fin-de-journee" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nettoyage (facultatif, en fin de journée)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-securite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Corrigé Atelier 07 : Sécurité & Isolement Réseau
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_8" id="__nav_4_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Versions longues
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Versions longues
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-services-version-longue/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 04 (énoncé + corrigé)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-volumes-longue-enonce/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 05 : énoncé
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-volumes-longue-corrige/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 05 : corrigé
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-supervision-longue-enonce/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 06 : énoncé
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-supervision-longue-corrige/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 06 : corrigé
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-securite-longue-enonce/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 07 : énoncé
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-securite-longue-corrige/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atelier 07 : corrigé
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../support-cours/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Support de Cours
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Évaluation des Acquis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table des matières">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table des matières
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#duree-et-optimisations-testees-sur-le-cluster-aws-le-23112026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Durée et optimisations (testées sur le cluster AWS le 23/11/2026)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#etape-0-preparer-lenvironnement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 0 — Préparer l'environnement
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-1-lire-les-logs-et-les-evenements-entrer-dans-un-conteneur" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 1 — Lire les logs et les événements, entrer dans un conteneur
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 1 — Lire les logs et les événements, entrer dans un conteneur">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-lire-les-logs-du-backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 — Lire les logs du backend
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-lire-la-chronologie-des-evenements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 — Lire la chronologie des événements
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-3-verifier-la-configuration-recue-par-le-backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 3 — Vérifier la configuration reçue par le backend
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-2-depanner-avec-methode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 2 — Dépanner avec méthode
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 2 — Dépanner avec méthode">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-incidents-a-et-b-crashloopbackoff-et-oomkilled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 — Incidents A et B : CrashLoopBackOff et OOMKilled
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-3-detecter-une-panne-de-nud" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 3 — Détecter une panne de nœud
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 3 — Détecter une panne de nœud">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-deployer-node-problem-detector" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 — Déployer Node Problem Detector
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-simuler-une-erreur-du-noyau" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 — Simuler une erreur du noyau
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-3-retirer-le-nud-du-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 3 — Retirer le nœud du service
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-4-mesurer-la-consommation-et-centraliser-les-logs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 4 — Mesurer la consommation et centraliser les logs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 4 — Mesurer la consommation et centraliser les logs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-verifier-la-pile-de-supervision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 — Vérifier la pile de supervision
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-mesurer-la-consommation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 — Mesurer la consommation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-3-grafana" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 3 — Grafana
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercice-5-optionnel-freelens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercice 5 (optionnel) — FreeLens
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exercice 5 (optionnel) — FreeLens">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#etape-1-connexion-par-le-kubeconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 1 — Connexion par le kubeconfig
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etape-2-retrouver-les-commandes-du-lab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Étape 2 — Retrouver les commandes du lab
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nettoyage-facultatif-en-fin-de-journee" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nettoyage (facultatif, en fin de journée)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="corrige-atelier-06-exploitation-observabilite-reverse-debugging">Corrigé — Atelier 06 : Exploitation, Observabilité &amp; Reverse Debugging<a class="headerlink" href="#corrige-atelier-06-exploitation-observabilite-reverse-debugging" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>🔒 <strong>Confidentiel formateur.</strong> À diffuser en fin d'atelier uniquement. Énoncé : <code>labs/06-Administration &amp; Supervision/README.md</code> (version <strong>simplifiée</strong> du 24/11/2026 : 4 exercices + exercice 5 FreeLens optionnel). La version longue d'origine (14 étapes) et son corrigé sont archivés dans <code>corrections/06-supervision-longue/</code>.</p>
+</blockquote>
+<p>Toutes les commandes s'exécutent depuis le dossier du lab (<code>cd "labs/06-Administration &amp; Supervision"</code>), namespace courant <code>campus-dev</code>.</p>
+<h2 id="duree-et-optimisations-testees-sur-le-cluster-aws-le-23112026">Durée et optimisations (testées sur le cluster AWS le 23/11/2026)<a class="headerlink" href="#duree-et-optimisations-testees-sur-le-cluster-aws-le-23112026" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: left;">Version longue (archive)</th>
+<th style="text-align: left;">Version optimisée (en vigueur)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Durée indicative</td>
+<td style="text-align: left;">~1 h 45</td>
+<td style="text-align: left;"><strong>~1 h 20</strong> (gain ~25 min)</td>
+</tr>
+<tr>
+<td style="text-align: left;">Pile de supervision</td>
+<td style="text-align: left;">Installée à l'exercice 5 : 1 à 2 min d'attente des pods, puis 1 min pour Metrics Server</td>
+<td style="text-align: left;">Lancée en fin d'étape 0 : elle démarre pendant les exercices 1 à 4 (pods <code>Running</code> en ~65 s, <code>kubectl top</code> disponible dès l'exercice 5)</td>
+</tr>
+<tr>
+<td style="text-align: left;">Logs à retrouver dans Loki</td>
+<td style="text-align: left;"><code>rollout restart</code> du backend (≈ 1 min de redémarrage, avec la limite CPU de 500m)</td>
+<td style="text-align: left;">Logs de <code>crash-app</code> (incident A), supprimé à l'exercice 3 : même démonstration, sans redémarrage</td>
+</tr>
+<tr>
+<td style="text-align: left;">Incidents A et B</td>
+<td style="text-align: left;">Deux étapes successives : deux attentes de <code>CrashLoopBackOff</code></td>
+<td style="text-align: left;">Lancés ensemble, un seul <code>kubectl get pods … -w</code> : les deux en <code>CrashLoopBackOff</code> en ~45 s</td>
+</tr>
+<tr>
+<td style="text-align: left;">Exercice 1</td>
+<td style="text-align: left;">3 étapes (<code>logs -f</code>, <code>logs -l --prefix</code>, événements)</td>
+<td style="text-align: left;">2 étapes (les deux lectures de logs regroupées)</td>
+</tr>
+<tr>
+<td style="text-align: left;">Exercice 2</td>
+<td style="text-align: left;">Origine de chaque variable (ConfigMap / Secret / manifest)</td>
+<td style="text-align: left;">Question retirée : relève de l'Atelier 05, pas des objectifs de l'Atelier 06</td>
+</tr>
+</tbody>
+</table>
+<p>Simplification du 24/11/2026 (énoncé en vigueur) : exercices 1 (logs, événements) et 2 (<code>exec</code>) fusionnés en un exercice 1 de 3 étapes, sans la question <code>--previous</code> (pratiquée à l'exercice 2) ni l'étape <code>wget</code> du frontend (Atelier 04) ; incident C (Service au sélecteur faux, Atelier 04) retiré ; encadré « Pod privilégié » et question <code>drain</code> retirés (le <code>drain</code> reste dans l'encadré info) ; une seule requête Loki (<code>{run="crash-app"}</code>) ; tableau des outils condensé. FreeLens devient l'exercice 5 optionnel (~10 min, 2 étapes), avec deux façons de charger le kubeconfig. Les exercices 3, 4, 5 deviennent 2, 3, 4. Gain estimé : ~15 min (durée indicative <strong>~1 h 05</strong> sans FreeLens).</p>
+<p>Objectifs pédagogiques et outils manipulés inchangés. Seule la requête Loki de l'exercice 5 change : <code>{app="campus-frontend"}</code> après rechargement du portail, au lieu de <code>{app="campus-backend"}</code>, vide quand on sort de l'Atelier 07 (voir l'étape 3 de l'exercice 5).</p>
+<p>Temps mesurés sur le cluster (commandes seules, hors lecture et réponses) : étape 0 = 75 s en partant de zéro (backend prêt en 53 s), 14 s en sortant de l'Atelier 07 (starter <code>unchanged</code>, test du 23/11/2026 enchaîné 05 → 07 → 06), incidents A + B = 45 s, déploiement NPD = 14 s, injection + <code>cordon</code> = 10 s.</p>
+<hr />
+<h2 id="etape-0-preparer-lenvironnement">Étape 0 — Préparer l'environnement<a class="headerlink" href="#etape-0-preparer-lenvironnement" title="Permanent link">&para;</a></h2>
+<p>Commandes données dans l'énoncé. Attendu :</p>
+<ul>
+<li><code>secret/campus-db-credentials created</code> (ou <code>configured</code>), puis les objets du starter : <code>configmap/campus-config</code>, <code>persistentvolume/pv-postgres</code>, <code>persistentvolumeclaim/pvc-postgres</code>, les Deployments <code>campus-postgres</code>, <code>campus-backend</code> (2 réplicas), <code>campus-frontend</code> (2 réplicas) et les Services <code>postgres</code>, <code>campus-backend</code>, <code>campus-frontend-svc</code> (NodePort 30088).</li>
+<li><code>rollout status</code> du backend rend la main quand les sondes sont vertes (≈ 1 min).</li>
+<li>La dernière commande crée le namespace <code>monitoring</code>, Metrics Server (dans <code>kube-system</code>), Loki, le DaemonSet Fluent Bit, Prometheus et Grafana. Le stagiaire n'attend pas : la pile démarre pendant les exercices 1 à 4.</li>
+</ul>
+<p>Piège : <code>kubectl apply -f monitoring/</code> (dossier entier) échoue sur <code>monitoring/dashboard-kubernetes.json</code>, qui n'est pas un objet Kubernetes (<code>apiVersion not set, kind not set</code>) ; les autres fichiers sont tout de même appliqués. D'où la liste explicite des 6 fichiers.</p>
+<p>Erreur fréquente : oublier le Secret. Les pods backend restent alors en <code>CreateContainerConfigError</code> (<code>secret "campus-db-credentials" not found</code>), visible avec <code>kubectl describe pod</code>.</p>
+<hr />
+<h2 id="exercice-1-lire-les-logs-et-les-evenements-entrer-dans-un-conteneur">Exercice 1 — Lire les logs et les événements, entrer dans un conteneur<a class="headerlink" href="#exercice-1-lire-les-logs-et-les-evenements-entrer-dans-un-conteneur" title="Permanent link">&para;</a></h2>
+<h3 id="etape-1-lire-les-logs-du-backend">Étape 1 — Lire les logs du backend<a class="headerlink" href="#etape-1-lire-les-logs-du-backend" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>kubectl<span class="w"> </span>logs<span class="w"> </span>-f<span class="w"> </span>deployment/campus-backend<span class="w"> </span>--tail<span class="o">=</span><span class="m">20</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>kubectl<span class="w"> </span>logs<span class="w"> </span>-l<span class="w"> </span><span class="nv">app</span><span class="o">=</span>campus-backend<span class="w"> </span>--tail<span class="o">=</span><span class="m">5</span><span class="w"> </span>--prefix
+</span></code></pre></div>
+<p><strong>1.</strong> La ligne <code>Started CampusOpsApplication in 52.9 seconds (process running for 57.6)</code> marque la fin du démarrage. La durée varie de 10 à 60 secondes selon la charge du nœud : avec la limite CPU de 500m posée à l'Atelier 07, compter plutôt 50 à 60 secondes (52,9 s et 53,8 s mesurées le 23/11/2026).</p>
+<p><strong>2.</strong> Première commande : <strong>un seul</strong> pod. <code>kubectl logs deployment/…</code> choisit l'un des pods du Deployment et l'annonce par <code>Found 2 pods, using pod/campus-backend-xxxx-yyyy</code>. Seconde commande : les <strong>2</strong> pods, grâce au sélecteur de labels, soit 10 lignes (5 par pod), chacune précédée de <code>[pod/campus-backend-…/campus-backend]</code>.</p>
+<h3 id="etape-2-lire-la-chronologie-des-evenements">Étape 2 — Lire la chronologie des événements<a class="headerlink" href="#etape-2-lire-la-chronologie-des-evenements" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>events<span class="w"> </span>--sort-by<span class="o">=</span>.metadata.creationTimestamp
+</span></code></pre></div>
+<p><strong>1.</strong> Pour un pod : <code>Scheduled</code> (le Scheduler l'a placé sur un nœud) → <code>Pulling</code> / <code>Pulled</code> (image téléchargée, ou déjà présente) → <code>Created</code> → <code>Started</code> (le kubelet a lancé le conteneur). On voit aussi <code>ScalingReplicaSet</code> (Deployment) et <code>SuccessfulCreate</code> (ReplicaSet).</p>
+<p>Question fréquente : des événements <code>Warning  Unhealthy … Startup probe failed: … connection refused</code> apparaissent pour les pods backend récents (constaté le 23/11/2026). C'est normal : la sonde de démarrage interroge l'API toutes les 5 s pendant que Spring Boot démarre (≈ 55 s avec la limite CPU de 500m) ; elle tolère 36 échecs avant de redémarrer le conteneur.</p>
+<p><strong>2.</strong> Non : les logs d'un pod sont stockés sur le nœud avec le conteneur et <strong>disparaissent avec le pod</strong>. Pour les conserver, il faut les centraliser hors du pod : agent de collecte sur chaque nœud (Fluent Bit) + stockage (Loki), vus à l'exercice 4. Les événements eux-mêmes ne sont conservés qu'une heure par défaut.</p>
+<h3 id="etape-3-verifier-la-configuration-recue-par-le-backend">Étape 3 — Vérifier la configuration reçue par le backend<a class="headerlink" href="#etape-3-verifier-la-configuration-recue-par-le-backend" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>deployment/campus-backend<span class="w"> </span>--<span class="w"> </span>sh<span class="w"> </span>-c<span class="w"> </span><span class="s2">"env | grep SPRING"</span>
+</span></code></pre></div>
+<p>Sortie attendue (ordre variable) :</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>SPRING_PROFILES_ACTIVE=production
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/campus
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>SPRING_DATASOURCE_USERNAME=campus
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>SPRING_DATASOURCE_PASSWORD=CampusSecret2026!
+</span></code></pre></div>
+<p><strong>1.</strong> Commande ci-dessus. Le <code>sh -c "…"</code> est indispensable : sans lui, le <code>| grep</code> serait exécuté par le terminal local (ça « marche » sous Bash, mais le filtrage se fait sur le poste ; sous PowerShell, <code>grep</code> n'existe pas). Variante sans <code>sh -c</code> côté PowerShell : <code>kubectl exec deployment/campus-backend -- env | Select-String SPRING</code>.</p>
+<p><strong>2.</strong> <code>jdbc:postgresql://postgres:5432/campus</code> : l'API joint la base par le nom du Service <code>postgres</code>, sur le port 5432. Pour aller plus loin à l'oral (question retirée de l'énoncé optimisé) : l'URL est écrite dans le manifest du Deployment (<code>env.value</code>), <code>SPRING_PROFILES_ACTIVE</code> vient du ConfigMap <code>campus-config</code> (via <code>envFrom</code>), l'utilisateur et le mot de passe du Secret <code>campus-db-credentials</code> (via <code>secretKeyRef</code>).</p>
+<p><strong>3.</strong> Oui, en clair : un Secret est décodé quand il est injecté dans le conteneur. Toute personne autorisée à faire <code>kubectl exec</code> (verbe <code>create</code> sur la ressource <code>pods/exec</code>) lit donc les Secrets de l'application. L'Atelier 07, réalisé avant celui-ci, a montré comment restreindre ces droits avec le RBAC.</p>
+<p>Erreurs fréquentes : <code>kubectl exec campus-backend -- …</code> (<code>pods "campus-backend" not found</code> : il faut le nom d'un pod ou <code>deployment/campus-backend</code>) ; oublier <code>--</code>.</p>
+<hr />
+<h2 id="exercice-2-depanner-avec-methode">Exercice 2 — Dépanner avec méthode<a class="headerlink" href="#exercice-2-depanner-avec-methode" title="Permanent link">&para;</a></h2>
+<h3 id="etape-1-incidents-a-et-b-crashloopbackoff-et-oomkilled">Étape 1 — Incidents A et B : <code>CrashLoopBackOff</code> et <code>OOMKilled</code><a class="headerlink" href="#etape-1-incidents-a-et-b-crashloopbackoff-et-oomkilled" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>kubectl<span class="w"> </span>run<span class="w"> </span>crash-app<span class="w"> </span>--image<span class="o">=</span>busybox:1.36<span class="w"> </span>--<span class="w"> </span>sh<span class="w"> </span>-c<span class="w"> </span><span class="s2">"echo Demarrage; sleep 3; echo Erreur fatale; exit 42"</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>manifests/oom-victim.yaml
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>crash-app<span class="w"> </span>oom-victim<span class="w"> </span>-w
+</span></code></pre></div>
+<p>Chronologie relevée sur le cluster AWS (23/11/2026) :</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>t=7s   crash-app Running 1    oom-victim CrashLoopBackOff 1
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>t=24s  crash-app Running 2    oom-victim OOMKilled 2
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>t=41s  crash-app CrashLoopBackOff 2    oom-victim CrashLoopBackOff 2
+</span></code></pre></div>
+<p><strong>1.</strong> <code>crash-app</code> : <code>ContainerCreating</code> → <code>Running</code> → <code>Error</code> → <code>Running</code> → <code>Error</code> → <code>CrashLoopBackOff</code>. <code>oom-victim</code> : <code>ContainerCreating</code> → <code>OOMKilled</code> → <code>CrashLoopBackOff</code> (relancé et retué à chaque tentative ; il alterne entre les deux statuts). <code>RESTARTS</code> augmente à chaque échec ; le délai entre deux tentatives double (10 s, 20 s, 40 s… plafonné à 5 minutes). <code>kubectl run</code> crée un pod avec <code>restartPolicy: Always</code> : le kubelet le relance sans fin. Seul <code>oom-victim</code> affiche un statut qui nomme sa cause (<code>OOMKilled</code>), et seulement par intermittence.</p>
+<p><strong>2.</strong> <code>kubectl describe pod &lt;pod&gt;</code>, section <code>Last State</code> :</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>crash-app                        oom-victim
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    Last State:  Terminated          Last State:  Terminated
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>      Reason:    Error                 Reason:    OOMKilled
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>      Exit Code: 42                    Exit Code: 137
+</span></code></pre></div>
+<p>Filtrer la sortie : <code>kubectl describe pod crash-app | grep -A 4 "Last State"</code> (Bash) ou <code>kubectl describe pod crash-app | Select-String "Last State" -Context 0,4</code> (PowerShell).</p>
+<p><strong>3.</strong> Un code différent de 0 signifie que le <strong>processus</strong> s'est arrêté sur une erreur. Pour <code>crash-app</code> (42), c'est l'application (ici le script) qui est en cause, pas Kubernetes. Pour <code>oom-victim</code>, 137 = 128 + signal 9 (<code>SIGKILL</code>) : c'est le <strong>noyau Linux</strong> du nœud (l'<em>OOM killer</em>, via le cgroup mémoire du conteneur) qui a tué le processus, car il dépassait <code>limits.memory: 50Mi</code>. Kubernetes ne fait que constater.</p>
+<p><strong>4.</strong> <code>kubectl logs crash-app --previous</code> → <code>Demarrage</code> puis <code>Erreur fatale</code>.</p>
+<p><strong>5.</strong> Augmenter <code>limits.memory</code> (au-dessus de la consommation réelle, mesurée avec <code>kubectl top</code>), ou réduire la consommation de l'application (ici, les 150 Mo demandés à <code>stress</code> ; pour une JVM, <code>-XX:MaxRAMPercentage</code>).</p>
+<p><strong>6.</strong> <code>kubectl delete pod crash-app oom-victim</code>.</p>
+<p>Erreur fréquente : <code>kubectl logs crash-app</code> sans <code>--previous</code> affiche une sortie vide ou partielle (le conteneur courant vient de redémarrer).</p>
+<p>À souligner : CrashLoopBackOff n'est pas une cause, c'est un symptôme : les deux pods l'affichent pour deux causes différentes. La cause se lit dans <code>Last State</code> : <code>Error</code> + <code>Exit Code</code> (application) ou <code>OOMKilled</code> (limite mémoire). C'est tout l'intérêt de les observer côte à côte.</p>
+<hr />
+<h2 id="exercice-3-detecter-une-panne-de-nud">Exercice 3 — Détecter une panne de nœud<a class="headerlink" href="#exercice-3-detecter-une-panne-de-nud" title="Permanent link">&para;</a></h2>
+<h3 id="etape-1-deployer-node-problem-detector">Étape 1 — Déployer Node Problem Detector<a class="headerlink" href="#etape-1-deployer-node-problem-detector" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>npd/npd.yaml
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>kubectl<span class="w"> </span>rollout<span class="w"> </span>status<span class="w"> </span>daemonset/node-problem-detector<span class="w"> </span>-n<span class="w"> </span>kube-system
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>kube-system<span class="w"> </span>-l<span class="w"> </span><span class="nv">app</span><span class="o">=</span>node-problem-detector<span class="w"> </span>-o<span class="w"> </span>wide
+</span></code></pre></div>
+<p><strong>1.</strong> <strong>2 pods</strong>, un sur <code>k8s-worker-1</code> et un sur <code>k8s-worker-2</code>. Aucun sur <code>k8s-control</code> : le DaemonSet NPD ne tolère pas la taint <code>node-role.kubernetes.io/control-plane:NoSchedule</code> posée par kubeadm.</p>
+<p><strong>2.</strong> <code>kubectl describe node k8s-worker-1</code>, section <code>Conditions</code> :</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>Type                 Status  Reason                       Message
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>KernelDeadlock       False   KernelHasNoDeadlock          kernel has no deadlock
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>ReadonlyFilesystem   False   FilesystemIsNotReadOnly      Filesystem is not read-only
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>NetworkUnavailable   False   CalicoIsUp                   Calico is running on this node
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>MemoryPressure       False   KubeletHasSufficientMemory   …
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>DiskPressure         False   KubeletHasNoDiskPressure     …
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>PIDPressure          False   KubeletHasSufficientPID      …
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>Ready                True    KubeletReady                 …
+</span></code></pre></div>
+<p>NPD a ajouté <code>KernelDeadlock</code> et <code>ReadonlyFilesystem</code>, à <code>False</code> (pas de problème). <code>NetworkUnavailable</code> est posée par Calico ; les quatre dernières viennent du kubelet.</p>
+<p>Filtrer : <code>kubectl describe node k8s-worker-1 | grep -A 12 "Conditions:"</code> (Bash) ou <code>… | Select-String "Conditions:" -Context 0,12</code> (PowerShell).</p>
+<h3 id="etape-2-simuler-une-erreur-du-noyau">Étape 2 — Simuler une erreur du noyau<a class="headerlink" href="#etape-2-simuler-une-erreur-du-noyau" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>manifests/inject-kernel-err.yaml
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>kubectl<span class="w"> </span><span class="nb">wait</span><span class="w"> </span>--for<span class="o">=</span><span class="nv">jsonpath</span><span class="o">=</span><span class="s1">'{.status.phase}'</span><span class="o">=</span>Succeeded<span class="w"> </span>pod/inject-kernel-err<span class="w"> </span>--timeout<span class="o">=</span>60s
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>kubectl<span class="w"> </span>get<span class="w"> </span>events<span class="w"> </span>-A<span class="w"> </span>--field-selector<span class="w"> </span><span class="nv">reason</span><span class="o">=</span>KernelDeadlock
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>kubectl<span class="w"> </span>delete<span class="w"> </span>pod<span class="w"> </span>inject-kernel-err
+</span></code></pre></div>
+<p>L'événement apparaît dans le namespace <code>default</code> (un nœud n'appartient à aucun namespace) : <code>Warning  KernelDeadlock  node/k8s-worker-1  kernel: BUG: unable to handle kernel NULL pointer dereference…</code>.</p>
+<p><strong>1.</strong> <code>kubectl describe node k8s-worker-1</code> → <code>KernelDeadlock   True   KernelDeadlock   kernel: BUG: unable to handle kernel NULL pointer dereference…</code>. NPD a reconnu dans <code>/dev/kmsg</code> un motif de sa configuration (<code>npd/npd.yaml</code>, règle <code>permanent</code> → condition <code>KernelDeadlock</code>).</p>
+<p><strong>2.</strong> Oui, <code>kubectl get nodes</code> affiche toujours <code>Ready</code> : la condition <code>Ready</code> vient du kubelet, qui fonctionne. Le Scheduler continuerait donc d'envoyer des pods sur un nœud dont le noyau est en panne. NPD signale ; il ne bloque rien.</p>
+<p><code>kubectl wait</code> répond <code>pod/inject-kernel-err condition met</code> en 2 à 4 secondes (testé le 23/11/2026, identique sous Bash et PowerShell) : sans lui, un stagiaire rapide pouvait supprimer le pod avant qu'il ait écrit dans <code>/dev/kmsg</code>. Si la condition est <strong>déjà</strong> <code>True</code> (injection rejouée), aucun nouvel événement n'apparaît : NPD ne signale que les changements d'état. Si la condition reste à <code>False</code> : attendre 10 à 20 secondes et relancer. Vérifier que le pod <code>inject-kernel-err</code> est bien passé en <code>Completed</code> (<code>kubectl get pod inject-kernel-err</code>) ; s'il est refusé, une Pod Security Admission bloque peut-être les pods privilégiés dans <code>campus-dev</code> (cas d'un cluster durci au-delà de l'Atelier 07).</p>
+<h3 id="etape-3-retirer-le-nud-du-service">Étape 3 — Retirer le nœud du service<a class="headerlink" href="#etape-3-retirer-le-nud-du-service" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>kubectl<span class="w"> </span>cordon<span class="w"> </span>k8s-worker-1
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>kubectl<span class="w"> </span>get<span class="w"> </span>nodes
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>kubectl<span class="w"> </span>uncordon<span class="w"> </span>k8s-worker-1
+</span></code></pre></div>
+<p><strong>1.</strong> <code>Ready,SchedulingDisabled</code>. <code>cordon</code> pose la taint <code>node.kubernetes.io/unschedulable:NoSchedule</code> (et <code>spec.unschedulable: true</code>). Non : <code>cordon</code> ne touche pas aux pods existants (vérifiable avec <code>kubectl get pods -o wide</code>, colonne <code>NODE</code>). Il empêche seulement le Scheduler d'en placer de nouveaux.</p>
+<p>À l'oral (question retirée de l'énoncé, <code>drain</code> présenté dans l'encadré info) : <code>kubectl drain k8s-worker-1 --ignore-daemonsets</code> : <code>cordon</code> + éviction des pods, recréés par leurs contrôleurs sur les autres nœuds. <code>--ignore-daemonsets</code> est nécessaire car les pods de DaemonSet (NPD, Fluent Bit, Calico, kube-proxy) ne peuvent pas être déplacés ; <code>--delete-emptydir-data</code> est requis si un pod utilise un <code>emptyDir</code>. Après la réparation : <code>kubectl uncordon</code>.</p>
+<p>La condition <code>KernelDeadlock=True</code> reste affichée quelques minutes après l'<code>uncordon</code> : elle est indépendante du cordon, et NPD ne la remet à <code>False</code> qu'au redémarrage de son pod, <strong>et seulement si le message est sorti de sa fenêtre d'analyse</strong> (<code>"lookback": "5m"</code> dans <code>npd/npd.yaml</code>). Pour la remettre à zéro en fin de lab, <strong>au moins 5 minutes après l'injection</strong> : <code>kubectl delete pod -n kube-system -l app=node-problem-detector --field-selector spec.nodeName=k8s-worker-1</code>. Constaté en préparation : un redémarrage 2 ou 4 minutes après l'injection relit le message et remet la condition à <code>True</code> ; à 7 minutes, elle repasse à <code>False</code> en 5 secondes.</p>
+<p>Piège à signaler : un <code>drain</code> déplacerait <code>campus-postgres</code> si elle tourne sur ce nœud. Son PV <code>pv-postgres</code> est un répertoire du disque de <code>k8s-worker-1</code> (<code>nodeAffinity</code>) : le pod resterait <code>Pending</code> jusqu'à l'<code>uncordon</code> (Atelier 05).</p>
+<hr />
+<h2 id="exercice-4-mesurer-la-consommation-et-centraliser-les-logs">Exercice 4 — Mesurer la consommation et centraliser les logs<a class="headerlink" href="#exercice-4-mesurer-la-consommation-et-centraliser-les-logs" title="Permanent link">&para;</a></h2>
+<h3 id="etape-1-verifier-la-pile-de-supervision">Étape 1 — Vérifier la pile de supervision<a class="headerlink" href="#etape-1-verifier-la-pile-de-supervision" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>monitoring<span class="w"> </span>-o<span class="w"> </span>wide
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>kube-system<span class="w"> </span>-l<span class="w"> </span>k8s-app<span class="o">=</span>metrics-server
+</span></code></pre></div>
+<p><strong>1.</strong> Oui : la pile a été lancée à l'étape 0 et tourne depuis (pods <code>Running</code> en ~65 s lors du test). Les pods <code>fluent-bit</code> ont été créés par un <strong>DaemonSet</strong> (comme NPD) ; <code>loki</code>, <code>prometheus</code> et <code>grafana</code> par des Deployments.</p>
+<p><strong>2.</strong> <strong>3 pods <code>fluent-bit</code></strong>, un par nœud y compris <code>k8s-control</code> : le DaemonSet Fluent Bit <strong>tolère</strong> la taint du control plane (bloc <code>tolerations</code> de <code>03-fluentbit.yaml</code>), pour collecter aussi les logs des composants système. NPD, lui, ne la tolère pas : 2 pods seulement (étape 1 de l'exercice 3).</p>
+<p>Stagiaire qui a sauté la commande de l'étape 0 : il la lance maintenant (1 à 2 minutes d'attente) et rejoue <code>crash-app</code> pour avoir des logs dans Loki (indice de l'énoncé).</p>
+<h3 id="etape-2-mesurer-la-consommation">Étape 2 — Mesurer la consommation<a class="headerlink" href="#etape-2-mesurer-la-consommation" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>kubectl<span class="w"> </span>top<span class="w"> </span>nodes
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>kubectl<span class="w"> </span>top<span class="w"> </span>pods
+</span></code></pre></div>
+<p><strong>1.</strong> CPU en <strong>millicœurs</strong> (<code>m</code>) : <code>1000m</code> = 1 cœur, donc <code>250m</code> = un quart de cœur. Mémoire en <strong>Mi</strong> (mébioctets).</p>
+<p><strong>2.</strong> Un pod <strong>backend</strong> (JVM Spring Boot) : typiquement 250 à 450 Mi, contre ~50 Mi pour PostgreSQL et 2 Mi pour un frontend Nginx. Relevé en préparation (23/11/2026, version optimisée) : backend 227 Mi et 222 Mi, PostgreSQL 53 Mi, frontend 2 Mi. Juste après un démarrage, la colonne CPU d'un backend peut dépasser <code>1500m</code> (démarrage de la JVM) avant de redescendre à quelques millicœurs.</p>
+<p><strong>3.</strong> C'est la consommation <strong>réelle</strong>, mesurée par le kubelet (cAdvisor) et relayée par Metrics Server. Les valeurs déclarées (<code>requests</code> / <code>limits</code>) se lisent dans le manifest ou avec <code>kubectl describe pod</code> ; comparez-les aux <code>requests</code> (150m / 256Mi) et <code>limits</code> (500m / 512Mi) déclarées par le backend à l'Atelier 07 pour juger leur dimensionnement.</p>
+<p>Si <code>error: Metrics API not available</code> ou <code>metrics not available yet</code> : Metrics Server démarre ou n'a pas encore fait sa première collecte ; attendre 1 minute. Avec la pile lancée à l'étape 0, <code>kubectl top</code> répond du premier coup (constaté lors du test).</p>
+<h3 id="etape-3-grafana">Étape 3 — Grafana<a class="headerlink" href="#etape-3-grafana" title="Permanent link">&para;</a></h3>
+<p><code>http://&lt;IP_PUBLIQUE_D_UN_WORKER&gt;:30300</code>, identifiants <code>admin</code> / <code>admin2026</code>, menu <strong>Explore</strong>.</p>
+<p><strong>1.</strong> Requête Prometheus : <strong>une courbe par pod</strong> de <code>campus-dev</code>, soit 5 (1 <code>campus-postgres</code>, 2 <code>campus-backend</code>, 2 <code>campus-frontend</code>), plus des courbes interrompues pour les pods supprimés pendant la période affichée (<code>crash-app</code>, <code>oom-victim</code>). Les valeurs sont en octets (Grafana affiche par exemple <code>230 MB</code>) et du même ordre que <code>kubectl top pods</code>, qui affiche la même métrique (<code>working_set</code>).</p>
+<p><strong>2.</strong> Oui : <code>{run="crash-app"}</code> affiche <code>Demarrage</code> et <code>Erreur fatale</code>, répétés à chaque redémarrage, alors que le pod a été supprimé à l'exercice 2. Le label <code>run=crash-app</code> a été posé par <code>kubectl run</code> ; Fluent Bit recopie les labels du pod en labels Loki (<code>Auto_Kubernetes_Labels on</code>), et le nom du pod, son namespace et son nœud se lisent dans la ligne elle-même (champ <code>kubernetes</code>). <code>kubectl logs crash-app</code> répond <code>pods "crash-app" not found</code> : les logs sont stockés sur le nœud avec le conteneur et disparaissent avec le pod ; Fluent Bit les a copiés dans Loki au fil de l'eau. Vérifié sur le cluster AWS le 23/11/2026 (labels Loki disponibles : <code>app</code>, <code>run</code>, <code>job</code>, <code>pod_template_hash</code>, <code>k8s_app</code>…).</p>
+<p>Requête retirée de l'énoncé simplifié, utilisable à l'oral : <code>{app="campus-frontend"}</code> affiche une ligne Nginx par requête reçue (<code>"GET / HTTP/1.1" 200 …</code>), avec le nom du pod frontend dans le champ <code>kubernetes</code>. Vérifié le 23/11/2026. On n'interroge plus <code>{app="campus-backend"}</code> : en sortant de l'Atelier 07, le starter laisse le backend <code>unchanged</code>, et Spring Boot n'écrit rien après son démarrage. Ses logs, antérieurs à Fluent Bit, ne sont donc pas dans Loki (résultat vide constaté sur AWS).</p>
+<p>Points de vigilance :</p>
+<ul>
+<li>Loki vide : Fluent Bit a été démarré <strong>après</strong> l'incident A (commande de l'étape 0 sautée), ou la période affichée est trop courte (passer à <em>Last 1 hour</em>).</li>
+<li>Pas de label <code>namespace</code> dans Loki avec cette configuration : sur un cluster partagé, <code>{app="campus-frontend"}</code> mélange les pods de tous les namespaces.</li>
+<li>IP publique périmée après un redémarrage de la session AWS : relever l'IP actuelle d'un worker dans la console AWS.</li>
+<li>Port filtré : <code>kubectl port-forward svc/grafana 3000:3000 -n monitoring</code>, puis <code>http://localhost:3000</code>.</li>
+</ul>
+<p><strong>StackDriver</strong> : l'ancien nom de la suite de supervision de Google Cloud, aujourd'hui <strong>Google Cloud Observability</strong> (Cloud Logging + Cloud Monitoring), activée par défaut sur GKE. Équivalents : <strong>CloudWatch</strong> (Container Insights) chez AWS, <strong>Azure Monitor</strong> (Container Insights) chez Azure.</p>
+<hr />
+<h2 id="exercice-5-optionnel-freelens">Exercice 5 (optionnel) — FreeLens<a class="headerlink" href="#exercice-5-optionnel-freelens" title="Permanent link">&para;</a></h2>
+<h3 id="etape-1-connexion-par-le-kubeconfig">Étape 1 — Connexion par le kubeconfig<a class="headerlink" href="#etape-1-connexion-par-le-kubeconfig" title="Permanent link">&para;</a></h3>
+<p><em>Kubeconfig Syncs</em> est plus robuste en Learner Lab : après un redémarrage de session, <code>get-kubeconfig</code> réécrit le fichier et FreeLens suit. <em>Add from kubeconfig</em> fige une copie, à recoller quand l'IP change. Échec : si <code>kubectl get nodes</code> échoue aussi avec ce fichier → kubeconfig périmé ; sinon → port 6443 filtré.</p>
+<h3 id="etape-2-retrouver-les-commandes-du-lab">Étape 2 — Retrouver les commandes du lab<a class="headerlink" href="#etape-2-retrouver-les-commandes-du-lab" title="Permanent link">&para;</a></h3>
+<p><strong>1.</strong> Colonne <code>Restarts</code> qui augmente et statut <code>CrashLoopBackOff</code>. Le message <code>Erreur fatale</code> se lit dans <strong>Logs</strong>, case <strong>Show previous terminated container</strong> cochée (équivalent de <code>--previous</code>).</p>
+<p><strong>2.</strong> <code>k8s-worker-1   Ready,SchedulingDisabled</code> : FreeLens envoie les mêmes requêtes à l'API Server que <code>kubectl</code>, avec les droits du kubeconfig. Comme pour <code>exec</code>, les modifications faites dans l'interface (<strong>Edit</strong>) ne remplacent pas la correction du manifest.</p>
+<hr />
+<h2 id="nettoyage-facultatif-en-fin-de-journee">Nettoyage (facultatif, en fin de journée)<a class="headerlink" href="#nettoyage-facultatif-en-fin-de-journee" title="Permanent link">&para;</a></h2>
+<p>La pile de supervision consomme plusieurs centaines de Mo de mémoire sur les workers. Pour la retirer (fichiers listés un par un : <code>monitoring/dashboard-kubernetes.json</code> n'est pas un objet Kubernetes, <code>kubectl delete -f monitoring/</code> échouerait dessus) :</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>kubectl<span class="w"> </span>delete<span class="w"> </span>-f<span class="w"> </span>monitoring/05-grafana.yaml<span class="w"> </span>-f<span class="w"> </span>monitoring/04-prometheus.yaml<span class="w"> </span>-f<span class="w"> </span>monitoring/03-fluentbit.yaml<span class="w"> </span>-f<span class="w"> </span>monitoring/02-loki.yaml<span class="w"> </span>-f<span class="w"> </span>monitoring/01-metrics-server.yaml<span class="w"> </span>-f<span class="w"> </span>monitoring/00-namespace.yaml
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>kubectl<span class="w"> </span>delete<span class="w"> </span>-f<span class="w"> </span>npd/npd.yaml
+</span></code></pre></div>
+<p>L'Atelier 08 n'en dépend pas.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Retour en haut de la page
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2026 Rym Regaieg
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "navigation.indexes", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copi\u00e9 dans le presse-papier", "clipboard.copy": "Copier dans le presse-papier", "search.result.more.one": "1 de plus sur cette page", "search.result.more.other": "# de plus sur cette page", "search.result.none": "Aucun document trouv\u00e9", "search.result.one": "1 document trouv\u00e9", "search.result.other": "# documents trouv\u00e9s", "search.result.placeholder": "Taper pour d\u00e9marrer la recherche", "search.result.term.missing": "Non trouv\u00e9", "select.version": "S\u00e9lectionner la version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+        <script src="../../javascripts/slides.js"></script>
+      
+    
+  </body>
+</html>
